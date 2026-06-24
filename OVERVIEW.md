@@ -11,7 +11,7 @@ Firebase를 백엔드로 사용하여 실시간 동기화를 지원한다.
 
 - **모바일 우선 (Mobile-First)**: 스마트폰에서 편리하게 사용 가능한 UI/UX
 - **크로스 플랫폼**: 모바일 ↔ PC 데이터 실시간 동기화
-- **Firebase 백엔드**: Firestore DB + Firebase Auth + (선택) Firebase Hosting
+- **Firebase 백엔드**: Realtime Database + Firebase Auth + (선택) Firebase Hosting
 
 ---
 
@@ -21,7 +21,7 @@ Firebase를 백엔드로 사용하여 실시간 동기화를 지원한다.
 |------|------|
 | 프론트엔드 | React (Vite) |
 | 스타일링 | Tailwind CSS (반응형) |
-| 백엔드/DB | Firebase Firestore |
+| 백엔드/DB | Firebase Realtime Database |
 | 인증 | Firebase Authentication (Google 로그인) |
 | 호스팅 | Firebase Hosting |
 | 상태 관리 | React Context API 또는 Zustand |
@@ -56,7 +56,7 @@ Firebase를 백엔드로 사용하여 실시간 동기화를 지원한다.
 
 ---
 
-## Firebase 데이터 구조 (Firestore)
+## Firebase 데이터 구조 (Realtime Database)
 
 ```
 users/
@@ -102,7 +102,7 @@ users/
 ### Phase 1 — 기반 세팅
 - [ ] Vite + React 프로젝트 초기화
 - [ ] Tailwind CSS 설정
-- [ ] Firebase 프로젝트 연결 (Firestore, Auth)
+- [ ] Firebase 프로젝트 연결 (Realtime Database, Auth)
 - [ ] 환경변수 (.env) 구성
 
 ### Phase 2 — 인증
@@ -111,7 +111,7 @@ users/
 - [ ] 사용자 세션 관리
 
 ### Phase 3 — 핵심 기능
-- [ ] Firestore CRUD 함수 구현
+- [ ] Realtime Database CRUD 함수 구현
 - [ ] 일정 추가/수정/삭제 폼
 - [ ] 월간 캘린더 컴포넌트
 - [ ] 일정 목록 컴포넌트
@@ -136,3 +136,90 @@ users/
 - 일정 공유 기능
 - 다크 모드
 - 캘린더 외부 연동 (Google Calendar API)
+
+
+
+캘린더 검색 기능 추가 , 캘린더뱃지에 시간도 노출 캘린더 화면 채워서 확대. 월 넘기기 버튼 가운데로. 
+인코딩깨짐은 한글로 하는 한 계속 발생하니깐 무시해.
+백엔드에서 OAuth refresh token 관리
+제일 정석
+Google OAuth authorization code flow 사용
+refresh token을 서버/Firebase Functions 등에 저장
+Calendar API 호출도 백엔드에서 수행
+설정과 보안 작업이 확 늘어남
+
+
+종합 페이지
+Todo 현황판(간트차트)   + 캘린더에 바로 반영 버튼 
+메모 그리기 기능 추가
+날씨(페이지따로 또 캘린더에 노출)  노출된 날씨가 어느 지역인지 안나옴 내가 준 이미지랑 많이다름 특히 이모지가 이상함 해가 까만색이고 또 지도도 이상함
+명언
+---
+
+## 보류 메모 - Google Calendar OAuth refresh token 백엔드 전환
+
+### 현재 상태
+- Google Calendar API를 프론트에서 access token으로 직접 호출하던 방식은 토큰 만료 때문에 장기 사용에 불안정함.
+- 이를 해결하기 위해 Firebase Functions에서 Google OAuth authorization code flow를 처리하고, refresh token을 서버 DB에 저장한 뒤 Calendar API를 백엔드에서 호출하는 구조로 전환하는 작업을 시작함.
+- `functions/`, `firebase.json`, `CALENDAR_OAUTH.md`, Functions 기반 `src/lib/googleCalendar.js` 변경까지는 코드상 준비됨.
+- 단, 현재 Functions 초안은 Firestore 기반으로 작성되어 있으므로 재개 시 Realtime Database 저장 방식으로 변경해야 함.
+
+### 왜 완료하지 못했는지
+- 회사 네트워크/보안 정책 때문에 Firebase CLI 로그인이 차단됨.
+- `npx firebase login --no-localhost --reauth` 실행 시 `https://auth.firebase.tools/attest` 요청 실패 발생.
+- 따라서 수정한 Firebase Functions 코드를 실제 Cloud Functions에 배포하지 못함.
+- 로컬 프론트는 이미 배포된 Cloud Functions를 호출하므로, Functions를 배포하기 전까지 CORS 수정 및 refresh token 구조가 실제로 적용되지 않음.
+
+### 언제 다시 해야 하는지
+- Google Calendar 연동을 장시간 안정적으로 유지해야 할 때.
+- access token 만료로 인해 사용자가 자주 재연결해야 하는 문제가 다시 불편해질 때.
+- 회사망이 아닌 네트워크, 휴대폰 핫스팟, 또는 Google Cloud Shell에서 Firebase CLI 배포가 가능한 상태가 되었을 때.
+
+### 다음 작업
+- Firebase CLI 로그인 가능 환경에서 아래 명령 실행:
+```powershell
+npx firebase-tools@13.35.1 login --no-localhost
+npx firebase-tools@13.35.1 deploy --only functions --project psmine-ad9cc
+```
+- Google Cloud OAuth 클라이언트에 아래 redirect URI 등록 확인:
+```txt
+https://us-central1-psmine-ad9cc.cloudfunctions.net/calendarOAuthCallback
+```
+- `functions/.env`에 OAuth client id/secret/redirect URI/app URL 설정.
+- 배포 후 프론트에서 Calendar 연결 버튼을 눌러 refresh token 저장 및 Calendar API 호출 확인.
+
+### 지금 우선순위
+- 이 백엔드 전환은 일단 보류.
+- 당장은 앱 기능, Realtime Database 기반 메모/Todo/설정, 캘린더 UI 개선을 먼저 진행.
+
+---
+
+## 날씨 데이터 저장 정책
+
+- 기상청 단기/중기/일출일몰 데이터는 Firebase Realtime Database에 계속 누적한다.
+- 나중에 과거 특정 시점의 예보를 다시 돌려볼 수 있어야 하므로 원본 번들 성격의 데이터도 별도로 보관한다.
+- 단기 데이터끼리는 같은 일자/시간 키를 덮어쓸 수 있다.
+- 장기 데이터가 단기 데이터를 덮어쓰면 안 된다. 단기와 장기는 컬렉션을 분리한다.
+
+### Realtime Database 구조
+- `/users/{uid}/weather/latest`
+  - 화면 표시용 최신 캐시
+- `/users/{uid}/weatherSnapshots`
+  - 갱신 호출마다 추가되는 전체 스냅샷 누적
+- `/users/{uid}/weatherArchive/{location_baseDate_baseTime_midTmFc}`
+  - 발표시각 기준 원본 번들 보관용 아카이브
+- `/users/{uid}/weatherShortHourly/{date_time}`
+  - 단기 시간별 예보. 같은 날짜/시간은 갱신 시 merge 가능
+- `/users/{uid}/weatherShortDaily/{date}`
+  - 단기 일별 요약. 같은 날짜는 갱신 시 merge 가능
+- `/users/{uid}/weatherMidForecasts/{date}`
+  - 중기/장기 예보. 단기 컬렉션과 절대 섞지 않음
+
+어디서부터 파이어스토어 DB로 설계한건지 모르겠는데 파이어스토어DB는 없어
+파이어베이스 리얼타임데이터베이스만 활성화해놧어. 여기다가해야해.
+
+디자인 참조 팔레트 
+https://webdesignrankings.com/resources/lolcolors/
+
+
+

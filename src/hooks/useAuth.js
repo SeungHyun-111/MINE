@@ -1,58 +1,59 @@
 import { useEffect } from 'react'
-import { signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, GoogleAuthProvider } from 'firebase/auth'
-import { auth, googleProvider } from '@/lib/firebase'
+import {
+  getRedirectResult,
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithRedirect,
+  signOut,
+} from 'firebase/auth'
+import { auth, createGoogleProvider } from '@/lib/firebase'
 import useAuthStore from '@/store/authStore'
-
-const TOKEN_KEY = 'gcal_access_token'
 
 export function useAuthListener() {
   const setUser = useAuthStore((s) => s.setUser)
-  const setAccessToken = useAuthStore((s) => s.setAccessToken)
 
   useEffect(() => {
     let unsubscribe = () => {}
 
-    // getRedirectResult 완료 후에 onAuthStateChanged 시작
-    // (먼저 실행되면 user=null로 로그인 화면이 잠깐 보이는 문제 방지)
     getRedirectResult(auth)
-      .then((result) => {
-        if (result) {
-          const credential = GoogleAuthProvider.credentialFromResult(result)
-          if (credential?.accessToken) {
-            sessionStorage.setItem(TOKEN_KEY, credential.accessToken)
-            setAccessToken(credential.accessToken)
-          }
-        }
-      })
       .catch(console.error)
       .finally(() => {
         unsubscribe = onAuthStateChanged(auth, (user) => {
           setUser(user)
-          if (user) {
-            const saved = sessionStorage.getItem(TOKEN_KEY)
-            if (saved) setAccessToken(saved)
-          } else {
-            sessionStorage.removeItem(TOKEN_KEY)
-            setAccessToken(null)
-          }
         })
       })
 
     return () => unsubscribe()
-  }, [setUser, setAccessToken])
+  }, [setUser])
 }
 
 export function useAuth() {
-  const { user, loading, accessToken } = useAuthStore()
-  const setAccessToken = useAuthStore((s) => s.setAccessToken)
+  const { user, loading } = useAuthStore()
+  const setUser = useAuthStore((s) => s.setUser)
+  const setLoading = useAuthStore((s) => s.setLoading)
 
-  const login = () => signInWithRedirect(auth, googleProvider)
-  const reconnectCalendar = login
+  const login = async ({ forceAccountSelect = false } = {}) => {
+    setLoading(true)
+    const provider = createGoogleProvider({ forceConsent: forceAccountSelect })
+
+    try {
+      if (import.meta.env.DEV) {
+        const result = await signInWithPopup(auth, provider)
+        setUser(result.user)
+        return result
+      }
+
+      return signInWithRedirect(auth, provider)
+    } catch (error) {
+      console.error(error)
+      setLoading(false)
+      throw error
+    }
+  }
 
   const logout = () => {
-    sessionStorage.removeItem(TOKEN_KEY)
     signOut(auth)
   }
 
-  return { user, loading, accessToken, login, logout, reconnectCalendar }
+  return { user, loading, login, logout }
 }

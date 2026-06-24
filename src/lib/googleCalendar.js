@@ -1,110 +1,135 @@
-const BASE_URL = 'https://www.googleapis.com/calendar/v3'
+import { httpsCallable } from 'firebase/functions'
+import { functions } from '@/lib/firebase'
 
-function headers(accessToken) {
-  return {
-    Authorization: `Bearer ${accessToken}`,
-    'Content-Type': 'application/json',
+function callable(name) {
+  return httpsCallable(functions, name)
+}
+
+function functionError(error, fallback) {
+  return new Error(error?.message || fallback)
+}
+
+function nextDate(date) {
+  const next = new Date(`${date}T00:00:00`)
+  next.setDate(next.getDate() + 1)
+  return next.toISOString().slice(0, 10)
+}
+
+export async function getCalendarConnectionStatus() {
+  try {
+    const result = await callable('getCalendarConnectionStatus')()
+    return !!result.data.connected
+  } catch (error) {
+    throw functionError(error, '캘린더 연결 상태를 확인하지 못했습니다.')
   }
 }
 
-// 구독 중인 모든 캘린더 목록 가져오기
-export async function fetchCalendarList(accessToken) {
-  const res = await fetch(`${BASE_URL}/users/me/calendarList`, {
-    headers: headers(accessToken),
-  })
-  if (!res.ok) throw new Error('캘린더 목록을 불러오지 못했습니다.')
-  const data = await res.json()
-  return data.items
+export async function connectCalendar() {
+  try {
+    const result = await callable('getCalendarConnectUrl')({
+      appUrl: window.location.origin,
+    })
+    window.location.assign(result.data.url)
+  } catch (error) {
+    throw functionError(error, '캘린더 연결을 시작하지 못했습니다.')
+  }
 }
 
-// 특정 캘린더의 일정 가져오기
-async function fetchCalendarEvents(accessToken, calendarId, timeMin, timeMax) {
-  const params = new URLSearchParams({
-    timeMin: timeMin.toISOString(),
-    timeMax: timeMax.toISOString(),
-    singleEvents: true,
-    orderBy: 'startTime',
-    maxResults: 250,
-  })
-
-  const res = await fetch(
-    `${BASE_URL}/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
-    { headers: headers(accessToken) }
-  )
-
-  if (!res.ok) return []
-  const data = await res.json()
-  return data.items.map((item) => ({
-    ...item,
-    calendarId,
-  }))
+export async function fetchCalendarList() {
+  try {
+    const result = await callable('listCalendarCalendars')()
+    return result.data.items || []
+  } catch (error) {
+    throw functionError(error, '캘린더 목록을 불러오지 못했습니다.')
+  }
 }
 
-// 모든 캘린더의 일정을 병렬로 가져오기
-export async function fetchAllEvents(accessToken, timeMin, timeMax, calendars) {
-  const results = await Promise.all(
+async function fetchCalendarEvents(calendarId, timeMin, timeMax) {
+  try {
+    const result = await callable('listCalendarEvents')({
+      calendarId,
+      timeMin: timeMin.toISOString(),
+      timeMax: timeMax.toISOString(),
+    })
+
+    return (result.data.items || []).map((item) => ({
+      ...item,
+      calendarId,
+    }))
+  } catch (error) {
+    throw functionError(error, `${calendarId}: 일정을 불러오지 못했습니다.`)
+  }
+}
+
+export async function fetchAllEvents(timeMin, timeMax, calendars) {
+  const results = await Promise.allSettled(
     calendars.map((cal) =>
-      fetchCalendarEvents(accessToken, cal.id, timeMin, timeMax)
+      fetchCalendarEvents(cal.id, timeMin, timeMax)
     )
   )
-  return results.flat().sort((a, b) => {
+
+  const failed = results.filter((result) => result.status === 'rejected')
+  if (failed.length === results.length) {
+    throw new Error(`일정을 불러오지 못했습니다: ${failed[0].reason.message}`)
+  }
+
+  failed.forEach((result) => console.warn(result.reason))
+
+  return results.flatMap((result) => (
+    result.status === 'fulfilled' ? result.value : []
+  )).sort((a, b) => {
     const aTime = a.start?.dateTime || a.start?.date || ''
     const bTime = b.start?.dateTime || b.start?.date || ''
     return aTime.localeCompare(bTime)
   })
 }
 
-// 일정 생성 (기본 캘린더에)
-export async function createEvent(accessToken, event) {
-  const res = await fetch(`${BASE_URL}/calendars/primary/events`, {
-    method: 'POST',
-    headers: headers(accessToken),
-    body: JSON.stringify(event),
-  })
-  if (!res.ok) throw new Error('일정 생성에 실패했습니다.')
-  return res.json()
+export async function createEvent(_accessToken, event) {
+  try {
+    const result = await callable('createCalendarEvent')({ event })
+    return result.data
+  } catch (error) {
+    throw functionError(error, '일정 생성에 실패했습니다.')
+  }
 }
 
-// 일정 수정
-export async function updateEvent(accessToken, calendarId, eventId, event) {
-  const res = await fetch(
-    `${BASE_URL}/calendars/${encodeURIComponent(calendarId)}/events/${eventId}`,
-    {
-      method: 'PUT',
-      headers: headers(accessToken),
-      body: JSON.stringify(event),
-    }
-  )
-  if (!res.ok) throw new Error('일정 수정에 실패했습니다.')
-  return res.json()
+export async function updateEvent(_accessToken, calendarId, eventId, event) {
+  try {
+    const result = await callable('updateCalendarEvent')({ calendarId, eventId, event })
+    return result.data
+  } catch (error) {
+    throw functionError(error, '일정 수정에 실패했습니다.')
+  }
 }
 
-// 일정 삭제
-export async function deleteEvent(accessToken, calendarId, eventId) {
-  const res = await fetch(
-    `${BASE_URL}/calendars/${encodeURIComponent(calendarId)}/events/${eventId}`,
-    { method: 'DELETE', headers: headers(accessToken) }
-  )
-  if (!res.ok) throw new Error('일정 삭제에 실패했습니다.')
+export async function deleteEvent(_accessToken, calendarId, eventId) {
+  try {
+    await callable('deleteCalendarEvent')({ calendarId, eventId })
+  } catch (error) {
+    throw functionError(error, '일정 삭제에 실패했습니다.')
+  }
 }
 
-// Google Calendar 이벤트 객체 생성 헬퍼
-export function makeEvent({ title, date, startTime, endTime, memo }) {
+export function makeEvent({ title, date, startDate, endDate, startTime, endTime, memo }) {
+  const safeStartDate = startDate || date
+  const safeEndDate = endDate || safeStartDate
   const isAllDay = !startTime
 
   if (isAllDay) {
     return {
       summary: title,
       description: memo || '',
-      start: { date },
-      end: { date },
+      start: { date: safeStartDate },
+      end: { date: nextDate(safeEndDate) },
     }
   }
+
+  const safeEndTime = endTime || startTime
 
   return {
     summary: title,
     description: memo || '',
-    start: { dateTime: `${date}T${startTime}:00`, timeZone: 'Asia/Seoul' },
-    end: { dateTime: `${date}T${endTime}:00`, timeZone: 'Asia/Seoul' },
+    start: { dateTime: `${safeStartDate}T${startTime}:00`, timeZone: 'Asia/Seoul' },
+    end: { dateTime: `${safeEndDate}T${safeEndTime}:00`, timeZone: 'Asia/Seoul' },
   }
 }

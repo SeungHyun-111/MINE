@@ -1,15 +1,48 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "NaverWeather";
+  src: url("https://ssl.pstatic.net/static/weather/font/NotoSans-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NaverWeather";
+  src: url("https://ssl.pstatic.net/static/weather/font/NotoSans-Bold.woff2") format("woff2");
+  font-weight: 700 900;
+  font-display: swap;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: "NaverWeather", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 #root {
   min-height: 100svh;
+}
+
+.weather-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #aab3bb #eef1f4;
+}
+
+.weather-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.weather-scroll::-webkit-scrollbar-track {
+  background: #eef1f4;
+  border-radius: 999px;
+}
+
+.weather-scroll::-webkit-scrollbar-thumb {
+  background: #aab3bb;
+  border-radius: 999px;
 }
