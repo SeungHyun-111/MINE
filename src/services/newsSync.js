@@ -1,29 +1,8 @@
-import { ref, update, get, onValue } from 'firebase/database'
-import { db } from '@/lib/firebase'
-import { SOURCES, PROXY_LIST } from './newsSources'
+import { SOURCES } from './newsSources'
 
-const FRESHNESS_MS = 60 * 60 * 1000 // 60 minutes
-
-async function fetchViaProxy(rawUrl) {
-  let lastErr
-  for (const proxy of PROXY_LIST) {
-    try {
-      const res = await fetch(proxy + encodeURIComponent(rawUrl), {
-        signal: AbortSignal.timeout(12000),
-      })
-      if (!res.ok) {
-        console.warn(`[newsSync] proxy ${proxy} → HTTP ${res.status}`)
-        lastErr = new Error(`HTTP ${res.status}`)
-        continue
-      }
-      return await res.text()
-    } catch (err) {
-      console.warn(`[newsSync] proxy ${proxy} failed:`, err.message)
-      lastErr = err
-    }
-  }
-  throw lastErr ?? new Error('All proxies failed')
-}
+const CACHE_TTL_MS = 30 * 60 * 1000
+const CACHE_PREFIX = 'mine:news:'
+const NEWS_PROXY_URL = 'https://news-proxy.weras1993.workers.dev/?url='
 
 function cutoffDate(days) {
   const d = new Date()
@@ -31,75 +10,129 @@ function cutoffDate(days) {
   return d.toISOString().slice(0, 10)
 }
 
-async function getLastSync(key) {
+function cacheKey(key) {
+  return `${CACHE_PREFIX}${key}`
+}
+
+function readLocalCache(key) {
   try {
-    const snap = await get(ref(db, `meta/${key}LastSync`))
-    return snap.val()
+    const cached = JSON.parse(localStorage.getItem(cacheKey(key)) ?? 'null')
+    if (!cached?.items || !cached?.savedAt) return null
+    return cached
   } catch {
     return null
   }
 }
 
-export async function syncSource(key) {
-  const source = SOURCES[key]
-  if (!source) throw new Error(`Unknown source: ${key}`)
+function writeLocalCache(key, items) {
+  try {
+    localStorage.setItem(cacheKey(key), JSON.stringify({
+      savedAt: Date.now(),
+      items,
+    }))
+  } catch {
+    // localStorage can be disabled or full; news still works without caching.
+  }
+}
 
-  const lastSync = await getLastSync(key)
-  if (lastSync && Date.now() - lastSync < FRESHNESS_MS) {
-    console.log(`[newsSync] ${key}: fresh (${Math.round((Date.now() - lastSync) / 60000)}m ago), skipping`)
-    return
+function proxiedUrl(rawUrl) {
+  return `${NEWS_PROXY_URL}${encodeURIComponent(rawUrl)}`
+}
+
+function requestUrls(source, rawUrl) {
+  const urls = [
+    proxiedUrl(rawUrl),
+    rawUrl,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rawUrl)}`,
+  ]
+
+  if (!source.useProxyFirst) {
+    return [rawUrl, ...urls.filter((url) => url !== rawUrl)]
   }
 
+  return urls
+}
+
+async function fetchText(source, rawUrl) {
+  let lastError
+
+  for (const url of requestUrls(source, rawUrl)) {
+    try {
+      const res = await fetch(url, { cache: 'no-cache' })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return await res.text()
+    } catch (error) {
+      lastError = error
+    }
+  }
+
+  throw lastError ?? new Error('뉴스 소스를 불러오지 못했습니다.')
+}
+
+async function fetchFreshNews(key) {
+  const source = SOURCES[key]
+  if (!source) throw new Error(`Unknown news source: ${key}`)
+
   const cutoff = cutoffDate(source.days)
-  const rtdbUpdates = {}
+  const news = []
+  const seen = new Set()
   let stopped = false
 
-  for (let page = 1; page <= source.maxPages && !stopped; page++) {
-    let text
-    try {
-      text = await fetchViaProxy(source.buildUrl(page))
-    } catch (err) {
-      console.warn(`[newsSync] ${key} page ${page}:`, err.message)
-      break
-    }
-
+  for (let page = 1; page <= source.maxPages && !stopped; page += 1) {
+    const text = await fetchText(source, source.buildUrl(page))
     const items = source.parse(text)
-    if (items.length === 0) {
-      stopped = true
-      break
-    }
+
+    if (items.length === 0) break
 
     let pageHasRecent = false
     for (const item of items) {
-      if (!item.date || item.date < cutoff) continue
+      if (!item.date || item.date < cutoff || seen.has(item.id)) continue
       pageHasRecent = true
-      rtdbUpdates[`${source.dbPath}/${item.id}`] = item
+      seen.add(item.id)
+      news.push(item)
     }
 
     if (!pageHasRecent) stopped = true
   }
 
-  const count = Object.keys(rtdbUpdates).length
-  if (count > 0) {
-    await update(ref(db), rtdbUpdates)
-    console.log(`[newsSync] ${key}: saved ${count} items`)
-  }
-
-  // mark sync time even if 0 items (avoids hammering on empty result)
-  await update(ref(db, 'meta'), { [`${key}LastSync`]: Date.now() })
+  return news.sort((a, b) => {
+    const d = (b.date ?? '').localeCompare(a.date ?? '')
+    return d !== 0 ? d : Number(b.id ?? 0) - Number(a.id ?? 0)
+  })
 }
 
-export function subscribeNews(key, callback) {
+export function getCachedNews(key) {
+  return readLocalCache(key)?.items ?? []
+}
+
+export async function loadNews(key, { force = false } = {}) {
+  const cached = readLocalCache(key)
+  const isFresh = cached && Date.now() - cached.savedAt < CACHE_TTL_MS
+
+  if (!force && isFresh) {
+    return { items: cached.items, fromCache: true }
+  }
+
+  try {
+    const items = await fetchFreshNews(key)
+    writeLocalCache(key, items)
+    return { items, fromCache: false }
+  } catch (error) {
+    if (cached?.items) {
+      return { items: cached.items, fromCache: true, error }
+    }
+    throw error
+  }
+}
+
+export async function loadNewsDetail(key, item) {
   const source = SOURCES[key]
-  if (!source) return () => {}
-  const r = ref(db, source.dbPath)
-  const unsub = onValue(r, (snap) => {
-    const raw = snap.val() ?? {}
-    const items = Object.values(raw).sort((a, b) => {
-      const d = (b.date ?? '').localeCompare(a.date ?? '')
-      return d !== 0 ? d : Number(b.id ?? 0) - Number(a.id ?? 0)
-    })
-    callback(items)
-  })
-  return unsub
+  if (!source) throw new Error(`Unknown news source: ${key}`)
+
+  if (item.content) return item.content
+  if (!source.detailUrl) return ''
+
+  const text = await fetchText(source, source.detailUrl(item))
+  return source.parseDetail(text)
 }

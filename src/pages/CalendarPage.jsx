@@ -16,15 +16,24 @@ export default function CalendarPage() {
     prevMonth,
     nextMonth,
     addEvent,
+    editEvent,
+    removeEvent,
     connectCalendar,
   } = useCalendar()
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editingEvent, setEditingEvent] = useState(null)
   const [formError, setFormError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [urlError, setUrlError] = useState(null)
   const effectiveError = urlError || error
+
+  void AlertCircle
+  void RefreshCw
+  void connected
+  void connectCalendar
+  void effectiveError
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -61,18 +70,55 @@ export default function CalendarPage() {
     else nextMonth()
   }
 
-  const handleAddEvent = async (formData) => {
+  const openAddForm = (date = selectedDate) => {
+    setSelectedDate(date)
+    setEditingEvent(null)
+    setFormError(null)
+    setIsFormOpen(true)
+  }
+
+  const openEditForm = (event) => {
+    setEditingEvent(event)
+    setFormError(null)
+    setIsFormOpen(true)
+  }
+
+  const closeForm = () => {
+    setIsFormOpen(false)
+    setEditingEvent(null)
+    setFormError(null)
+  }
+
+  const handleSaveEvent = async (formData) => {
     setSaving(true)
     setFormError(null)
 
     try {
-      await addEvent(formData)
-      setIsFormOpen(false)
+      if (editingEvent) {
+        await editEvent(editingEvent.calendarId, editingEvent.id, formData)
+      } else {
+        await addEvent(formData)
+      }
+      closeForm()
     } catch (e) {
       console.error(e)
       setFormError(e.message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleRemoveEvent = async (event) => {
+    if (!window.confirm('이 일정을 삭제할까요?')) return
+
+    setFormError(null)
+    try {
+      await removeEvent(event.calendarId, event.id)
+    } catch (e) {
+      console.error(e)
+      setFormError(e.message)
+      setEditingEvent(event)
+      setIsFormOpen(true)
     }
   }
 
@@ -149,23 +195,27 @@ export default function CalendarPage() {
           currentMonth={currentMonth}
           onMonthChange={handleMonthChange}
           onDayClick={setSelectedDate}
+          onDayDoubleClick={openAddForm}
           selectedDate={selectedDate}
         />
 
         <DayEventList
           date={selectedDate}
           events={filteredEvents}
-          onAdd={() => setIsFormOpen(true)}
+          onAdd={() => openAddForm()}
+          onEdit={openEditForm}
+          onRemove={handleRemoveEvent}
         />
       </div>
 
       {isFormOpen && (
         <EventFormModal
           date={selectedDate}
+          eventToEdit={editingEvent}
           error={formError}
           saving={saving}
-          onClose={() => setIsFormOpen(false)}
-          onSubmit={handleAddEvent}
+          onClose={closeForm}
+          onSubmit={handleSaveEvent}
         />
       )}
     </div>

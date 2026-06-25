@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { Clock, Plus } from 'lucide-react'
+import { Clock, Pencil, Plus, Trash2 } from 'lucide-react'
 
 function addDays(dateString, days) {
   const date = new Date(`${dateString}T00:00:00`)
@@ -16,8 +16,15 @@ function formatTime(dateTimeStr) {
 function getEventRange(event) {
   const start = event.start?.date || event.start?.dateTime?.slice(0, 10)
   const rawEnd = event.end?.date || event.end?.dateTime?.slice(0, 10) || start
-  const end = event.end?.date ? addDays(rawEnd, -1) : rawEnd
-  return { start, end: end && end >= start ? end : start }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start || '')) {
+    return { start: null, end: null }
+  }
+
+  const exclusiveEnd = event.end?.date && rawEnd > start ? addDays(rawEnd, -1) : rawEnd
+  const end = exclusiveEnd && exclusiveEnd >= start ? exclusiveEnd : start
+
+  return { start, end }
 }
 
 function includesDate(event, dateStr) {
@@ -25,7 +32,7 @@ function includesDate(event, dateStr) {
   return !!start && start <= dateStr && dateStr <= end
 }
 
-export default function DayEventList({ date, events, onAdd }) {
+export default function DayEventList({ date, events, onAdd, onEdit, onRemove }) {
   if (!date) return null
 
   const dateStr = format(date, 'yyyy-MM-dd')
@@ -37,7 +44,7 @@ export default function DayEventList({ date, events, onAdd }) {
         <div>
           <p className="text-xs font-semibold text-[#55777b]">선택한 날짜</p>
           <h3 className="text-sm font-bold text-[#1f4e5f]">
-          {format(date, 'M월 d일 (EEE)', { locale: ko })}
+            {format(date, 'M월 d일 (EEE)', { locale: ko })}
           </h3>
         </div>
         <button
@@ -59,11 +66,13 @@ export default function DayEventList({ date, events, onAdd }) {
               <li key={event.id} className="flex items-start gap-3 px-4 py-3">
                 <div className="flex items-center gap-1.5 text-[#789094] text-xs mt-0.5 w-20 shrink-0">
                   {!isAllDay && <Clock size={12} />}
-                  <span>
-                    {isAllDay ? '종일' : formatTime(event.start?.dateTime)}
-                  </span>
+                  <span>{isAllDay ? '종일' : formatTime(event.start?.dateTime)}</span>
                 </div>
-                <div className="flex-1 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => onEdit?.(event)}
+                  className="flex-1 min-w-0 text-left"
+                >
                   <p className="text-sm font-semibold text-[#304852] truncate">
                     {event.summary || '(제목 없음)'}
                   </p>
@@ -72,6 +81,24 @@ export default function DayEventList({ date, events, onAdd }) {
                       {event.description}
                     </p>
                   )}
+                </button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => onEdit?.(event)}
+                    className="p-1.5 rounded-md text-[#55777b] hover:bg-[#e1edef] hover:text-[#1f4e5f]"
+                    aria-label="일정 수정"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onRemove?.(event)}
+                    className="p-1.5 rounded-md text-[#9d5c5c] hover:bg-[#fff0f0] hover:text-[#7a3d3d]"
+                    aria-label="일정 삭제"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </li>
             )

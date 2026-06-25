@@ -1,8 +1,45 @@
 import { format } from 'date-fns'
 import { X } from 'lucide-react'
 
-export default function EventFormModal({ date, error, saving, onClose, onSubmit }) {
-  const dateValue = format(date || new Date(), 'yyyy-MM-dd')
+function addDays(dateString, days) {
+  const date = new Date(`${dateString}T00:00:00`)
+  date.setDate(date.getDate() + days)
+  return date.toISOString().slice(0, 10)
+}
+
+function eventToDefaults(event, fallbackDate) {
+  if (!event) {
+    const dateValue = format(fallbackDate || new Date(), 'yyyy-MM-dd')
+    return {
+      title: '',
+      startDate: dateValue,
+      endDate: dateValue,
+      allDay: true,
+      startTime: '',
+      endTime: '',
+      memo: '',
+    }
+  }
+
+  const allDay = !!event.start?.date
+  const startDate = event.start?.date || event.start?.dateTime?.slice(0, 10) || format(fallbackDate || new Date(), 'yyyy-MM-dd')
+  const rawEndDate = event.end?.date || event.end?.dateTime?.slice(0, 10) || startDate
+  const endDate = allDay ? addDays(rawEndDate, -1) : rawEndDate
+
+  return {
+    title: event.summary || '',
+    startDate,
+    endDate: endDate && endDate >= startDate ? endDate : startDate,
+    allDay,
+    startTime: allDay ? '' : event.start?.dateTime?.slice(11, 16) || '',
+    endTime: allDay ? '' : event.end?.dateTime?.slice(11, 16) || '',
+    memo: event.description || '',
+  }
+}
+
+export default function EventFormModal({ date, eventToEdit, error, saving, onClose, onSubmit }) {
+  const defaults = eventToDefaults(eventToEdit, date)
+  const isEditing = !!eventToEdit
 
   const handleSubmit = (event) => {
     event.preventDefault()
@@ -26,7 +63,9 @@ export default function EventFormModal({ date, error, saving, onClose, onSubmit 
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#1f4e5f]/45 sm:items-center">
       <div className="w-full max-w-md bg-[#f4f7f7] rounded-t-lg sm:rounded-lg shadow-xl border border-[#c9d6de]">
         <div className="flex items-center justify-between px-4 py-3 bg-[#dcebed] border-b border-[#c3dadd]">
-          <h2 className="text-base font-bold text-[#1f4e5f]">일정 추가</h2>
+          <h2 className="text-base font-bold text-[#1f4e5f]">
+            {isEditing ? '일정 수정' : '일정 추가'}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -50,6 +89,7 @@ export default function EventFormModal({ date, error, saving, onClose, onSubmit 
               name="title"
               required
               autoFocus
+              defaultValue={defaults.title}
               className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
               placeholder="일정 제목"
             />
@@ -57,21 +97,21 @@ export default function EventFormModal({ date, error, saving, onClose, onSubmit 
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="block text-xs font-bold text-[#55777b] mb-1">시작 일자</span>
+              <span className="block text-xs font-bold text-[#55777b] mb-1">시작 날짜</span>
               <input
                 type="date"
                 name="startDate"
-                defaultValue={dateValue}
+                defaultValue={defaults.startDate}
                 required
                 className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
               />
             </label>
             <label className="block">
-              <span className="block text-xs font-bold text-[#55777b] mb-1">종료 일자</span>
+              <span className="block text-xs font-bold text-[#55777b] mb-1">종료 날짜</span>
               <input
                 type="date"
                 name="endDate"
-                defaultValue={dateValue}
+                defaultValue={defaults.endDate}
                 required
                 className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
               />
@@ -82,7 +122,7 @@ export default function EventFormModal({ date, error, saving, onClose, onSubmit 
             <input
               type="checkbox"
               name="allDay"
-              defaultChecked
+              defaultChecked={defaults.allDay}
               className="h-4 w-4 rounded border-[#aacfd0] text-[#1f4e5f]"
             />
             종일
@@ -97,6 +137,7 @@ export default function EventFormModal({ date, error, saving, onClose, onSubmit 
                 inputMode="numeric"
                 pattern="^([01]\d|2[0-3]):[0-5]\d$"
                 placeholder="09:00"
+                defaultValue={defaults.startTime}
                 className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
               />
             </label>
@@ -108,6 +149,7 @@ export default function EventFormModal({ date, error, saving, onClose, onSubmit 
                 inputMode="numeric"
                 pattern="^([01]\d|2[0-3]):[0-5]\d$"
                 placeholder="10:00"
+                defaultValue={defaults.endTime}
                 className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
               />
             </label>
@@ -118,6 +160,7 @@ export default function EventFormModal({ date, error, saving, onClose, onSubmit 
             <textarea
               name="memo"
               rows={3}
+              defaultValue={defaults.memo}
               className="w-full resize-none rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
               placeholder="메모"
             />
