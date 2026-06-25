@@ -5,6 +5,8 @@ const KMA_SHORT_URL = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0
 const KMA_MID_URL = 'https://apis.data.go.kr/1360000/MidFcstInfoService'
 const RISE_SET_URL = 'https://apis.data.go.kr/B090041/openapi/service/RiseSetInfoService/getAreaRiseSetInfo'
 const ENABLE_RISE_SET_API = true
+const NATIONWIDE_FETCH_CONCURRENCY = 5
+const NATIONWIDE_BATCH_DELAY_MS = 350
 
 export const DEFAULT_WEATHER_LOCATION = {
   name: '마포구 상암동',
@@ -14,6 +16,25 @@ export const DEFAULT_WEATHER_LOCATION = {
   midTempRegId: '11B10101',
   riseSetLocation: '서울',
 }
+
+const NATIONWIDE_LOCATIONS = [
+  { city: '백령', nx: 21, ny: 135, x: 13, y: 29 },
+  { city: '서울', nx: 60, ny: 127, x: 38, y: 23 },
+  { city: '춘천', nx: 73, ny: 134, x: 49, y: 18 },
+  { city: '강릉', nx: 92, ny: 131, x: 70, y: 24 },
+  { city: '수원', nx: 60, ny: 121, x: 38, y: 31 },
+  { city: '청주', nx: 69, ny: 106, x: 49, y: 40 },
+  { city: '대전', nx: 67, ny: 100, x: 46, y: 49 },
+  { city: '전주', nx: 63, ny: 89, x: 39, y: 60 },
+  { city: '광주', nx: 58, ny: 74, x: 34, y: 71 },
+  { city: '목포', nx: 50, ny: 67, x: 25, y: 79 },
+  { city: '대구', nx: 89, ny: 90, x: 63, y: 63 },
+  { city: '울산', nx: 102, ny: 84, x: 75, y: 69 },
+  { city: '부산', nx: 98, ny: 76, x: 70, y: 76 },
+  { city: '여수', nx: 73, ny: 66, x: 51, y: 77 },
+  { city: '제주', nx: 52, ny: 38, x: 31, y: 92 },
+  { city: '울릉/독도', nx: 127, ny: 127, x: 88, y: 35 },
+]
 
 const SKY = {
   1: '맑음',
@@ -72,20 +93,29 @@ function latestMidTmFc() {
 }
 
 async function fetchJson(url) {
-  const response = await fetch(url)
-  const text = await response.text()
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const response = await fetch(url)
+    const text = await response.text()
 
-  if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}: ${text.slice(0, 180)}`)
+    if (response.status === 429 && attempt < 2) {
+      await wait(1200 * (attempt + 1))
+      continue
+    }
+
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}: ${text.slice(0, 180)}`)
+    }
+
+    const data = JSON.parse(text)
+    const header = data?.response?.header
+    if (header && header.resultCode !== '00') {
+      throw new Error(header.resultMsg || 'Weather API error')
+    }
+
+    return data
   }
 
-  const data = JSON.parse(text)
-  const header = data?.response?.header
-  if (header && header.resultCode !== '00') {
-    throw new Error(header.resultMsg || 'Weather API error')
-  }
-
-  return data
+  throw new Error('Weather API retry failed')
 }
 
 async function fetchText(url) {
@@ -97,6 +127,24 @@ async function fetchText(url) {
   }
 
   return text
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
+async function settle(name, promise) {
+  try {
+    return { status: 'fulfilled', value: await promise }
+  } catch (error) {
+    return {
+      status: 'rejected',
+      reason: error,
+      name,
+    }
+  }
 }
 
 function getItems(data) {
@@ -179,6 +227,24 @@ function buildDaily(rows) {
   })
 }
 
+function buildCityDaily(rows) {
+  return buildDaily(rows).map((day) => {
+    const dayRows = rows.filter((row) => row.date === day.date)
+    const amRow = dayRows.find((row) => Number(row.time) >= 600 && Number(row.time) < 1200) || dayRows[0]
+    const pmRow = dayRows.find((row) => Number(row.time) >= 1200 && Number(row.time) < 1800) || dayRows.find((row) => Number(row.time) >= 1200) || dayRows[0]
+    const amSummary = weatherSummary(amRow || {})
+    const pmSummary = weatherSummary(pmRow || {})
+
+    return {
+      ...day,
+      am: amSummary.text,
+      pm: pmSummary.text,
+      rnAm: amRow?.POP || day.pop,
+      rnPm: pmRow?.POP || day.pop,
+    }
+  })
+}
+
 function parseCurrent(items) {
   const current = {}
   items.forEach((item) => {
@@ -198,6 +264,65 @@ function parseCurrent(items) {
     sky: summary.text,
     icon: summary.icon,
   }
+}
+
+async function fetchCityWeather(location, baseTimes) {
+  const common = `serviceKey=${serviceKey()}&pageNo=1&numOfRows=1000&dataType=JSON&nx=${location.nx}&ny=${location.ny}`
+  const forecastResult = await settle(
+    `${location.city}.forecast`,
+    fetchJson(`${KMA_SHORT_URL}/getVilageFcst?${common}&base_date=${baseTimes.vilage.baseDate}&base_time=${baseTimes.vilage.baseTime}`)
+  )
+
+  const forecastData = settledValue(forecastResult, null)
+  const forecastRows = groupForecastItems(getItems(forecastData))
+  const nearestForecast = forecastRows[0] || {}
+  const currentSummary = weatherSummary(nearestForecast)
+
+  return {
+    ...location,
+    current: {
+      temp: nearestForecast.TMP || '-',
+      humidity: nearestForecast.REH || '-',
+      wind: nearestForecast.WSD || '-',
+      rain: nearestForecast.PCP || '0',
+      sky: currentSummary.text,
+      icon: currentSummary.icon,
+    },
+    daily: buildCityDaily(forecastRows),
+    apiErrors: [
+      settledError(`${location.city}.forecast`, forecastResult),
+    ].filter(Boolean),
+  }
+}
+
+async function fetchNationwideWeather(baseTimes) {
+  const cities = []
+  const apiErrors = []
+
+  for (let index = 0; index < NATIONWIDE_LOCATIONS.length; index += NATIONWIDE_FETCH_CONCURRENCY) {
+    const batch = NATIONWIDE_LOCATIONS.slice(index, index + NATIONWIDE_FETCH_CONCURRENCY)
+    const results = await Promise.allSettled(batch.map((location) => fetchCityWeather(location, baseTimes)))
+
+    results.forEach((result, batchIndex) => {
+      const location = batch[batchIndex]
+      if (result.status === 'fulfilled') {
+        cities.push(result.value)
+        apiErrors.push(...(result.value.apiErrors || []))
+        return
+      }
+
+      apiErrors.push({
+        source: `${location.city}.nationwide`,
+        message: result.reason?.message || String(result.reason),
+      })
+    })
+
+    if (index + NATIONWIDE_FETCH_CONCURRENCY < NATIONWIDE_LOCATIONS.length) {
+      await wait(NATIONWIDE_BATCH_DELAY_MS)
+    }
+  }
+
+  return { cities, apiErrors }
 }
 
 function buildMidTerm(landItem, tempItem) {
@@ -248,7 +373,8 @@ export async function fetchWeatherBundle(location = DEFAULT_WEATHER_LOCATION) {
 
   const commonShort = `serviceKey=${serviceKey()}&pageNo=1&numOfRows=1000&dataType=JSON&nx=${location.nx}&ny=${location.ny}`
 
-  const [currentResult, forecastResult, midLandResult, midTempResult, riseSetResult] = await Promise.allSettled([
+  const baseTimes = { ultra, vilage, mid: tmFc }
+  const [currentResult, forecastResult, midLandResult, midTempResult, riseSetResult, nationwideResult] = await Promise.allSettled([
     fetchJson(`${KMA_SHORT_URL}/getUltraSrtNcst?${commonShort}&base_date=${ultra.baseDate}&base_time=${ultra.baseTime}`),
     fetchJson(`${KMA_SHORT_URL}/getVilageFcst?${commonShort}&base_date=${vilage.baseDate}&base_time=${vilage.baseTime}`),
     fetchJson(`${KMA_MID_URL}/getMidLandFcst?serviceKey=${serviceKey()}&pageNo=1&numOfRows=10&dataType=JSON&regId=${location.midLandRegId}&tmFc=${tmFc}`),
@@ -256,6 +382,7 @@ export async function fetchWeatherBundle(location = DEFAULT_WEATHER_LOCATION) {
     ENABLE_RISE_SET_API
       ? fetchText(`${RISE_SET_URL}?serviceKey=${serviceKey()}&locdate=${today}&location=${encodeURIComponent(location.riseSetLocation)}`)
       : Promise.reject(new Error('RiseSetInfoService is disabled until API access is approved')),
+    fetchNationwideWeather(baseTimes),
   ])
 
   const currentData = settledValue(currentResult, null)
@@ -263,12 +390,15 @@ export async function fetchWeatherBundle(location = DEFAULT_WEATHER_LOCATION) {
   const midLandData = settledValue(midLandResult, null)
   const midTempData = settledValue(midTempResult, null)
   const riseSetXml = settledValue(riseSetResult, '')
+  const nationwide = settledValue(nationwideResult, { cities: [], apiErrors: [] })
   const apiErrors = [
     settledError('shortCurrent', currentResult),
     settledError('shortForecast', forecastResult),
     settledError('midLand', midLandResult),
     settledError('midTemp', midTempResult),
     settledError('sunriseSunset', riseSetResult),
+    settledError('nationwide', nationwideResult),
+    ...(nationwide.apiErrors || []),
   ].filter(Boolean)
 
   const forecastRows = groupForecastItems(getItems(forecastData))
@@ -284,6 +414,7 @@ export async function fetchWeatherBundle(location = DEFAULT_WEATHER_LOCATION) {
       mid: tmFc,
     },
     apiErrors,
+    nationwide,
     current: parseCurrent(getItems(currentData)),
     hourly: buildHourly(forecastRows),
     daily,

@@ -78,7 +78,7 @@ export default function CalendarPage() {
 
   return (
     <div className="flex flex-col h-full min-h-full bg-[#f4f7f7]">
-      {/*
+      {/* Intentionally hidden for now; Google Calendar connection UI will be restored when backend integration is enabled.
       {!connected && (
         <div className="flex items-center justify-between gap-3 bg-[#fff8df] border-b border-[#e7d79a] px-4 py-3">
           <p className="text-sm font-medium text-[#665a2b]">Google Calendar 연결이 필요합니다.</p>

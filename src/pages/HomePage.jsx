@@ -1,9 +1,20 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import AppLayout from '@/components/layout/AppLayout'
-import SummaryPage from '@/pages/SummaryPage'
-import CalendarPage from '@/pages/CalendarPage'
-import TodoPage from '@/pages/TodoPage'
-import WeatherPage from '@/pages/WeatherPage'
+
+const SummaryPage = lazy(() => import('@/pages/SummaryPage'))
+const CalendarPage = lazy(() => import('@/pages/CalendarPage'))
+const TodoPage = lazy(() => import('@/pages/TodoPage'))
+const WeatherPage = lazy(() => import('@/pages/WeatherPage'))
+const MemoPage = lazy(() => import('@/pages/MemoPage'))
+const EuphonyPage = lazy(() => import('@/pages/EuphonyPage'))
+
+function PageFallback() {
+  return (
+    <div className="flex min-h-full items-center justify-center bg-[#f4f7f7]">
+      <div className="h-8 w-8 rounded-full border-4 border-[#79a8a9] border-t-transparent animate-spin" />
+    </div>
+  )
+}
 
 export default function HomePage() {
   const [page, setPage] = useState('summary')
@@ -14,7 +25,8 @@ export default function HomePage() {
       case 'calendar': return <CalendarPage />
       case 'todo': return <TodoPage />
       case 'weather': return <WeatherPage />
-      case 'memo': return <div className="p-4 text-[#789094]">메모 준비 중...</div>
+      case 'memo': return <MemoPage />
+      case 'euphony': return <EuphonyPage />
       case 'settings': return <div className="p-4 text-[#789094]">설정 준비 중...</div>
       default: return <SummaryPage />
     }
@@ -22,7 +34,9 @@ export default function HomePage() {
 
   return (
     <AppLayout page={page} onPageChange={setPage}>
-      {renderPage()}
+      <Suspense fallback={<PageFallback />}>
+        {renderPage()}
+      </Suspense>
     </AppLayout>
   )
 }

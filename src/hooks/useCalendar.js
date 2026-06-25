@@ -12,6 +12,7 @@ import {
   updateEvent,
 } from '@/lib/googleCalendar'
 
+// Intentionally disabled for now; Google Calendar backend integration will be enabled later.
 const CALENDAR_BACKEND_ENABLED = false
 
 export function useCalendar() {

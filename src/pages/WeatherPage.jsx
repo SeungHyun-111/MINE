@@ -93,6 +93,11 @@ function todayLabel() {
   return format(new Date(), 'MM.dd', { locale: ko })
 }
 
+function formatFetchedAt(value) {
+  if (!value) return '-'
+  return format(new Date(value), 'M월 d일 HH:mm', { locale: ko })
+}
+
 function formatShortDate(date) {
   if (!date) return '-'
   return `${date.slice(4, 6)}.${date.slice(6, 8)}`
@@ -116,10 +121,77 @@ function mergeWeek(shortDaily = [], midTerm = []) {
       maxTemp: item.maxTemp,
       pop: item.rnAm || item.rnPm || '-',
       sky: item.am || item.pm || '-',
+      am: item.am,
+      pm: item.pm,
+      rnAm: item.rnAm,
+      rnPm: item.rnPm,
       source: 'mid',
     }))
 
   return [...shortDaily.map((item) => ({ ...item, source: 'short' })), ...midAsDaily].slice(0, 10)
+}
+
+function getPeriodForecast(day, selectedPeriod) {
+  if (!day) return null
+  if (selectedPeriod === '오전') {
+    return {
+      sky: day.am || day.sky || '-',
+      pop: day.rnAm || day.pop || '-',
+    }
+  }
+  if (selectedPeriod === '오후') {
+    return {
+      sky: day.pm || day.sky || '-',
+      pop: day.rnPm || day.pop || '-',
+    }
+  }
+  return {
+    sky: day.sky || day.am || day.pm || '-',
+    pop: day.pop || day.rnAm || day.rnPm || '-',
+  }
+}
+
+function getCityPeriodForecast(city, selectedDate, selectedPeriod) {
+  const day = city.daily?.find((item) => item.date === selectedDate)
+  const forecast = getPeriodForecast(day, selectedPeriod)
+  if (selectedPeriod === '현재') {
+    return {
+      sky: city.current?.sky || forecast?.sky || '-',
+      pop: forecast?.pop || '-',
+      temp: city.current?.temp,
+    }
+  }
+
+  return {
+    sky: forecast?.sky || city.current?.sky || '-',
+    pop: forecast?.pop || '-',
+    temp: null,
+    minTemp: day?.minTemp,
+    maxTemp: day?.maxTemp,
+  }
+}
+
+function parseSunTime(value) {
+  if (!/^\d{4}$/.test(value || '')) return null
+  return Number(value.slice(0, 2)) * 60 + Number(value.slice(2, 4))
+}
+
+function sunArcPosition(sunrise, sunset) {
+  const start = parseSunTime(sunrise)
+  const end = parseSunTime(sunset)
+  if (start == null || end == null || end <= start) {
+    return { x: 120, y: 52 }
+  }
+
+  const now = new Date()
+  const current = now.getHours() * 60 + now.getMinutes()
+  const progress = Math.min(Math.max((current - start) / (end - start), 0), 1)
+  const angle = Math.PI * (1 - progress)
+
+  return {
+    x: 120 + Math.cos(angle) * 108,
+    y: 98 - Math.sin(angle) * 86,
+  }
 }
 
 function MetricBox({ label, value, sub, accent = false }) {
@@ -245,19 +317,14 @@ function WeeklyForecast({ daily, selectedDate, onSelectDate }) {
   )
 }
 
-function NationwideWeather({ daily, selectedDate, selectedPeriod, onSelectDate, onSelectPeriod }) {
+function NationwideWeather({ daily, nationwide, selectedDate, selectedPeriod, onSelectDate, onSelectPeriod }) {
   const tabs = daily.slice(0, 7)
   const today = daily[0]?.date
   const isToday = !selectedDate || selectedDate === today
   const selectedDay = daily.find(d => d.date === selectedDate)
-
-  const mapCities = isToday
-    ? CITY_WEATHER
-    : CITY_WEATHER.map(city => ({
-        ...city,
-        tone: selectedDay ? weatherTone(selectedDay.sky || '') : city.tone,
-        temp: null,
-      }))
+  const cities = nationwide?.cities?.length ? nationwide.cities : CITY_WEATHER
+  const periods = isToday ? ['현재', '오전', '오후'] : ['오전', '오후']
+  const activePeriod = periods.includes(selectedPeriod) ? selectedPeriod : periods[0]
 
   return (
     <section className="bg-white px-6 py-6 xl:px-8">
@@ -267,7 +334,10 @@ function NationwideWeather({ daily, selectedDate, selectedPeriod, onSelectDate, 
           <button
             type="button"
             key={`tab_${item.date}`}
-            onClick={() => onSelectDate(item.date)}
+            onClick={() => {
+              onSelectDate(item.date)
+              if (item.date !== today && selectedPeriod === '현재') onSelectPeriod('오전')
+            }}
             className={selectedDate === item.date ? 'font-black text-[#1578ff]' : 'font-bold text-[#57616a] hover:text-[#1578ff]'}
           >
             <p>{weekdayFromDate(item.date)}</p>
@@ -277,12 +347,12 @@ function NationwideWeather({ daily, selectedDate, selectedPeriod, onSelectDate, 
       </div>
       <div className="mt-4 rounded-md bg-[#7fc1ea] p-3">
         <div className="mb-2 inline-flex overflow-hidden rounded bg-white text-xs font-black">
-          {['현재', '오전', '오후'].map((label) => (
+          {periods.map((label) => (
             <button
               type="button"
               key={label}
               onClick={() => onSelectPeriod(label)}
-              className={`px-3 py-2 ${selectedPeriod === label ? 'bg-[#4aa9ef] text-white' : 'text-[#5f6870] hover:bg-[#eef7ff]'}`}
+              className={`px-3 py-2 ${activePeriod === label ? 'bg-[#4aa9ef] text-white' : 'text-[#5f6870] hover:bg-[#eef7ff]'}`}
             >
               {label}
             </button>
@@ -294,20 +364,35 @@ function NationwideWeather({ daily, selectedDate, selectedPeriod, onSelectDate, 
             alt=""
             className="absolute inset-0 h-full w-full object-contain opacity-95 drop-shadow-sm"
           />
-          {mapCities.map((item) => (
-            <div
-              key={item.city}
-              className="absolute -translate-x-1/2 -translate-y-1/2 text-center"
-              style={{ left: `${item.x}%`, top: `${item.y}%` }}
-            >
-              <div className="flex scale-90 justify-center drop-shadow-sm">
-                <WeatherIcon tone={item.tone} size="sm" />
+          {cities.map((item) => {
+            const cityForecast = getCityPeriodForecast(item, selectedDay?.date || today, activePeriod)
+            const tone = item.tone || weatherTone(cityForecast.sky)
+            const tempLabel = cityForecast.temp != null
+              ? `${cityForecast.temp}°`
+              : cityForecast.minTemp && cityForecast.maxTemp
+                ? `${cityForecast.minTemp}/${cityForecast.maxTemp}°`
+                : ''
+
+            return (
+              <div
+                key={item.city}
+                className="absolute -translate-x-1/2 -translate-y-1/2 text-center"
+                style={{ left: `${item.x}%`, top: `${item.y}%` }}
+              >
+                <div className="flex scale-90 justify-center drop-shadow-sm">
+                  <WeatherIcon tone={tone} size="sm" />
+                </div>
+                <p className="whitespace-nowrap rounded bg-white/75 px-1 text-[9px] font-black leading-tight text-[#173f4e] shadow-sm">
+                  {item.city}{tempLabel ? ` ${tempLabel}` : ''}
+                </p>
               </div>
-              <p className="whitespace-nowrap rounded bg-white/70 px-1 text-[9px] font-black leading-tight text-[#173f4e] shadow-sm">
-                {item.city}{item.temp != null ? ` ${item.temp}°` : ''}
-              </p>
+            )
+          })}
+          {!nationwide?.cities?.length && (
+            <div className="absolute inset-x-6 bottom-4 rounded-md border border-white/70 bg-white/90 px-3 py-2 text-center text-[11px] font-bold text-[#4c6d7d] shadow-sm">
+              전국 데이터 갱신 전입니다. 새로고침하면 주요 지점별 예보를 불러옵니다.
             </div>
-          ))}
+          )}
         </div>
       </div>
       <p className="mt-3 text-xs text-[#54728b]">기상청 발표, 웨더아이 제공</p>
@@ -318,15 +403,17 @@ function NationwideWeather({ daily, selectedDate, selectedPeriod, onSelectDate, 
 function SunTimeline({ sunriseSunset }) {
   const sunrise = sunriseSunset.sunrise || '-'
   const sunset = sunriseSunset.sunset || '-'
+  const sun = sunArcPosition(sunrise, sunset)
+  const remainingPath = `M${sun.x.toFixed(1)} ${sun.y.toFixed(1)} A108 86 0 0 1 228 98`
 
   return (
     <section className="border-t border-[#e5e5e5] bg-white px-6 py-7 xl:px-6">
       <h2 className="mb-4 text-xl font-black text-black">일출일몰</h2>
       <div className="relative mx-auto h-[180px] max-w-[300px]">
         <svg className="absolute inset-x-0 top-0 mx-auto h-[110px] w-[240px]" viewBox="0 0 240 110" aria-hidden="true">
-          <path d="M12 98 A141 141 0 0 1 228 98" fill="none" stroke="#f6b000" strokeWidth="5" strokeLinecap="round" />
-          <path d="M157 52 A141 141 0 0 1 228 98" fill="none" stroke="#cdd2d7" strokeWidth="2" strokeDasharray="5 5" strokeLinecap="round" />
-          <circle cx="157" cy="52" r="10" fill="#ffc21a" stroke="#ffd36a" strokeWidth="4" />
+          <path d="M12 98 A108 86 0 0 1 228 98" fill="none" stroke="#f6b000" strokeWidth="5" strokeLinecap="round" />
+          <path d={remainingPath} fill="none" stroke="#cdd2d7" strokeWidth="2" strokeDasharray="5 5" strokeLinecap="round" />
+          <circle cx={sun.x} cy={sun.y} r="10" fill="#ffc21a" stroke="#ffd36a" strokeWidth="4" />
         </svg>
         <p className="absolute left-0 right-0 top-[64px] text-center text-sm font-black text-[#3d464e]">
           오늘<span className="ml-1 text-xs font-bold text-[#87909a]">{todayLabel()}</span>
@@ -366,6 +453,7 @@ export default function WeatherPage() {
   const { weather, loading, cacheLoading, error, saveStatus, forceRefresh, nextRefreshAt } = useWeather()
   const hourly = weather?.hourly || []
   const daily = mergeWeek(weather?.daily || [], weather?.midTerm || [])
+  const nationwide = weather?.nationwide
   const current = weather?.current
   const tomorrow = daily[1]
   const sunriseSunset = weather?.sunriseSunset || {}
@@ -379,6 +467,7 @@ export default function WeatherPage() {
   const activeDate = selectedDate || daily[0]?.date || ''
 
   return (
+    // Intentionally deferring broader WeatherPage region/CSS cleanup for a later layout pass.
     <div data-weather-page className="min-h-full overflow-x-hidden bg-white text-[#202124]">
       <div className="mx-auto flex min-h-full w-full max-w-[1600px] border-x border-[#e0e0e0] bg-white">
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 xl:px-12">
@@ -440,6 +529,9 @@ export default function WeatherPage() {
               </button>
               <p className="mt-1 text-[11px] font-bold text-[#8c969e]">
                 RTDB {saveStatus === 'saving' ? '저장 중' : saveStatus === 'saved' ? '저장 완료' : saveStatus === 'error' ? '저장 실패' : '대기'}
+              </p>
+              <p className="text-[11px] font-bold text-[#8c969e]">
+                마지막 갱신 {formatFetchedAt(weather?.fetchedAt)}
               </p>
             </div>
           </div>
@@ -521,6 +613,7 @@ export default function WeatherPage() {
         <aside className="hidden w-[320px] shrink-0 border-l border-[#d9dee3] xl:block">
           <NationwideWeather
             daily={daily}
+            nationwide={nationwide}
             selectedDate={activeDate}
             selectedPeriod={selectedPeriod}
             onSelectDate={setSelectedDate}
@@ -533,6 +626,7 @@ export default function WeatherPage() {
       <div className="xl:hidden">
         <NationwideWeather
           daily={daily}
+          nationwide={nationwide}
           selectedDate={activeDate}
           selectedPeriod={selectedPeriod}
           onSelectDate={setSelectedDate}

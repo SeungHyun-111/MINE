@@ -1,16 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { onValue, ref, serverTimestamp, set, update } from 'firebase/database'
+import { onValue, ref, serverTimestamp, set } from 'firebase/database'
 import { db } from '@/lib/firebase'
-import { useAuth } from '@/hooks/useAuth'
 import { DEFAULT_WEATHER_LOCATION, fetchWeatherBundle } from '@/lib/weatherApi'
 
 const WEATHER_REFRESH_INTERVAL_MS = 8 * 60 * 60 * 1000
+const GLOBAL_WEATHER_PATH = 'weather/global/latest'
 
 function fetchedTime(value) {
   if (!value) return 0
   if (typeof value === 'number') return value
   if (typeof value === 'string') return new Date(value).getTime()
   return 0
+}
+
+function isWeatherStale(weather) {
+  const latestTime = fetchedTime(weather?.fetchedAt)
+  return !latestTime || !weather?.nationwide?.cities?.length || Date.now() - latestTime >= WEATHER_REFRESH_INTERVAL_MS
 }
 
 // Firebase RTDB stores arrays as numeric-keyed objects; normalize back to arrays
@@ -27,11 +32,17 @@ function normalizeWeather(data) {
     hourly: toArray(data.hourly),
     daily: toArray(data.daily),
     midTerm: toArray(data.midTerm),
+    nationwide: data.nationwide ? {
+      ...data.nationwide,
+      cities: toArray(data.nationwide.cities).map((city) => ({
+        ...city,
+        daily: toArray(city.daily),
+      })),
+    } : data.nationwide,
   }
 }
 
 export function useWeather() {
-  const { user } = useAuth()
   const [weather, setWeather] = useState(null)
   const [loading, setLoading] = useState(false)
   const [cacheLoading, setCacheLoading] = useState(true)
@@ -41,17 +52,14 @@ export function useWeather() {
   const refreshInFlight = useRef(false)
   const autoRefreshStarted = useRef(false)
 
-  const basePath = useMemo(() => (user ? `users/${user.uid}` : null), [user])
-  const latestRef = useMemo(() => (basePath ? ref(db, `${basePath}/weather/latest`) : null), [basePath])
+  const latestRef = useMemo(() => ref(db, GLOBAL_WEATHER_PATH), [])
 
   useEffect(() => {
-    if (!latestRef) {
-      setWeather(null)
-      setCacheLoading(false)
-      setCacheChecked(true)
-      return undefined
-    }
+    autoRefreshStarted.current = false
+    setCacheChecked(false)
+  }, [])
 
+  useEffect(() => {
     setCacheLoading(true)
     return onValue(
       latestRef,
@@ -73,7 +81,6 @@ export function useWeather() {
   }, [latestRef])
 
   const refresh = useCallback(async ({ force = false } = {}) => {
-    if (!basePath || !latestRef) return null
     if (refreshInFlight.current) return null
 
     const latestTime = fetchedTime(weather?.fetchedAt)
@@ -97,7 +104,7 @@ export function useWeather() {
         updatedAt: serverTimestamp(),
       }
 
-      // weather/latest 하나만 저장 — 읽는 곳도 여기뿐
+      // Shared weather cache: weather/global/latest
       await set(latestRef, payload)
 
       setWeather(normalizeWeather({ ...payload, updatedAt: fetchedAt }))
@@ -113,10 +120,10 @@ export function useWeather() {
       refreshInFlight.current = false
       setLoading(false)
     }
-  }, [basePath, latestRef, weather])
+  }, [latestRef, weather])
 
   useEffect(() => {
-    if (cacheChecked && !weather && !loading && !error && !autoRefreshStarted.current) {
+    if (cacheChecked && !loading && !error && !autoRefreshStarted.current && isWeatherStale(weather)) {
       autoRefreshStarted.current = true
       refresh()
     }

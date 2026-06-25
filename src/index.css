@@ -46,3 +46,21 @@ body {
   background: #aab3bb;
   border-radius: 999px;
 }
+
+.memo-roll-y {
+  animation: memo-roll-y 18s linear infinite;
+}
+
+.memo-roll-y:hover {
+  animation-play-state: paused;
+}
+
+@keyframes memo-roll-y {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-50%);
+  }
+}

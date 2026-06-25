@@ -41,9 +41,10 @@ export function useTodos() {
 
   const paths = useMemo(() => {
     if (!user) return null
+    const pagePath = `users/${user.uid}/pages/todo`
     return {
-      sections: `users/${user.uid}/todoSections`,
-      todos: `users/${user.uid}/todos`,
+      sections: `${pagePath}/sections`,
+      todos: `${pagePath}/items`,
     }
   }, [user])
 
@@ -128,11 +129,28 @@ export function useTodos() {
     })
   }, [paths])
 
-  const toggleTodo = useCallback(async (todo) => {
-    const completed = !todo.completed
+  const advanceTodo = useCallback(async (todo) => {
+    const sectionId = todo.sectionId || 'todo'
+
+    if (sectionId === 'todo') {
+      await updateTodo(todo.id, {
+        completed: false,
+        sectionId: 'doing',
+      })
+      return
+    }
+
+    if (sectionId === 'doing') {
+      await updateTodo(todo.id, {
+        completed: true,
+        sectionId: 'done',
+      })
+      return
+    }
+
     await updateTodo(todo.id, {
-      completed,
-      sectionId: completed ? 'done' : 'todo',
+      calendarReady: true,
+      calendarReadyAt: serverTimestamp(),
     })
   }, [updateTodo])
 
@@ -148,7 +166,7 @@ export function useTodos() {
     error,
     addTodo,
     updateTodo,
-    toggleTodo,
+    advanceTodo,
     removeTodo,
     todayString,
     addDays,

@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { addDays, format, isSameDay, startOfWeek } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { CalendarRange, Check, Plus, Trash2 } from 'lucide-react'
+import { CalendarRange, Check, Plus, Trash2, X } from 'lucide-react'
 import { useTodos } from '@/hooks/useTodos'
 
 const PRIORITIES = {
@@ -24,12 +24,11 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max)
 }
 
-function TodoForm({ sections, onSubmit }) {
-  const today = toDateString(new Date())
+function TodoAddModal({ sections, initialValues, onClose, onSubmit }) {
   const [title, setTitle] = useState('')
-  const [startDate, setStartDate] = useState(today)
-  const [endDate, setEndDate] = useState(today)
-  const [sectionId, setSectionId] = useState('todo')
+  const [startDate, setStartDate] = useState(initialValues?.startDate || toDateString(new Date()))
+  const [endDate, setEndDate] = useState(initialValues?.endDate || initialValues?.startDate || toDateString(new Date()))
+  const [sectionId, setSectionId] = useState(initialValues?.sectionId || 'todo')
   const [priority, setPriority] = useState('medium')
 
   const handleSubmit = async (event) => {
@@ -43,62 +42,129 @@ function TodoForm({ sections, onSubmit }) {
       sectionId,
       priority,
     })
-
-    setTitle('')
-    setStartDate(today)
-    setEndDate(today)
-    setSectionId('todo')
-    setPriority('medium')
+    onClose()
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-2 md:grid-cols-[1fr_140px_140px_120px_110px_auto]">
-      <input
-        value={title}
-        onChange={(event) => setTitle(event.target.value)}
-        placeholder="할 일 추가"
-        className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
-      />
-      <input
-        type="date"
-        value={startDate}
-        onChange={(event) => setStartDate(event.target.value)}
-        className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
-      />
-      <input
-        type="date"
-        value={endDate}
-        onChange={(event) => setEndDate(event.target.value)}
-        className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
-      />
-      <select
-        value={sectionId}
-        onChange={(event) => setSectionId(event.target.value)}
-        className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9]"
-      >
-        {sections.map((section) => (
-          <option key={section.id} value={section.id}>{section.title}</option>
-        ))}
-      </select>
-      <select
-        value={priority}
-        onChange={(event) => setPriority(event.target.value)}
-        className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9]"
-      >
-        {Object.entries(PRIORITIES).map(([key, item]) => (
-          <option key={key} value={key}>{item.label}</option>
-        ))}
-      </select>
-      <button className="flex items-center justify-center gap-1.5 rounded-lg bg-[#1f4e5f] px-4 py-2 text-sm font-bold text-white hover:bg-[#173f4e]">
-        <Plus size={16} />
-        추가
-      </button>
-    </form>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#1f4e5f]/45 px-3 sm:items-center">
+      <div className="w-full max-w-md rounded-t-lg border border-[#c9d6de] bg-[#f4f7f7] shadow-xl sm:rounded-lg">
+        <div className="flex items-center justify-between border-b border-[#c3dadd] bg-[#dcebed] px-4 py-3">
+          <h2 className="text-base font-bold text-[#1f4e5f]">할 일 추가</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-2 text-[#55777b] hover:bg-[#cfe1e4] hover:text-[#1f4e5f]"
+            aria-label="닫기"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3 p-4">
+          <input
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            autoFocus
+            placeholder="할 일 제목"
+            className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
+          />
+
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(event) => setStartDate(event.target.value)}
+              className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9]"
+            />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(event) => setEndDate(event.target.value)}
+              className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9]"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={sectionId}
+              onChange={(event) => setSectionId(event.target.value)}
+              className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9]"
+            >
+              {sections.map((section) => (
+                <option key={section.id} value={section.id}>{section.title}</option>
+              ))}
+            </select>
+            <select
+              value={priority}
+              onChange={(event) => setPriority(event.target.value)}
+              className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9]"
+            >
+              {Object.entries(PRIORITIES).map(([key, item]) => (
+                <option key={key} value={key}>{item.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-[#55777b] hover:bg-[#e1edef]"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f4e5f] px-4 py-2 text-sm font-bold text-white hover:bg-[#173f4e]"
+            >
+              <Plus size={16} />
+              추가
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   )
 }
 
-function GanttChart({ sections, todos }) {
+function ganttBarClass(todo, todayString) {
+  if (todo.completed || todo.sectionId === 'done') {
+    return 'bg-[#c8d8d9] text-[#55777b] line-through'
+  }
+  if ((todo.endDate || todo.startDate) < todayString) {
+    return 'bg-[#b94a48] text-white'
+  }
+  if (todo.sectionId === 'doing') {
+    return 'bg-[#2563eb] text-white'
+  }
+  return 'bg-[#1f4e5f] text-white'
+}
+
+function displayEndDate(todo, todayString) {
+  const start = todo.startDate || todayString
+  const end = todo.endDate || start
+  if (
+    !todo.completed &&
+    todo.sectionId !== 'done' &&
+    start <= todayString &&
+    end < todayString
+  ) {
+    return todayString
+  }
+
+  return end
+}
+
+function nextTodoAction(todo) {
+  const sectionId = todo.sectionId || 'todo'
+  if (sectionId === 'todo') return '진행중으로 이동'
+  if (sectionId === 'doing') return '완료로 이동'
+  return todo.calendarReady ? '캘린더 반영 대기 중' : '캘린더 반영 표시'
+}
+
+function GanttChart({ sections, todos, onCellDoubleClick }) {
   const today = new Date()
+  const todayString = toDateString(today)
   const rangeStart = startOfWeek(today, { weekStartsOn: 0 })
   const days = Array.from({ length: 14 }, (_, index) => addDays(rangeStart, index))
   const rangeStartString = toDateString(rangeStart)
@@ -150,6 +216,8 @@ function GanttChart({ sections, todos }) {
 
           {sections.map((section) => {
             const sectionTodos = todosBySection[section.id] || []
+            const laneCount = Math.max(sectionTodos.length, 1)
+            const rowHeight = 20 + laneCount * 34
 
             return (
               <div
@@ -160,27 +228,41 @@ function GanttChart({ sections, todos }) {
                   {section.title}
                 </div>
                 <div
-                  className="relative min-h-[74px] bg-white"
+                  className="relative bg-white"
                   style={{
                     backgroundImage: 'linear-gradient(to right, #e3ecee 1px, transparent 1px)',
                     backgroundSize: 'calc(100% / 14) 100%',
+                    minHeight: rowHeight,
                   }}
                 >
+                  <div className="absolute inset-0 grid grid-cols-[repeat(14,minmax(0,1fr))]">
+                    {days.map((day) => (
+                      <button
+                        type="button"
+                        key={`${section.id}_${day.toISOString()}`}
+                        onDoubleClick={() => onCellDoubleClick({
+                          sectionId: section.id,
+                          startDate: toDateString(day),
+                          endDate: toDateString(day),
+                        })}
+                        className="border-l border-transparent hover:bg-[#eef7f7]/70"
+                        aria-label={`${section.title} ${format(day, 'M월 d일', { locale: ko })} 할 일 추가`}
+                      />
+                    ))}
+                  </div>
                   {sectionTodos.map((todo, index) => {
                     const startOffset = clamp(diffDays(rangeStartString, todo.startDate || rangeStartString), 0, 13)
-                    const endOffset = clamp(diffDays(rangeStartString, todo.endDate || todo.startDate || rangeStartString), 0, 13)
+                    const endOffset = clamp(diffDays(rangeStartString, displayEndDate(todo, todayString)), 0, 13)
                     const span = Math.max(endOffset - startOffset + 1, 1)
 
                     return (
                       <div
                         key={todo.id}
-                        className={`absolute h-7 rounded-md px-2 text-xs font-semibold leading-7 truncate shadow-sm ${
-                          todo.completed ? 'bg-[#c8d8d9] text-[#55777b] line-through' : 'bg-[#1f4e5f] text-white'
-                        }`}
+                        className={`pointer-events-none absolute h-7 rounded-md px-2 text-xs font-semibold leading-7 truncate shadow-sm ${ganttBarClass(todo, todayString)}`}
                         style={{
                           left: `calc(${startOffset} * 100% / 14 + 4px)`,
                           width: `calc(${span} * 100% / 14 - 8px)`,
-                          top: 10 + (index % 2) * 34,
+                          top: 10 + index * 34,
                         }}
                       >
                         {todo.title}
@@ -197,7 +279,7 @@ function GanttChart({ sections, todos }) {
   )
 }
 
-function TodoList({ sections, todos, onToggle, onUpdate, onRemove }) {
+function TodoList({ sections, todos, onAdvance, onUpdate, onRemove }) {
   const todosBySection = todos.reduce((acc, todo) => {
     const key = todo.sectionId || 'todo'
     if (!acc[key]) acc[key] = []
@@ -229,11 +311,12 @@ function TodoList({ sections, todos, onToggle, onUpdate, onRemove }) {
                   {sectionTodos.map((todo) => (
                     <li key={todo.id} className="flex items-center gap-2 rounded-lg border border-[#e0eaec] bg-[#fbfdfd] px-3 py-2">
                       <button
-                        onClick={() => onToggle(todo)}
+                        onClick={() => onAdvance(todo)}
                         className={`flex h-6 w-6 items-center justify-center rounded-full border ${
-                          todo.completed ? 'bg-[#1f4e5f] border-[#1f4e5f] text-white' : 'border-[#aacfd0] text-transparent'
+                          todo.completed || todo.sectionId === 'done' ? 'bg-[#1f4e5f] border-[#1f4e5f] text-white' : 'border-[#aacfd0] text-transparent hover:text-[#1f4e5f]'
                         }`}
-                        aria-label="완료 토글"
+                        title={nextTodoAction(todo)}
+                        aria-label={nextTodoAction(todo)}
                       >
                         <Check size={14} />
                       </button>
@@ -248,6 +331,11 @@ function TodoList({ sections, todos, onToggle, onUpdate, onRemove }) {
                         />
                         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[#789094]">
                           <span>{todo.startDate} - {todo.endDate}</span>
+                          {todo.calendarReady && (
+                            <span className="rounded-full bg-[#fff2df] px-2 py-0.5 font-bold text-[#7a4a10]">
+                              캘린더 반영 대기
+                            </span>
+                          )}
                           <span className={`rounded-full px-2 py-0.5 font-bold ${PRIORITIES[todo.priority || 'medium'].className}`}>
                             {PRIORITIES[todo.priority || 'medium'].label}
                           </span>
@@ -284,13 +372,14 @@ function TodoList({ sections, todos, onToggle, onUpdate, onRemove }) {
 }
 
 export default function TodoPage() {
-  const { sections, todos, loading, error, addTodo, updateTodo, toggleTodo, removeTodo } = useTodos()
+  const { sections, todos, loading, error, addTodo, updateTodo, advanceTodo, removeTodo } = useTodos()
+  const [addModal, setAddModal] = useState(null)
 
   return (
     <div className="min-h-full bg-[#f4f7f7] p-4 md:p-6">
       <div className="mb-4">
         <h1 className="text-xl font-bold text-[#1f4e5f]">Todo</h1>
-        <p className="text-sm text-[#55777b]">위에서 기간을 보고, 아래에서 바로 정리합니다.</p>
+        <p className="text-sm text-[#55777b]">간트 차트의 날짜 셀을 더블클릭해 할 일을 추가합니다.</p>
       </div>
 
       {error && (
@@ -300,10 +389,6 @@ export default function TodoPage() {
       )}
 
       <div className="space-y-4">
-        <div className="bg-[#e8f1f2] border border-[#c8dadc] rounded-lg p-3 shadow-sm">
-          <TodoForm sections={sections} onSubmit={addTodo} />
-        </div>
-
         {loading && (
           <div className="flex items-center gap-2 rounded-lg border border-[#c8dadc] bg-white px-3 py-2 text-sm font-medium text-[#55777b]">
             <div className="w-4 h-4 border-2 border-[#79a8a9] border-t-transparent rounded-full animate-spin" />
@@ -311,15 +396,24 @@ export default function TodoPage() {
           </div>
         )}
 
-        <GanttChart sections={sections} todos={todos} />
+        <GanttChart sections={sections} todos={todos} onCellDoubleClick={setAddModal} />
         <TodoList
           sections={sections}
           todos={todos}
-          onToggle={toggleTodo}
+          onAdvance={advanceTodo}
           onUpdate={updateTodo}
           onRemove={removeTodo}
         />
       </div>
+
+      {addModal && (
+        <TodoAddModal
+          sections={sections}
+          initialValues={addModal}
+          onClose={() => setAddModal(null)}
+          onSubmit={addTodo}
+        />
+      )}
     </div>
   )
 }
