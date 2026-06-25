@@ -11,7 +11,7 @@ export default function LoginPage() {
         <p className="text-gray-500 text-sm mb-8">모바일과 PC에서 함께 쓰는 일정 앱</p>
 
         <button
-          onClick={login}
+          onClick={() => login()}
           className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl px-4 py-3 text-gray-700 font-medium hover:bg-gray-50 active:bg-gray-100 transition-colors"
         >
           <GoogleIcon />

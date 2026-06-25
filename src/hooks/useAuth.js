@@ -3,7 +3,6 @@ import {
   getRedirectResult,
   onAuthStateChanged,
   signInWithPopup,
-  signInWithRedirect,
   signOut,
 } from 'firebase/auth'
 import { auth, createGoogleProvider } from '@/lib/firebase'
@@ -37,13 +36,9 @@ export function useAuth() {
     const provider = createGoogleProvider({ forceConsent: forceAccountSelect })
 
     try {
-      if (import.meta.env.DEV) {
-        const result = await signInWithPopup(auth, provider)
-        setUser(result.user)
-        return result
-      }
-
-      return signInWithRedirect(auth, provider)
+      const result = await signInWithPopup(auth, provider)
+      setUser(result.user)
+      return result
     } catch (error) {
       console.error(error)
       setLoading(false)
