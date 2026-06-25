@@ -8,6 +8,7 @@ const WeatherPage = lazy(() => import('@/pages/WeatherPage'))
 const MemoPage = lazy(() => import('@/pages/MemoPage'))
 const EuphonyPage = lazy(() => import('@/pages/EuphonyPage'))
 const RoutinePage = lazy(() => import('@/pages/RoutinePage'))
+const NewsPage = lazy(() => import('@/pages/NewsPage'))
 
 function PageFallback() {
   return (
@@ -29,6 +30,7 @@ export default function HomePage() {
       case 'memo': return <MemoPage />
       case 'routine': return <RoutinePage />
       case 'euphony': return <EuphonyPage />
+      case 'news': return <NewsPage />
       case 'settings': return <div className="p-4 text-[#789094]">설정 준비 중...</div>
       default: return <SummaryPage />
     }
