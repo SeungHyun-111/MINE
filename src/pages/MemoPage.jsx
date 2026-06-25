@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, FileText, Plus, Trash2, X } from 'lucide-react'
-import { MEMO_STAGES, useMemos } from '@/hooks/useMemos'
+import { MEMO_PRIORITIES, MEMO_STAGES, useMemos } from '@/hooks/useMemos'
 
 function formatLogTime(value) {
   if (!value) return '-'
@@ -28,6 +28,10 @@ function stageMeta(stageId) {
 
 function stageValue(stageId) {
   return stageId === 'review' ? 'progress' : stageId || 'pending'
+}
+
+function priorityMeta(priorityId) {
+  return MEMO_PRIORITIES.find((p) => p.id === priorityId) || null
 }
 
 function StatusBoard({ memos, onSelect }) {
@@ -112,15 +116,17 @@ function MemoForm({ onSubmit }) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [stage, setStage] = useState('pending')
+  const [priority, setPriority] = useState('')
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    if (!content.trim()) return
+    if (!title.trim() && !content.trim()) return
 
-    await onSubmit({ title, content, stage })
+    await onSubmit({ title, content, stage, priority })
     setTitle('')
     setContent('')
     setStage('pending')
+    setPriority('')
   }
 
   return (
@@ -145,6 +151,16 @@ function MemoForm({ onSubmit }) {
           className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm font-bold text-[#1f4e5f] outline-none"
         >
           {MEMO_STAGES.map((item) => (
+            <option key={item.id} value={item.id}>{item.label}</option>
+          ))}
+        </select>
+        <select
+          value={priority}
+          onChange={(event) => setPriority(event.target.value)}
+          className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm font-bold text-[#1f4e5f] outline-none"
+        >
+          <option value="">우선순위</option>
+          {MEMO_PRIORITIES.map((item) => (
             <option key={item.id} value={item.id}>{item.label}</option>
           ))}
         </select>
@@ -205,6 +221,17 @@ function MemoEditor({ memo, onUpdate, onRemove }) {
           className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm font-bold text-[#1f4e5f] outline-none"
         >
           {MEMO_STAGES.map((item) => (
+            <option key={item.id} value={item.id}>{item.label}</option>
+          ))}
+        </select>
+
+        <select
+          value={memo.priority || ''}
+          onChange={(event) => onUpdate(memo, { priority: event.target.value })}
+          className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm font-bold text-[#1f4e5f] outline-none"
+        >
+          <option value="">우선순위 없음</option>
+          {MEMO_PRIORITIES.map((item) => (
             <option key={item.id} value={item.id}>{item.label}</option>
           ))}
         </select>
@@ -287,7 +314,14 @@ export default function MemoPage() {
                             <option key={item.id} value={item.id}>{item.label}</option>
                           ))}
                         </select>
-                        <p className="truncate text-sm font-black leading-relaxed text-[#304852]">{memo.title || '(제목 없음)'}</p>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          {memo.priority && priorityMeta(memo.priority) && (
+                            <span className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-black ${priorityMeta(memo.priority).tone}`}>
+                              {priorityMeta(memo.priority).label}
+                            </span>
+                          )}
+                          <p className="truncate text-sm font-black leading-relaxed text-[#304852]">{memo.title || '(제목 없음)'}</p>
+                        </div>
                         <p className="truncate text-xs font-medium leading-relaxed text-[#789094]">{memo.content}</p>
                       </div>
                     </button>

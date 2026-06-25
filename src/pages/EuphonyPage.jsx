@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { MoreVertical, Plus } from 'lucide-react'
 import backgroundImage from '../../e88d2de1f6d41bb9d5cd335cd9a5f0a0.jpg'
 import { useEuphony } from '@/hooks/useEuphony'
@@ -57,6 +57,7 @@ function EditableField({ value, className, multiline = false, rows = 1, placehol
           }
         }}
         autoFocus
+        size={Math.max((draft || placeholder || '').length + 1, 4)}
         className={`${inputClass} px-2 py-1`}
         placeholder={placeholder}
       />
@@ -146,12 +147,20 @@ function HighlightCard({ highlight, onUpdate, onRemove }) {
           className="shrink-0 text-xs font-bold text-[#395f5b]"
           placeholder="날짜"
         />
-        <EditableField
-          value={highlight.bookTitle || ''}
-          onSave={(value) => onUpdate(highlight.id, { bookTitle: value })}
-          placeholder="책 제목"
-          className="w-40 rounded-md border border-white/40 bg-white/20 px-3 py-1.5 text-right text-xs font-bold text-[#1f3f3b] placeholder:text-[#557b76]"
-        />
+        <div className="flex min-w-0 items-center gap-1.5">
+          <EditableField
+            value={highlight.author || ''}
+            onSave={(value) => onUpdate(highlight.id, { author: value })}
+            placeholder="저자"
+            className="rounded-md border border-white/40 bg-white/20 px-3 py-1.5 text-right text-xs font-bold text-[#1f3f3b] placeholder:text-[#557b76]"
+          />
+          <EditableField
+            value={highlight.bookTitle || ''}
+            onSave={(value) => onUpdate(highlight.id, { bookTitle: value })}
+            placeholder="책 제목"
+            className="rounded-md border border-white/40 bg-white/20 px-3 py-1.5 text-right text-xs font-bold text-[#1f3f3b] placeholder:text-[#557b76]"
+          />
+        </div>
       </div>
     </article>
   )
@@ -159,6 +168,17 @@ function HighlightCard({ highlight, onUpdate, onRemove }) {
 
 export default function EuphonyPage() {
   const { highlights, loading, error, addHighlight, updateHighlight, removeHighlight } = useEuphony()
+  const [selectedBook, setSelectedBook] = useState('')
+  const [selectedAuthor, setSelectedAuthor] = useState('')
+
+  const bookTitles = useMemo(() => [...new Set(highlights.map((h) => h.bookTitle).filter(Boolean))], [highlights])
+  const authors = useMemo(() => [...new Set(highlights.map((h) => h.author).filter(Boolean))], [highlights])
+
+  const filtered = highlights.filter((h) => {
+    if (selectedBook && h.bookTitle !== selectedBook) return false
+    if (selectedAuthor && h.author !== selectedAuthor) return false
+    return true
+  })
 
   return (
     <div className="h-full overflow-y-auto bg-[#edf4f2] p-0.5 text-[#173f3d]">
@@ -174,14 +194,36 @@ export default function EuphonyPage() {
               <p className="text-sm font-black uppercase tracking-[0.24em] text-[#2f7771]">Euphony</p>
               <h1 className="mt-2 text-4xl font-black leading-tight md:text-6xl">Euphony</h1>
             </div>
-            <button
-              type="button"
-              onClick={addHighlight}
-              className="inline-flex items-center gap-1.5 rounded-md border border-white/40 bg-white/20 px-3 py-2 text-xs font-black text-[#1f3f3b] shadow-sm backdrop-blur-[2px] hover:bg-white/35"
-            >
-              <Plus size={14} />
-              추가
-            </button>
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedBook}
+                onChange={(e) => setSelectedBook(e.target.value)}
+                className="rounded-md border border-white/40 bg-white/20 px-2.5 py-2 text-xs font-bold text-[#1f3f3b] shadow-sm backdrop-blur-[2px] focus:outline-none"
+              >
+                <option value="">도서명</option>
+                {bookTitles.map((title) => (
+                  <option key={title} value={title}>{title}</option>
+                ))}
+              </select>
+              <select
+                value={selectedAuthor}
+                onChange={(e) => setSelectedAuthor(e.target.value)}
+                className="rounded-md border border-white/40 bg-white/20 px-2.5 py-2 text-xs font-bold text-[#1f3f3b] shadow-sm backdrop-blur-[2px] focus:outline-none"
+              >
+                <option value="">저자명</option>
+                {authors.map((author) => (
+                  <option key={author} value={author}>{author}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={addHighlight}
+                className="inline-flex items-center gap-1.5 rounded-md border border-white/40 bg-white/20 px-3 py-2 text-xs font-black text-[#1f3f3b] shadow-sm backdrop-blur-[2px] hover:bg-white/35"
+              >
+                <Plus size={14} />
+                추가
+              </button>
+            </div>
           </section>
 
           <div className="space-y-3">
@@ -197,7 +239,7 @@ export default function EuphonyPage() {
               </div>
             )}
 
-            {highlights.map((highlight) => (
+            {filtered.map((highlight) => (
               <HighlightCard
                 key={highlight.id}
                 highlight={highlight}

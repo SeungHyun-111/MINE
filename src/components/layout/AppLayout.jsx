@@ -1,4 +1,4 @@
-import { CalendarDays, CloudSun, Grid2X2, ListTodo, LogOut, Music2, Settings, StickyNote } from 'lucide-react'
+import { CalendarDays, CloudSun, Grid2X2, ListTodo, LogOut, Music2, Repeat, Settings, StickyNote } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 const NAV_ITEMS = [
@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { icon: ListTodo, label: 'Todo', key: 'todo' },
   { icon: CloudSun, label: '날씨', key: 'weather' },
   { icon: StickyNote, label: '메모', key: 'memo' },
+  { icon: Repeat, label: '정기일정', key: 'routine' },
   { icon: Music2, label: 'Euphony', key: 'euphony' },
   { icon: Settings, label: '설정', key: 'settings' },
 ]

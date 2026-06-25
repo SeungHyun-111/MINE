@@ -17,6 +17,12 @@ export const MEMO_STAGES = [
   { id: 'done', label: '완료', tone: 'bg-[#e9f4ee] text-[#2d6544] border-[#c7dfd1]' },
 ]
 
+export const MEMO_PRIORITIES = [
+  { id: 'high', label: '높음', tone: 'bg-[#fff0f0] text-[#8a3d3d] border-[#e4bcbc]' },
+  { id: 'medium', label: '보통', tone: 'bg-[#fdf8e6] text-[#7a5c10] border-[#e8d4a0]' },
+  { id: 'low', label: '낮음', tone: 'bg-[#f0f7f0] text-[#3d6040] border-[#b8d4b8]' },
+]
+
 function objectToList(value) {
   return Object.entries(value || {}).map(([id, item]) => ({ id, ...item }))
 }
@@ -68,14 +74,15 @@ export function useMemos() {
     )
   }, [memosPath])
 
-  const addMemo = useCallback(async ({ title, content, stage = 'pending' }) => {
-    if (!memosPath || !content.trim()) return null
+  const addMemo = useCallback(async ({ title, content, stage = 'pending', priority = '' }) => {
+    if (!memosPath) return null
 
     const memoRef = push(ref(db, memosPath))
     const now = Date.now()
     const payload = {
-      title: title?.trim() || content.trim().slice(0, 24),
-      content: content.trim(),
+      title: title?.trim() || content?.trim().slice(0, 24) || '',
+      content: content?.trim() || '',
+      priority,
       stage,
       logs: [logEntry('create', '메모 생성')],
       createdAt: now,
