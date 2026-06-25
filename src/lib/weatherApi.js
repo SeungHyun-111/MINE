@@ -3,7 +3,7 @@ import { format, addDays } from 'date-fns'
 const SERVICE_KEY = 'ngx/BFtjRyWWjj+yPeRTo2TrinX/wrFwkYpu1ROLrnac5ZLI+ckoMTL1wptN0WfsHSUTLmOgwz1UiLEHd8FVAw=='
 const KMA_SHORT_URL = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0'
 const KMA_MID_URL = 'https://apis.data.go.kr/1360000/MidFcstInfoService'
-const RISE_SET_URL = 'http://apis.data.go.kr/B090041/openapi/service/RiseSetInfoService/getAreaRiseSetInfo'
+const RISE_SET_URL = 'https://apis.data.go.kr/B090041/openapi/service/RiseSetInfoService/getAreaRiseSetInfo'
 const ENABLE_RISE_SET_API = true
 
 export const DEFAULT_WEATHER_LOCATION = {

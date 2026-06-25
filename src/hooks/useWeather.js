@@ -1,12 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  onValue,
-  push,
-  ref,
-  serverTimestamp,
-  set,
-  update,
-} from 'firebase/database'
+import { onValue, ref, serverTimestamp, set, update } from 'firebase/database'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/hooks/useAuth'
 import { DEFAULT_WEATHER_LOCATION, fetchWeatherBundle } from '@/lib/weatherApi'
@@ -20,8 +13,21 @@ function fetchedTime(value) {
   return 0
 }
 
-function safeKey(value) {
-  return String(value || 'unknown').replace(/[.#$/[\]]/g, '_')
+// Firebase RTDB stores arrays as numeric-keyed objects; normalize back to arrays
+function toArray(value) {
+  if (!value) return []
+  if (Array.isArray(value)) return value
+  return Object.values(value)
+}
+
+function normalizeWeather(data) {
+  if (!data) return data
+  return {
+    ...data,
+    hourly: toArray(data.hourly),
+    daily: toArray(data.daily),
+    midTerm: toArray(data.midTerm),
+  }
 }
 
 export function useWeather() {
@@ -51,7 +57,7 @@ export function useWeather() {
       latestRef,
       (snapshot) => {
         if (snapshot.exists()) {
-          setWeather(snapshot.val())
+          setWeather(normalizeWeather(snapshot.val()))
           setError(null)
         }
         setCacheLoading(false)
@@ -84,69 +90,24 @@ export function useWeather() {
     try {
       const data = await fetchWeatherBundle(DEFAULT_WEATHER_LOCATION)
       const fetchedAt = Date.now()
-      const archiveId = safeKey([
-        data.location.name,
-        data.baseTimes.ultra.baseDate,
-        data.baseTimes.ultra.baseTime,
-        data.baseTimes.vilage.baseDate,
-        data.baseTimes.vilage.baseTime,
-        data.baseTimes.mid,
-      ].join('_'))
+
       const payload = {
         ...data,
         fetchedAt,
         updatedAt: serverTimestamp(),
       }
-      const updates = {
-        [`${basePath}/weather/latest`]: payload,
-        [`${basePath}/weatherArchive/${archiveId}`]: {
-          ...payload,
-          source: 'bundle',
-          archiveId,
-          archivedAt: serverTimestamp(),
-        },
-      }
 
-      data.hourly.forEach((item) => {
-        updates[`${basePath}/weatherShortHourly/${safeKey(`${item.date}_${item.time}`)}`] = {
-          ...item,
-          location: data.location,
-          source: 'short',
-          baseTimes: data.baseTimes,
-          updatedAt: serverTimestamp(),
-        }
-      })
+      // weather/latest 하나만 저장 — 읽는 곳도 여기뿐
+      await set(latestRef, payload)
 
-      data.daily.forEach((item) => {
-        updates[`${basePath}/weatherShortDaily/${safeKey(item.date)}`] = {
-          ...item,
-          location: data.location,
-          source: 'short',
-          baseTimes: data.baseTimes,
-          updatedAt: serverTimestamp(),
-        }
-      })
-
-      data.midTerm.forEach((item) => {
-        updates[`${basePath}/weatherMidForecasts/${safeKey(item.date)}`] = {
-          ...item,
-          location: data.location,
-          source: 'mid',
-          baseTimes: data.baseTimes,
-          updatedAt: serverTimestamp(),
-        }
-      })
-
-      await update(ref(db), updates)
-      await set(push(ref(db, `${basePath}/weatherSnapshots`)), payload)
-      setWeather(payload)
+      setWeather(normalizeWeather({ ...payload, updatedAt: fetchedAt }))
       setSaveStatus('saved')
-      setError(data.apiErrors?.length ? data.apiErrors.map((item) => `${item.source}: ${item.message}`).join(' / ') : null)
+      setError(data.apiErrors?.length ? data.apiErrors.map((e) => `${e.source}: ${e.message}`).join(' / ') : null)
       return payload
     } catch (e) {
       console.error(e)
       setSaveStatus('error')
-      setError(`날씨 데이터 RTDB 저장/갱신 실패: ${e.message}`)
+      setError(`날씨 갱신 실패: ${e.message}`)
       return null
     } finally {
       refreshInFlight.current = false

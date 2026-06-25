@@ -124,10 +124,10 @@ function mergeWeek(shortDaily = [], midTerm = []) {
 
 function MetricBox({ label, value, sub, accent = false }) {
   return (
-    <div className={`h-[50px] min-w-0 rounded-md border px-3 py-2 ${accent ? 'border-[#ff9b7b] bg-[#fff8f4]' : 'border-[#d4d9de] bg-white'}`}>
-      <p className={`truncate text-[11px] font-bold ${accent ? 'text-[#ff5f36]' : 'text-[#36434d]'}`}>{label}</p>
-      <p className="mt-0.5 truncate text-[15px] font-black leading-none text-black">{value}</p>
-      {sub && <p className="mt-0.5 truncate text-[10px] font-bold text-[#2d78e7]">{sub}</p>}
+    <div className={`min-h-[60px] min-w-0 rounded-md border px-3 py-2.5 ${accent ? 'border-[#ff9b7b] bg-[#fff8f4]' : 'border-[#d4d9de] bg-white'}`}>
+      <p className={`truncate text-[11px] font-bold leading-tight ${accent ? 'text-[#ff5f36]' : 'text-[#36434d]'}`}>{label}</p>
+      <p className="mt-1 truncate text-[15px] font-black leading-none text-black">{value}</p>
+      {sub && <p className="mt-1 truncate text-[10px] font-bold text-[#2d78e7]">{sub}</p>}
     </div>
   )
 }
@@ -138,7 +138,7 @@ function HourlyForecast({ hourly, selectedHour, onSelectHour }) {
   return (
     <section className="border-t border-[#d9dee3] pt-5">
       <div className="weather-scroll overflow-x-auto overflow-y-hidden pb-2">
-        <div className="grid min-w-[658px] grid-cols-[42px_repeat(14,44px)] text-center text-[11px]">
+        <div className="grid w-full min-w-[674px] grid-cols-[58px_repeat(14,minmax(44px,1fr))] text-center text-[11px]">
           <div className="flex items-start justify-center pt-1">
             <span className="rounded-full bg-[#3b3b3b] px-2 py-0.5 text-[10px] font-bold text-white">오늘</span>
           </div>
@@ -157,7 +157,7 @@ function HourlyForecast({ hourly, selectedHour, onSelectHour }) {
             </button>
           ))}
 
-          <div className="mt-2 text-left text-[10px] text-[#646f77]">강수량㎜</div>
+          <div className="mt-2 text-left text-[9px] leading-tight text-[#646f77]">강수량<br/>㎜</div>
           {items.map((item, index) => (
             <p key={`rain_${item.date}_${item.time}_${index}`} className="mt-2 border-l border-[#edf0f2] text-[#c6cbd0]">0</p>
           ))}
@@ -169,9 +169,9 @@ function HourlyForecast({ hourly, selectedHour, onSelectHour }) {
 
           <div className="mt-2 text-left text-[10px] text-[#646f77]">바람㎧</div>
           {items.map((item, index) => (
-            <div key={`wind_${item.date}_${item.time}_${index}`} className="mt-2 border-l border-[#edf0f2]">
+            <div key={`wind_${item.date}_${item.time}_${index}`} className="mt-2 flex flex-col items-center border-l border-[#edf0f2] leading-tight">
               <p className="font-medium text-[#2d78e7]">{item.wind}</p>
-              <p className="text-sm leading-none text-[#1468d8]">◂</p>
+              <p className="text-[10px] leading-none text-[#1468d8]">◂</p>
             </div>
           ))}
         </div>
@@ -247,11 +247,22 @@ function WeeklyForecast({ daily, selectedDate, onSelectDate }) {
 
 function NationwideWeather({ daily, selectedDate, selectedPeriod, onSelectDate, onSelectPeriod }) {
   const tabs = daily.slice(0, 7)
+  const today = daily[0]?.date
+  const isToday = !selectedDate || selectedDate === today
+  const selectedDay = daily.find(d => d.date === selectedDate)
+
+  const mapCities = isToday
+    ? CITY_WEATHER
+    : CITY_WEATHER.map(city => ({
+        ...city,
+        tone: selectedDay ? weatherTone(selectedDay.sky || '') : city.tone,
+        temp: null,
+      }))
 
   return (
     <section className="bg-white px-6 py-6 xl:px-8">
       <h2 className="text-xl font-black text-black">전국날씨</h2>
-      <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-center text-xs">
+      <div className="mt-5 flex justify-between text-center text-xs">
         {tabs.map((item, index) => (
           <button
             type="button"
@@ -283,7 +294,7 @@ function NationwideWeather({ daily, selectedDate, selectedPeriod, onSelectDate, 
             alt=""
             className="absolute inset-0 h-full w-full object-contain opacity-95 drop-shadow-sm"
           />
-          {CITY_WEATHER.map((item) => (
+          {mapCities.map((item) => (
             <div
               key={item.city}
               className="absolute -translate-x-1/2 -translate-y-1/2 text-center"
@@ -293,7 +304,7 @@ function NationwideWeather({ daily, selectedDate, selectedPeriod, onSelectDate, 
                 <WeatherIcon tone={item.tone} size="sm" />
               </div>
               <p className="whitespace-nowrap rounded bg-white/70 px-1 text-[9px] font-black leading-tight text-[#173f4e] shadow-sm">
-                {item.city} {item.temp}°
+                {item.city}{item.temp != null ? ` ${item.temp}°` : ''}
               </p>
             </div>
           ))}
@@ -309,26 +320,26 @@ function SunTimeline({ sunriseSunset }) {
   const sunset = sunriseSunset.sunset || '-'
 
   return (
-    <section className="border-t border-[#e5e5e5] bg-white px-6 py-7 xl:px-8">
+    <section className="border-t border-[#e5e5e5] bg-white px-6 py-7 xl:px-6">
       <h2 className="mb-4 text-xl font-black text-black">일출일몰</h2>
-      <div className="relative mx-auto h-[118px] max-w-[300px]">
-        <svg className="absolute inset-x-0 top-0 mx-auto h-[86px] w-[230px]" viewBox="0 0 230 86" aria-hidden="true">
-          <path d="M20 76 A95 95 0 0 1 210 76" fill="none" stroke="#f6b000" strokeWidth="5" strokeLinecap="round" />
-          <path d="M157 19 A95 95 0 0 1 210 76" fill="none" stroke="#cdd2d7" strokeWidth="2" strokeDasharray="5 5" strokeLinecap="round" />
-          <circle cx="157" cy="19" r="10" fill="#ffc21a" stroke="#ffd36a" strokeWidth="4" />
+      <div className="relative mx-auto h-[180px] max-w-[300px]">
+        <svg className="absolute inset-x-0 top-0 mx-auto h-[110px] w-[240px]" viewBox="0 0 240 110" aria-hidden="true">
+          <path d="M12 98 A141 141 0 0 1 228 98" fill="none" stroke="#f6b000" strokeWidth="5" strokeLinecap="round" />
+          <path d="M157 52 A141 141 0 0 1 228 98" fill="none" stroke="#cdd2d7" strokeWidth="2" strokeDasharray="5 5" strokeLinecap="round" />
+          <circle cx="157" cy="52" r="10" fill="#ffc21a" stroke="#ffd36a" strokeWidth="4" />
         </svg>
-        <p className="absolute left-0 right-0 top-[38px] text-center text-sm font-black text-[#3d464e]">
+        <p className="absolute left-0 right-0 top-[64px] text-center text-sm font-black text-[#3d464e]">
           오늘<span className="ml-1 text-xs font-bold text-[#87909a]">{todayLabel()}</span>
         </p>
         <div className="absolute bottom-0 left-0 right-0 flex items-end justify-center gap-3">
           <div className="text-center">
-            <p className="text-xs font-black text-[#3d464e]"><span className="mr-1 inline-block h-3 w-3 rounded-full bg-[#ffc21a]" />일출</p>
+            <p className="text-xs font-black text-[#3d464e]">일출 ↑</p>
             <p className="text-2xl font-black leading-none text-[#11233a]">{sunrise}</p>
             <p className="text-[10px] font-bold text-[#8c969e]">AM</p>
           </div>
           <div className="mb-4 h-8 w-px bg-[#d8dde2]" />
           <div className="text-center">
-            <p className="text-xs font-black text-[#3d464e]"><span className="mr-1 inline-block h-3 w-3 rounded-full bg-[#ffc21a]" />일몰</p>
+            <p className="text-xs font-black text-[#3d464e]">↓ 일몰</p>
             <p className="text-2xl font-black leading-none text-[#11233a]">{sunset}</p>
             <p className="text-[10px] font-bold text-[#8c969e]">PM</p>
           </div>
@@ -340,10 +351,8 @@ function SunTimeline({ sunriseSunset }) {
             <p className="mb-1 text-xs font-black text-[#5e6872]">
               {label} <span className="font-bold text-[#9aa2a9]">{format(new Date(Date.now() + (index + 1) * 86400000), 'MM.dd', { locale: ko })}</span>
             </p>
-            <p className="text-sm font-black text-[#11233a]">
-              <span className="mr-1 inline-block h-3 w-3 rounded-full bg-[#ffc21a]" />{sunrise}
-              <span className="mx-2 text-[#c8cdd2]">|</span>
-              <span className="mr-1 inline-block h-3 w-3 rounded-full bg-[#ffc21a]" />{sunset}
+            <p className="truncate text-xs font-bold text-[#11233a]">
+              ↑{sunrise} ↓{sunset}
             </p>
           </div>
         ))}
@@ -371,8 +380,8 @@ export default function WeatherPage() {
 
   return (
     <div data-weather-page className="min-h-full overflow-x-hidden bg-white text-[#202124]">
-      <div className="mx-auto flex min-h-full w-full max-w-[1120px] border-x border-[#e0e0e0] bg-white">
-        <main className="min-w-0 flex-1 px-6 py-6 xl:px-8">
+      <div className="mx-auto flex min-h-full w-full max-w-[1600px] border-x border-[#e0e0e0] bg-white">
+        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 xl:px-12">
           <div className="mb-5 flex items-center justify-between">
             <div className="relative flex items-center gap-2">
               <button

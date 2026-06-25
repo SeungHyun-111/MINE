@@ -221,5 +221,49 @@ https://us-central1-psmine-ad9cc.cloudfunctions.net/calendarOAuthCallback
 디자인 참조 팔레트 
 https://webdesignrankings.com/resources/lolcolors/
 
+---
 
+## 날씨 페이지 작업 이력
+
+### UI 수정 (WeatherPage.jsx)
+- **전체 폭 반응형**: `max-w-[1120px]` → `max-w-[1600px]`, main 패딩 `px-4 sm:px-6 lg:px-10 xl:px-12`
+- **MetricBox 텍스트 잘림**: 고정 높이 `h-[50px]` → `min-h-[60px]`, `py-2.5`로 3줄 텍스트 수용
+- **시간별 예보 그리드**: `grid-cols-[42px_repeat(14,44px)]` → `grid-cols-[58px_repeat(14,minmax(44px,1fr))]` + `w-full` — 화면 너비에 맞게 확장, "강수량㎜" 라벨 공간 확보
+- **전국날씨 요일 탭**: `flex-wrap gap-x-4` → `flex justify-between` — 7일 줄바꿈 없이 한 줄 배치
+
+### 전국날씨 날짜 반응 (NationwideWeather)
+- 날짜 탭 클릭 시 지도 날씨 아이콘이 해당 날의 `sky` 조건으로 변경
+- 오늘: 기존 도시별 실황 데이터 그대로
+- 미래 날짜: 선택한 날 예보의 날씨 조건을 모든 도시에 적용, 기온 표시 생략 (도시명만)
+- 구현: `isToday` 판별 → `mapCities` 계산
+
+### 일출일몰 SVG 수정 (SunTimeline)
+- **근본 원인**: 기존 `r=95`, chord=190=2r → 두 반원 모두 86px viewBox 바깥 → 아크 미표시
+- **수정**: viewBox `0 0 240 110`, `r=141`, center(120, 188.6) — 호 정점 y≈48으로 viewBox 내부에 완전히 수용
+- **sweep 방향**: sweep=1 (시계방향, center가 chord 아래에 있으므로 호가 위로 솟음)
+- **아이콘 교체**: 노란 원 `●` → 방향 텍스트 `일출 ↑` / `↓ 일몰`
+- **내일/모레 줄바꿈 제거**: `text-sm` → `text-xs`, 원 아이콘 제거, `↑05:43 ↓19:50` 형식으로 한 줄
+
+### DB 및 API 버그 수정 (useWeather.js / weatherApi.js)
+- **일출/일몰 데이터 항상 빈 값 원인**: `http://apis.data.go.kr` URL → 브라우저 Mixed Content 차단
+  - **수정**: `https://apis.data.go.kr`로 변경
+- **Firebase array 역직렬화**: RTDB는 array를 `{0:…, 1:…}` object로 저장하고 돌려줌 → `.map()` 호출 시 오류 가능
+  - **수정**: `normalizeWeather()` 함수 추가, `toArray()` 로 `hourly` / `daily` / `midTerm` 방어 변환
+- **중복 DB 쓰기 제거**: 기존에는 `weather/latest` 외에 `weatherShortHourly`, `weatherShortDaily`, `weatherMidForecasts`, `weatherArchive`, `weatherSnapshots` 5개 경로에 중복 저장
+  - 읽는 곳이 `weather/latest` 하나뿐이므로 나머지 경로 쓰기 전면 제거
+  - `update(ref(db), updates)` + `set(push(...))` 2단계 → `set(latestRef, payload)` 1번으로 단순화
+
+### 현재 날씨 DB 구조 (확정)
+```
+users/{uid}/
+  weather/
+    latest/    ← 전체 날씨 번들 (화면 표시 + 캐시 모두 여기서)
+```
+- `latest` 안에 `current`, `hourly[]`, `daily[]`, `midTerm[]`, `sunriseSunset`, `location`, `fetchedAt` 포함
+- 갱신 주기: 8시간 (WEATHER_REFRESH_INTERVAL_MS)
+
+### 월간/주간 기후전망 API
+- 기상청 단기(`getVilageFcst`) + 중기(`getMidLandFcst`, `getMidTa`) 는 최대 10일
+- 주간전망/월간전망(네이버 날씨의 "7월 1주차" 등)은 **기상청 기후전망정보 API** (별도 서비스) 사용
+- 현재 API key로는 호출 불가 — 공공데이터포털에서 별도 신청 필요
 
