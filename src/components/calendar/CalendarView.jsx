@@ -86,7 +86,7 @@ export default function CalendarView({
   const startPad = getDay(firstDay)
 
   return (
-    <section className="bg-white border border-[#c9d6de] rounded-lg shadow-sm flex flex-col flex-1 min-h-[620px] md:min-h-0 overflow-hidden">
+    <section className="bg-white border border-[#c9d6de] rounded-lg shadow-sm flex flex-col min-h-[520px] md:flex-1 md:min-h-0 overflow-hidden">
       <div className="flex items-center justify-center gap-3 px-4 py-3 bg-[#aacfd0] border-b border-[#92bdc0]">
         <button
           onClick={() => onMonthChange(subMonths(currentMonth, 1))}
@@ -122,7 +122,7 @@ export default function CalendarView({
 
       <div className="grid grid-cols-7 auto-rows-fr flex-1 bg-white">
         {Array.from({ length: startPad }).map((_, i) => (
-          <div key={`pad-${i}`} className="min-h-[96px] md:min-h-[112px] border-b border-r border-[#e3ecee] bg-[#f7fafa]" />
+          <div key={`pad-${i}`} className="min-h-[76px] md:min-h-[112px] border-b border-r border-[#e3ecee] bg-[#f7fafa]" />
         ))}
 
         {days.map((day) => {
@@ -137,7 +137,7 @@ export default function CalendarView({
               key={dateStr}
               onClick={() => onDayClick(day)}
               onDoubleClick={() => onDayDoubleClick?.(day)}
-              className={`min-h-[96px] md:min-h-[112px] p-1.5 border-b border-r border-[#e3ecee] flex flex-col items-center text-left transition-colors ${
+              className={`min-h-[76px] md:min-h-[112px] p-1.5 border-b border-r border-[#e3ecee] flex flex-col items-center text-left transition-colors ${
                 isSelected ? 'bg-[#e6f2f3]' : 'bg-white hover:bg-[#f4f7f7] active:bg-[#eaf1f2]'
               }`}
             >
@@ -158,7 +158,7 @@ export default function CalendarView({
               </span>
 
               <div className="flex flex-col gap-1 w-full min-w-0">
-                {dayEvents.slice(0, 3).map((event) => {
+                {dayEvents.slice(0, 2).map((event) => {
                   const { className, style } = getEventStyle(event, calendars)
                   const time = getBadgeTime(event)
                   return (
@@ -167,14 +167,14 @@ export default function CalendarView({
                       className={`text-white text-[10px] leading-tight rounded px-1.5 py-0.5 truncate ${className}`}
                       style={style}
                     >
-                      {time && <span className="font-semibold mr-1">{time}</span>}
+                      {time && <span className="hidden sm:inline font-semibold mr-1">{time}</span>}
                       {event.summary || '(제목 없음)'}
                     </div>
                   )
                 })}
-                {dayEvents.length > 3 && (
+                {dayEvents.length > 2 && (
                   <div className="text-[10px] text-[#789094] px-1">
-                    +{dayEvents.length - 3}
+                    +{dayEvents.length - 2}
                   </div>
                 )}
               </div>

@@ -21,6 +21,7 @@ export default function CalendarPage() {
     connectCalendar,
   } = useCalendar()
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
   const [formError, setFormError] = useState(null)
@@ -70,6 +71,11 @@ export default function CalendarPage() {
     else nextMonth()
   }
 
+  const handleDaySelect = (date) => {
+    setSelectedDate(date)
+    setIsDetailOpen(true)
+  }
+
   const openAddForm = (date = selectedDate) => {
     setSelectedDate(date)
     setEditingEvent(null)
@@ -100,6 +106,7 @@ export default function CalendarPage() {
         await addEvent(formData)
       }
       closeForm()
+      setIsDetailOpen(true)
     } catch (e) {
       console.error(e)
       setFormError(e.message)
@@ -188,25 +195,41 @@ export default function CalendarPage() {
         </label>
       </div>
 
-      <div className="flex flex-col flex-1 min-h-0 gap-3 overflow-y-auto p-3">
+      <div className="flex flex-col flex-1 min-h-0 gap-3 overflow-y-auto p-3 pb-24 md:pb-3">
         <CalendarView
           events={filteredEvents}
           calendars={calendars}
           currentMonth={currentMonth}
           onMonthChange={handleMonthChange}
-          onDayClick={setSelectedDate}
+          onDayClick={handleDaySelect}
           onDayDoubleClick={openAddForm}
           selectedDate={selectedDate}
         />
 
-        <DayEventList
-          date={selectedDate}
-          events={filteredEvents}
-          onAdd={() => openAddForm()}
-          onEdit={openEditForm}
-          onRemove={handleRemoveEvent}
-        />
+        <div className="hidden md:block">
+          <DayEventList
+            date={selectedDate}
+            events={filteredEvents}
+            onAdd={() => openAddForm()}
+            onEdit={openEditForm}
+            onRemove={handleRemoveEvent}
+          />
+        </div>
       </div>
+
+      {isDetailOpen && (
+        <div className="fixed inset-x-0 bottom-[82px] z-30 px-3 md:hidden">
+          <DayEventList
+            date={selectedDate}
+            events={filteredEvents}
+            onAdd={() => openAddForm()}
+            onEdit={openEditForm}
+            onRemove={handleRemoveEvent}
+            onClose={() => setIsDetailOpen(false)}
+            variant="sheet"
+          />
+        </div>
+      )}
 
       {isFormOpen && (
         <EventFormModal

@@ -54,25 +54,27 @@ export default function AppLayout({ page, onPageChange, children }) {
         </div>
       </main>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#d6e1e3] flex">
+      <nav
+        className="mobile-tab-rail md:hidden fixed bottom-0 left-0 right-0 z-40 flex overflow-x-auto overscroll-x-contain border-t border-[#bfd2d6] bg-white shadow-[0_-5px_18px_rgba(31,78,95,0.12)]"
+      >
         {NAV_ITEMS.map(({ icon: Icon, label, key }) => (
           <button
             key={key}
             onClick={() => onPageChange(key)}
-            className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 text-xs font-medium transition-colors ${
-              page === key ? 'text-[#1f4e5f]' : 'text-[#789094]'
+            className={`mobile-tab-item flex basis-[20%] shrink-0 flex-col items-center justify-center gap-1 px-1 py-2.5 text-[11px] font-medium leading-tight transition-colors ${
+              page === key ? 'bg-[#edf6f7] text-[#1f4e5f]' : 'text-[#789094] active:bg-[#f4f7f7]'
             }`}
           >
-            <Icon size={22} />
-            {label}
+            <Icon size={21} />
+            <span className="min-h-7 max-w-full break-keep text-center">{label}</span>
           </button>
         ))}
         <button
           onClick={logout}
-          className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-xs font-medium text-[#789094] transition-colors hover:text-[#1f4e5f]"
+          className="mobile-tab-item flex basis-[20%] shrink-0 flex-col items-center justify-center gap-1 px-1 py-2.5 text-[11px] font-medium leading-tight text-[#789094] transition-colors active:bg-[#f4f7f7]"
         >
-          <LogOut size={22} />
-          로그아웃
+          <LogOut size={21} />
+          <span className="min-h-7 max-w-full break-keep text-center">로그아웃</span>
         </button>
       </nav>
     </div>
