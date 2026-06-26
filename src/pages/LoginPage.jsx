@@ -5,7 +5,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm text-center">
+      <div className="bg-white/90 rounded-2xl shadow-lg p-8 w-full max-w-sm text-center">
         <div className="text-5xl mb-4">📅</div>
         <h1 className="text-2xl font-bold text-gray-800 mb-2">내 일정 관리</h1>
         <p className="text-gray-500 text-sm mb-8">모바일과 PC에서 함께 쓰는 일정 앱</p>

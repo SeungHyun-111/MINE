@@ -52,8 +52,8 @@ function WeatherIcon({ tone = 'sun', size = 'md' }) {
   if (tone === 'rain') {
     return (
       <div className={`${scale} relative shrink-0`}>
-        <div className="absolute left-[18%] top-[22%] h-[42%] w-[58%] rounded-full bg-[#c7cfd4]" />
-        <div className="absolute left-[36%] top-[10%] h-[48%] w-[45%] rounded-full bg-[#dce2e6]" />
+        <div className="absolute left-[18%] top-[22%] h-[42%] w-[58%] rounded-full bg-[#aabbdd]" />
+        <div className="absolute left-[36%] top-[10%] h-[48%] w-[45%] rounded-full bg-[#d5e8ff]" />
         <div className="absolute left-[48%] top-[68%] h-[22%] w-[7%] rotate-12 rounded-full bg-[#4c8ee8]" />
         <div className="absolute left-[66%] top-[64%] h-[22%] w-[7%] rotate-12 rounded-full bg-[#4c8ee8]" />
       </div>
@@ -63,8 +63,8 @@ function WeatherIcon({ tone = 'sun', size = 'md' }) {
   if (tone === 'snow') {
     return (
       <div className={`${scale} relative shrink-0`}>
-        <div className="absolute left-[18%] top-[24%] h-[42%] w-[58%] rounded-full bg-[#c7cfd4]" />
-        <div className="absolute left-[36%] top-[12%] h-[48%] w-[45%] rounded-full bg-[#dce2e6]" />
+        <div className="absolute left-[18%] top-[24%] h-[42%] w-[58%] rounded-full bg-[#aabbdd]" />
+        <div className="absolute left-[36%] top-[12%] h-[48%] w-[45%] rounded-full bg-[#d5e8ff]" />
         <div className="absolute left-[48%] top-[70%] text-[#4c8ee8]">*</div>
         <div className="absolute left-[66%] top-[66%] text-[#4c8ee8]">*</div>
       </div>
@@ -75,16 +75,16 @@ function WeatherIcon({ tone = 'sun', size = 'md' }) {
     return (
       <div className={`${scale} relative shrink-0`}>
         <div className="absolute left-[10%] top-[18%] h-[42%] aspect-square rounded-full bg-[#ffc400]" />
-        <div className="absolute left-[26%] top-[38%] h-[36%] w-[54%] rounded-full bg-[#c7cfd4]" />
-        <div className="absolute left-[44%] top-[26%] h-[44%] w-[42%] rounded-full bg-[#dce2e6]" />
+        <div className="absolute left-[26%] top-[38%] h-[36%] w-[54%] rounded-full bg-[#aabbdd]" />
+        <div className="absolute left-[44%] top-[26%] h-[44%] w-[42%] rounded-full bg-[#d5e8ff]" />
       </div>
     )
   }
 
   return (
     <div className={`${scale} relative shrink-0`}>
-      <div className="absolute left-[12%] top-[36%] h-[38%] w-[60%] rounded-full bg-[#c7cfd4]" />
-      <div className="absolute left-[34%] top-[22%] h-[48%] w-[48%] rounded-full bg-[#dce2e6]" />
+      <div className="absolute left-[12%] top-[36%] h-[38%] w-[60%] rounded-full bg-[#aabbdd]" />
+      <div className="absolute left-[34%] top-[22%] h-[48%] w-[48%] rounded-full bg-[#d5e8ff]" />
     </div>
   )
 }
@@ -196,8 +196,8 @@ function sunArcPosition(sunrise, sunset) {
 
 function MetricBox({ label, value, sub, accent = false }) {
   return (
-    <div className={`min-h-[60px] min-w-0 rounded-md border px-3 py-2.5 ${accent ? 'border-[#ff9b7b] bg-[#fff8f4]' : 'border-[#d4d9de] bg-white'}`}>
-      <p className={`truncate text-[11px] font-bold leading-tight ${accent ? 'text-[#ff5f36]' : 'text-[#36434d]'}`}>{label}</p>
+    <div className={`min-h-[60px] min-w-0 rounded-md border px-3 py-2.5 ${accent ? 'border-[#ff9b7b] bg-[#fff8f4]' : 'border-[#c0d5ee] bg-white/90'}`}>
+      <p className={`truncate text-[11px] font-bold leading-tight ${accent ? 'text-[#ff5f36]' : 'text-[#1a2e4a]'}`}>{label}</p>
       <p className="mt-1 truncate text-[15px] font-black leading-none text-black">{value}</p>
       {sub && <p className="mt-1 truncate text-[10px] font-bold text-[#2d78e7]">{sub}</p>}
     </div>
@@ -208,7 +208,7 @@ function HourlyForecast({ hourly, selectedHour, onSelectHour }) {
   const items = hourly.slice(0, 14)
 
   return (
-    <section className="border-t border-[#d9dee3] pt-5">
+    <section className="border-t border-[#c8ddff] pt-5">
       <div className="weather-scroll overflow-x-auto overflow-y-hidden pb-2">
         <div className="grid w-full min-w-[674px] grid-cols-[58px_repeat(14,minmax(44px,1fr))] text-center text-[11px]">
           <div className="flex items-start justify-center pt-1">
@@ -219,9 +219,9 @@ function HourlyForecast({ hourly, selectedHour, onSelectHour }) {
               type="button"
               key={`time_${item.date}_${item.time}_${index}`}
               onClick={() => onSelectHour(`${item.date}_${item.time}`)}
-              className={`border-l border-[#edf0f2] outline-none transition-colors ${selectedHour === `${item.date}_${item.time}` ? 'bg-[#f1f8ff]' : 'hover:bg-[#f8fbfd]'}`}
+              className={`border-l border-[#eef3ff] outline-none transition-colors ${selectedHour === `${item.date}_${item.time}` ? 'bg-[#f1f8ff]' : 'hover:bg-[#f5f9ff]'}`}
             >
-              <p className="h-5 font-bold text-[#404850]">{item.time}</p>
+              <p className="h-5 font-bold text-[#223355]">{item.time}</p>
               <div className="flex h-8 items-center justify-center">
                 <WeatherIcon tone={weatherTone(item.sky)} size="xs" />
               </div>
@@ -229,26 +229,26 @@ function HourlyForecast({ hourly, selectedHour, onSelectHour }) {
             </button>
           ))}
 
-          <div className="mt-2 text-left text-[9px] leading-tight text-[#646f77]">강수량<br/>㎜</div>
+          <div className="mt-2 text-left text-[9px] leading-tight text-[#445588]">강수량<br/>㎜</div>
           {items.map((item, index) => (
-            <p key={`rain_${item.date}_${item.time}_${index}`} className="mt-2 border-l border-[#edf0f2] text-[#c6cbd0]">0</p>
+            <p key={`rain_${item.date}_${item.time}_${index}`} className="mt-2 border-l border-[#eef3ff] text-[#c6cbd0]">0</p>
           ))}
 
-          <div className="mt-2 text-left text-[10px] text-[#646f77]">습도%</div>
+          <div className="mt-2 text-left text-[10px] text-[#445588]">습도%</div>
           {items.map((item, index) => (
-            <p key={`humidity_${item.date}_${item.time}_${index}`} className="mt-2 border-l border-[#edf0f2] font-medium text-[#2d78e7]">{item.humidity}</p>
+            <p key={`humidity_${item.date}_${item.time}_${index}`} className="mt-2 border-l border-[#eef3ff] font-medium text-[#2d78e7]">{item.humidity}</p>
           ))}
 
-          <div className="mt-2 text-left text-[10px] text-[#646f77]">바람㎧</div>
+          <div className="mt-2 text-left text-[10px] text-[#445588]">바람㎧</div>
           {items.map((item, index) => (
-            <div key={`wind_${item.date}_${item.time}_${index}`} className="mt-2 flex flex-col items-center border-l border-[#edf0f2] leading-tight">
+            <div key={`wind_${item.date}_${item.time}_${index}`} className="mt-2 flex flex-col items-center border-l border-[#eef3ff] leading-tight">
               <p className="font-medium text-[#2d78e7]">{item.wind}</p>
-              <p className="text-[10px] leading-none text-[#1468d8]">◂</p>
+              <p className="text-[10px] leading-none text-[#0055ff]">◂</p>
             </div>
           ))}
         </div>
       </div>
-      <div className="mt-3 flex items-center gap-2 border-t border-[#d9dee3] pt-2 text-[11px] text-[#7b858d]">
+      <div className="mt-3 flex items-center gap-2 border-t border-[#c8ddff] pt-2 text-[11px] text-[#7b858d]">
         <span>날씨아이콘</span>
         <span>ⓘ</span>
         <span>시간별 예보 기준</span>
@@ -263,19 +263,19 @@ function WeeklyForecast({ daily, selectedDate, onSelectDate }) {
   const rest = daily.slice(2, 8)
 
   return (
-    <section className="border-t border-[#d9dee3] pt-6">
-      <h2 className="mb-4 text-xl font-black text-black">주간예보 <span className="text-xs font-bold text-[#9aa2a9]">ⓘ</span></h2>
+    <section className="border-t border-[#c8ddff] pt-6">
+      <h2 className="mb-4 text-xl font-black text-black">주간예보 <span className="text-xs font-bold text-[#7799bb]">ⓘ</span></h2>
       <div className="mb-4 grid gap-2 md:grid-cols-2">
         {featured.map((item, index) => (
           <button
             type="button"
             key={`featured_${item.date}`}
             onClick={() => onSelectDate(item.date)}
-            className={`grid min-h-[54px] grid-cols-[52px_1fr_auto] items-center gap-2 rounded-md border px-4 text-left shadow-sm ${selectedDate === item.date ? 'border-[#9bcaff] bg-[#f4faff]' : 'border-[#d6dce2] bg-white hover:bg-[#f8fbfd]'}`}
+            className={`grid min-h-[54px] grid-cols-[52px_1fr_auto] items-center gap-2 rounded-md border px-4 text-left shadow-sm ${selectedDate === item.date ? 'border-[#99ccff] bg-[#f4faff]' : 'border-[#bbd0ee] bg-white/90 hover:bg-[#f5f9ff]'}`}
           >
             <div className="min-w-0">
               <p className="text-sm font-black text-black">{index === 0 ? '오늘' : '내일'}</p>
-              <p className="text-xs font-bold text-[#6f7880]">{formatShortDate(item.date)}</p>
+              <p className="text-xs font-bold text-[#445588]">{formatShortDate(item.date)}</p>
             </div>
             <div className="flex min-w-0 items-center justify-center gap-1 text-xs font-bold">
               <span>오전</span>
@@ -296,10 +296,10 @@ function WeeklyForecast({ daily, selectedDate, onSelectDate }) {
             type="button"
             key={`rest_${item.date}`}
             onClick={() => onSelectDate(item.date)}
-            className={`border-l border-[#edf0f2] px-2 text-center first:border-l-0 ${selectedDate === item.date ? 'rounded-md bg-[#f4faff]' : 'hover:bg-[#fafafa]'}`}
+            className={`border-l border-[#eef3ff] px-2 text-center first:border-l-0 ${selectedDate === item.date ? 'rounded-md bg-[#f4faff]' : 'hover:bg-[#fafafa]'}`}
           >
-            <p className={`text-sm font-black ${weekdayFromDate(item.date) === '일' ? 'text-red-500' : 'text-[#4e5963]'}`}>{weekdayFromDate(item.date)}</p>
-            <p className="text-xs text-[#8a939b]">{formatShortDate(item.date)}</p>
+            <p className={`text-sm font-black ${weekdayFromDate(item.date) === '일' ? 'text-red-500' : 'text-[#334477]'}`}>{weekdayFromDate(item.date)}</p>
+            <p className="text-xs text-[#6688bb]">{formatShortDate(item.date)}</p>
             <div className="mt-3 flex justify-center">
               <WeatherIcon tone={weatherTone(item.sky)} size="sm" />
             </div>
@@ -327,7 +327,7 @@ function NationwideWeather({ daily, nationwide, selectedDate, selectedPeriod, on
   const activePeriod = periods.includes(selectedPeriod) ? selectedPeriod : periods[0]
 
   return (
-    <section className="bg-white px-6 py-6 xl:px-8">
+    <section className="bg-white/90 px-6 py-6 xl:px-8">
       <h2 className="text-xl font-black text-black">전국날씨</h2>
       <div className="mt-5 flex justify-between text-center text-xs">
         {tabs.map((item, index) => (
@@ -338,7 +338,7 @@ function NationwideWeather({ daily, nationwide, selectedDate, selectedPeriod, on
               onSelectDate(item.date)
               if (item.date !== today && selectedPeriod === '현재') onSelectPeriod('오전')
             }}
-            className={selectedDate === item.date ? 'font-black text-[#1578ff]' : 'font-bold text-[#57616a] hover:text-[#1578ff]'}
+            className={selectedDate === item.date ? 'font-black text-[#1578ff]' : 'font-bold text-[#334466] hover:text-[#1578ff]'}
           >
             <p>{weekdayFromDate(item.date)}</p>
             <p className={selectedDate === item.date ? 'border-b-2 border-[#1578ff] pb-2' : 'pb-2'}>{index === 0 ? '오늘' : formatShortDate(item.date)}</p>
@@ -346,13 +346,13 @@ function NationwideWeather({ daily, nationwide, selectedDate, selectedPeriod, on
         ))}
       </div>
       <div className="mt-4 rounded-md bg-[#7fc1ea] p-3">
-        <div className="mb-2 inline-flex overflow-hidden rounded bg-white text-xs font-black">
+        <div className="mb-2 inline-flex overflow-hidden rounded bg-white/90 text-xs font-black">
           {periods.map((label) => (
             <button
               type="button"
               key={label}
               onClick={() => onSelectPeriod(label)}
-              className={`px-3 py-2 ${activePeriod === label ? 'bg-[#4aa9ef] text-white' : 'text-[#5f6870] hover:bg-[#eef7ff]'}`}
+              className={`px-3 py-2 ${activePeriod === label ? 'bg-[#4aa9ef] text-white' : 'text-[#334477] hover:bg-[#eef7ff]'}`}
             >
               {label}
             </button>
@@ -382,14 +382,14 @@ function NationwideWeather({ daily, nationwide, selectedDate, selectedPeriod, on
                 <div className="flex scale-90 justify-center drop-shadow-sm">
                   <WeatherIcon tone={tone} size="sm" />
                 </div>
-                <p className="whitespace-nowrap rounded bg-white/75 px-1 text-[9px] font-black leading-tight text-[#173f4e] shadow-sm">
+                <p className="whitespace-nowrap rounded bg-white/75 px-1 text-[9px] font-black leading-tight text-[#002080] shadow-sm">
                   {item.city}{tempLabel ? ` ${tempLabel}` : ''}
                 </p>
               </div>
             )
           })}
           {!nationwide?.cities?.length && (
-            <div className="absolute inset-x-6 bottom-4 rounded-md border border-white/70 bg-white/90 px-3 py-2 text-center text-[11px] font-bold text-[#4c6d7d] shadow-sm">
+            <div className="absolute inset-x-6 bottom-4 rounded-md border border-white/70 bg-white/90 px-3 py-2 text-center text-[11px] font-bold text-[#2244aa] shadow-sm">
               전국 데이터 갱신 전입니다. 새로고침하면 주요 지점별 예보를 불러옵니다.
             </div>
           )}
@@ -407,38 +407,38 @@ function SunTimeline({ sunriseSunset }) {
   const remainingPath = `M${sun.x.toFixed(1)} ${sun.y.toFixed(1)} A108 86 0 0 1 228 98`
 
   return (
-    <section className="border-t border-[#e5e5e5] bg-white px-6 py-7 xl:px-6">
+    <section className="border-t border-[#e5e5e5] bg-white/90 px-6 py-7 xl:px-6">
       <h2 className="mb-4 text-xl font-black text-black">일출일몰</h2>
       <div className="relative mx-auto h-[180px] max-w-[300px]">
         <svg className="absolute inset-x-0 top-0 mx-auto h-[110px] w-[240px]" viewBox="0 0 240 110" aria-hidden="true">
           <path d="M12 98 A108 86 0 0 1 228 98" fill="none" stroke="#f6b000" strokeWidth="5" strokeLinecap="round" />
-          <path d={remainingPath} fill="none" stroke="#cdd2d7" strokeWidth="2" strokeDasharray="5 5" strokeLinecap="round" />
+          <path d={remainingPath} fill="none" stroke="#aabbdd" strokeWidth="2" strokeDasharray="5 5" strokeLinecap="round" />
           <circle cx={sun.x} cy={sun.y} r="10" fill="#ffc21a" stroke="#ffd36a" strokeWidth="4" />
         </svg>
-        <p className="absolute left-0 right-0 top-[64px] text-center text-sm font-black text-[#3d464e]">
-          오늘<span className="ml-1 text-xs font-bold text-[#87909a]">{todayLabel()}</span>
+        <p className="absolute left-0 right-0 top-[64px] text-center text-sm font-black text-[#1a2e4a]">
+          오늘<span className="ml-1 text-xs font-bold text-[#5577bb]">{todayLabel()}</span>
         </p>
         <div className="absolute bottom-0 left-0 right-0 flex items-end justify-center gap-3">
           <div className="text-center">
-            <p className="text-xs font-black text-[#3d464e]">일출 ↑</p>
-            <p className="text-2xl font-black leading-none text-[#11233a]">{sunrise}</p>
-            <p className="text-[10px] font-bold text-[#8c969e]">AM</p>
+            <p className="text-xs font-black text-[#1a2e4a]">일출 ↑</p>
+            <p className="text-2xl font-black leading-none text-[#001166]">{sunrise}</p>
+            <p className="text-[10px] font-bold text-[#6688bb]">AM</p>
           </div>
           <div className="mb-4 h-8 w-px bg-[#d8dde2]" />
           <div className="text-center">
-            <p className="text-xs font-black text-[#3d464e]">↓ 일몰</p>
-            <p className="text-2xl font-black leading-none text-[#11233a]">{sunset}</p>
-            <p className="text-[10px] font-bold text-[#8c969e]">PM</p>
+            <p className="text-xs font-black text-[#1a2e4a]">↓ 일몰</p>
+            <p className="text-2xl font-black leading-none text-[#001166]">{sunset}</p>
+            <p className="text-[10px] font-bold text-[#6688bb]">PM</p>
           </div>
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
         {['내일', '모레'].map((label, index) => (
           <div key={label} className="rounded-md bg-[#f5f6f7] px-3 py-2 text-center">
-            <p className="mb-1 text-xs font-black text-[#5e6872]">
-              {label} <span className="font-bold text-[#9aa2a9]">{format(new Date(Date.now() + (index + 1) * 86400000), 'MM.dd', { locale: ko })}</span>
+            <p className="mb-1 text-xs font-black text-[#334477]">
+              {label} <span className="font-bold text-[#7799bb]">{format(new Date(Date.now() + (index + 1) * 86400000), 'MM.dd', { locale: ko })}</span>
             </p>
-            <p className="truncate text-xs font-bold text-[#11233a]">
+            <p className="truncate text-xs font-bold text-[#001166]">
               ↑{sunrise} ↓{sunset}
             </p>
           </div>
@@ -468,20 +468,20 @@ export default function WeatherPage() {
 
   return (
     // Intentionally deferring broader WeatherPage region/CSS cleanup for a later layout pass.
-    <div data-weather-page className="min-h-full overflow-x-hidden bg-white text-[#202124]">
-      <div className="mx-auto flex min-h-full w-full max-w-[1600px] border-x border-[#e0e0e0] bg-white">
+    <div data-weather-page className="min-h-full overflow-x-hidden bg-white/90 text-[#202124]">
+      <div className="mx-auto flex min-h-full w-full max-w-[1600px] border-x border-[#e0e0e0] bg-white/90">
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 xl:px-12">
           <div className="mb-5 flex items-center justify-between">
             <div className="relative flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setSourceOpen((value) => !value)}
-                className="rounded-full bg-[#0c57bb] px-4 py-2 text-sm font-black text-white"
+                className="rounded-full bg-[#0044cc] px-4 py-2 text-sm font-black text-white"
               >
                 {selectedSource}⌄
               </button>
               {sourceOpen && (
-                <div className="absolute left-0 top-11 z-20 w-36 overflow-hidden rounded-md border border-[#cfd7df] bg-white text-sm font-bold shadow-lg">
+                <div className="absolute left-0 top-11 z-20 w-36 overflow-hidden rounded-md border border-[#cfd7df] bg-white/90 text-sm font-bold shadow-lg">
                   {['기상청', '웨더아이'].map((label) => (
                     <button
                       type="button"
@@ -500,12 +500,12 @@ export default function WeatherPage() {
               <button
                 type="button"
                 onClick={() => setRegionOpen((value) => !value)}
-                className="rounded-full border border-[#d8dde2] px-4 py-2 text-sm font-bold text-[#626b73] hover:bg-[#f7fafc]"
+                className="rounded-full border border-[#d8dde2] px-4 py-2 text-sm font-bold text-[#334488] hover:bg-[#f7fafc]"
               >
                 ☆ 지역설정
               </button>
               {regionOpen && (
-                <div className="absolute left-[150px] top-11 z-20 w-56 rounded-md border border-[#cfd7df] bg-white p-3 text-xs font-bold text-[#5c6670] shadow-lg">
+                <div className="absolute left-[150px] top-11 z-20 w-56 rounded-md border border-[#cfd7df] bg-white/90 p-3 text-xs font-bold text-[#334466] shadow-lg">
                   <p className="text-sm font-black text-[#202124]">{locationName}</p>
                   <p className="mt-1">현재 고정 지역입니다. 검색/즐겨찾기 연결은 다음 단계에서 붙입니다.</p>
                   <button
@@ -522,22 +522,22 @@ export default function WeatherPage() {
               <button
                 onClick={forceRefresh}
                 disabled={loading}
-                className="inline-flex items-center gap-1 rounded-md bg-[#eff6fb] px-3 py-2 text-xs font-black text-[#235f87] hover:bg-[#dceef8] disabled:opacity-60"
+                className="inline-flex items-center gap-1 rounded-md bg-[#eff6fb] px-3 py-2 text-xs font-black text-[#235f87] hover:bg-[#cce4ff] disabled:opacity-60"
               >
                 <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
                 갱신
               </button>
-              <p className="mt-1 text-[11px] font-bold text-[#8c969e]">
+              <p className="mt-1 text-[11px] font-bold text-[#6688bb]">
                 RTDB {saveStatus === 'saving' ? '저장 중' : saveStatus === 'saved' ? '저장 완료' : saveStatus === 'error' ? '저장 실패' : '대기'}
               </p>
-              <p className="text-[11px] font-bold text-[#8c969e]">
+              <p className="text-[11px] font-bold text-[#6688bb]">
                 마지막 갱신 {formatFetchedAt(weather?.fetchedAt)}
               </p>
             </div>
           </div>
 
           {cacheLoading && (
-            <div className="mb-4 rounded-md border border-[#d8e4ea] bg-[#f8fbfd] px-4 py-3 text-sm font-bold text-[#55777b]">
+            <div className="mb-4 rounded-md border border-[#bbddff] bg-[#f5f9ff] px-4 py-3 text-sm font-bold text-[#4477cc]">
               Firebase에 저장된 날씨를 불러오는 중
             </div>
           )}
@@ -551,27 +551,27 @@ export default function WeatherPage() {
           <section className="pb-8">
             <div className="mb-5 flex items-center gap-2">
               <Star size={18} className="fill-[#c9ced3] text-[#c9ced3]" />
-              <h1 className="text-2xl font-black text-[#3a4046]">{locationName}</h1>
-              <span className="text-lg text-[#7f8992]">⊕</span>
+              <h1 className="text-2xl font-black text-[#1a2e4a]">{locationName}</h1>
+              <span className="text-lg text-[#5577aa]">⊕</span>
             </div>
 
             <div className="grid gap-8 md:grid-cols-[1fr_1px_1fr]">
               <div className="text-center">
-                <span className="inline-block rounded-full border border-[#d4d9de] px-3 py-1 text-sm font-black">현재 {todayLabel()}</span>
+                <span className="inline-block rounded-full border border-[#c0d5ee] px-3 py-1 text-sm font-black">현재 {todayLabel()}</span>
                 <div className="mt-4 flex items-center justify-center gap-1">
                   <WeatherIcon tone={weatherTone(current?.sky)} size="lg" />
                   <p className="text-[58px] font-black leading-none tracking-tight text-black">{current?.temp || '-'}°</p>
                 </div>
                 <p className="mt-3 text-base font-black">{current?.sky || '-'}</p>
-                <p className="text-sm font-bold text-[#525c65]">
+                <p className="text-sm font-bold text-[#334466]">
                   어제보다 0.6°↑ <span className="ml-2">최저{daily[0]?.minTemp || '-'}° · 최고{daily[0]?.maxTemp || '-'}°</span>
                 </p>
               </div>
 
-              <div className="hidden bg-[#d5d9dd] md:block" />
+              <div className="hidden bg-[#bbccee] md:block" />
 
               <div className="text-center">
-                <span className="inline-block rounded-full border border-[#d4d9de] px-3 py-1 text-sm font-black">내일 {tomorrow?.label || '-'}</span>
+                <span className="inline-block rounded-full border border-[#c0d5ee] px-3 py-1 text-sm font-black">내일 {tomorrow?.label || '-'}</span>
                 <div className="mt-6 flex items-end justify-center gap-2">
                   <div className="text-center text-xs font-bold text-[#5b6570]">
                     <p>최저</p>
@@ -583,9 +583,9 @@ export default function WeatherPage() {
                     <p className="text-4xl font-black text-black">{tomorrow?.maxTemp || '-'}°</p>
                   </div>
                 </div>
-                <div className="mx-auto mt-4 max-w-[240px] border-t border-[#e4e7ea] pt-3 text-left text-sm font-bold">
-                  <p>오전 <span className="text-[#525c65]">{tomorrow?.sky || '-'}</span> <span className="text-[#145ed6]">{tomorrow?.pop || '-'}%</span></p>
-                  <p>오후 <span className="text-[#525c65]">{tomorrow?.sky || '-'}</span> <span className="text-[#145ed6]">{tomorrow?.pop || '-'}%</span></p>
+                <div className="mx-auto mt-4 max-w-[240px] border-t border-[#d5e8ff] pt-3 text-left text-sm font-bold">
+                  <p>오전 <span className="text-[#334466]">{tomorrow?.sky || '-'}</span> <span className="text-[#145ed6]">{tomorrow?.pop || '-'}%</span></p>
+                  <p>오후 <span className="text-[#334466]">{tomorrow?.sky || '-'}</span> <span className="text-[#145ed6]">{tomorrow?.pop || '-'}%</span></p>
                 </div>
               </div>
             </div>
@@ -604,13 +604,13 @@ export default function WeatherPage() {
           <WeeklyForecast daily={daily} selectedDate={activeDate} onSelectDate={setSelectedDate} />
 
           {nextRefreshAt && (
-            <p className="mt-4 text-right text-[11px] font-bold text-[#9aa2a9]">
+            <p className="mt-4 text-right text-[11px] font-bold text-[#7799bb]">
               다음 자동 갱신 {format(nextRefreshAt, 'M월 d일 HH:mm', { locale: ko })}
             </p>
           )}
         </main>
 
-        <aside className="hidden w-[320px] shrink-0 border-l border-[#d9dee3] xl:block">
+        <aside className="hidden w-[320px] shrink-0 border-l border-[#c8ddff] xl:block">
           <NationwideWeather
             daily={daily}
             nationwide={nationwide}
@@ -637,7 +637,7 @@ export default function WeatherPage() {
       <button
         type="button"
         onClick={() => document.querySelector('[data-weather-page]')?.scrollIntoView({ behavior: 'smooth' })}
-        className="fixed bottom-8 right-8 hidden h-12 w-12 items-center justify-center rounded-full bg-[#0b78ff] text-white shadow-lg lg:flex"
+        className="fixed bottom-8 right-8 hidden h-12 w-12 items-center justify-center rounded-full bg-[#0055ff] text-white shadow-lg lg:flex"
         aria-label="top"
       >
         <ChevronRight size={24} className="-rotate-90" />

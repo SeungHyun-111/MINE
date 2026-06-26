@@ -60,16 +60,16 @@ export default function EventFormModal({ date, eventToEdit, error, saving, onClo
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#1f4e5f]/45 sm:items-center">
-      <div className="w-full max-w-md bg-[#f4f7f7] rounded-t-lg sm:rounded-lg shadow-xl border border-[#c9d6de]">
-        <div className="flex items-center justify-between px-4 py-3 bg-[#dcebed] border-b border-[#c3dadd]">
-          <h2 className="text-base font-bold text-[#1f4e5f]">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#0044cc]/45 sm:items-center">
+      <div className="w-full max-w-md bg-[#f0f5ff] rounded-t-lg sm:rounded-lg shadow-xl border border-[#aacce4]">
+        <div className="flex items-center justify-between px-4 py-3 bg-[#cce0ff] border-b border-[#aaccee]">
+          <h2 className="text-base font-bold text-[#0044cc]">
             {isEditing ? '일정 수정' : '일정 추가'}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-full text-[#55777b] hover:bg-[#cfe1e4] hover:text-[#1f4e5f]"
+            className="p-2 rounded-full text-[#4477cc] hover:bg-[#bbd5ff] hover:text-[#0044cc]"
             aria-label="닫기"
           >
             <X size={18} />
@@ -84,53 +84,53 @@ export default function EventFormModal({ date, eventToEdit, error, saving, onClo
           )}
 
           <label className="block">
-            <span className="block text-xs font-bold text-[#55777b] mb-1">제목</span>
+            <span className="block text-xs font-bold text-[#4477cc] mb-1">제목</span>
             <input
               name="title"
               required
               autoFocus
               defaultValue={defaults.title}
-              className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
+              className="w-full rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
               placeholder="일정 제목"
             />
           </label>
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="block text-xs font-bold text-[#55777b] mb-1">시작 날짜</span>
+              <span className="block text-xs font-bold text-[#4477cc] mb-1">시작 날짜</span>
               <input
                 type="date"
                 name="startDate"
                 defaultValue={defaults.startDate}
                 required
-                className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
+                className="w-full rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
               />
             </label>
             <label className="block">
-              <span className="block text-xs font-bold text-[#55777b] mb-1">종료 날짜</span>
+              <span className="block text-xs font-bold text-[#4477cc] mb-1">종료 날짜</span>
               <input
                 type="date"
                 name="endDate"
                 defaultValue={defaults.endDate}
                 required
-                className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
+                className="w-full rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
               />
             </label>
           </div>
 
-          <label className="flex items-center gap-2 text-sm font-medium text-[#1f4e5f]">
+          <label className="flex items-center gap-2 text-sm font-medium text-[#0044cc]">
             <input
               type="checkbox"
               name="allDay"
               defaultChecked={defaults.allDay}
-              className="h-4 w-4 rounded border-[#aacfd0] text-[#1f4e5f]"
+              className="h-4 w-4 rounded border-[#99ccff] text-[#0044cc]"
             />
             종일
           </label>
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="block text-xs font-bold text-[#55777b] mb-1">시작 시간</span>
+              <span className="block text-xs font-bold text-[#4477cc] mb-1">시작 시간</span>
               <input
                 type="text"
                 name="startTime"
@@ -138,11 +138,11 @@ export default function EventFormModal({ date, eventToEdit, error, saving, onClo
                 pattern="^([01]\d|2[0-3]):[0-5]\d$"
                 placeholder="09:00"
                 defaultValue={defaults.startTime}
-                className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
+                className="w-full rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
               />
             </label>
             <label className="block">
-              <span className="block text-xs font-bold text-[#55777b] mb-1">종료 시간</span>
+              <span className="block text-xs font-bold text-[#4477cc] mb-1">종료 시간</span>
               <input
                 type="text"
                 name="endTime"
@@ -150,18 +150,18 @@ export default function EventFormModal({ date, eventToEdit, error, saving, onClo
                 pattern="^([01]\d|2[0-3]):[0-5]\d$"
                 placeholder="10:00"
                 defaultValue={defaults.endTime}
-                className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
+                className="w-full rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
               />
             </label>
           </div>
 
           <label className="block">
-            <span className="block text-xs font-bold text-[#55777b] mb-1">메모</span>
+            <span className="block text-xs font-bold text-[#4477cc] mb-1">메모</span>
             <textarea
               name="memo"
               rows={3}
               defaultValue={defaults.memo}
-              className="w-full resize-none rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
+              className="w-full resize-none rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
               placeholder="메모"
             />
           </label>
@@ -170,14 +170,14 @@ export default function EventFormModal({ date, eventToEdit, error, saving, onClo
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-semibold text-[#55777b] rounded-lg hover:bg-[#e1edef]"
+              className="px-4 py-2 text-sm font-semibold text-[#4477cc] rounded-lg hover:bg-[#d5e8ff]"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 text-sm font-bold text-white bg-[#1f4e5f] rounded-lg hover:bg-[#173f4e] disabled:opacity-60"
+              className="px-4 py-2 text-sm font-bold text-white bg-[#0044cc] rounded-lg hover:bg-[#002080] disabled:opacity-60"
             >
               {saving ? '저장 중...' : '저장'}
             </button>

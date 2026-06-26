@@ -30,7 +30,7 @@ body {
 
 .weather-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #aab3bb #eef1f4;
+  scrollbar-color: #99aacc #eef3ff;
 }
 
 .weather-scroll::-webkit-scrollbar {
@@ -38,12 +38,12 @@ body {
 }
 
 .weather-scroll::-webkit-scrollbar-track {
-  background: #eef1f4;
+  background: #eef3ff;
   border-radius: 999px;
 }
 
 .weather-scroll::-webkit-scrollbar-thumb {
-  background: #aab3bb;
+  background: #99aacc;
   border-radius: 999px;
 }
 

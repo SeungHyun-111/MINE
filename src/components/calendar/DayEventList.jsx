@@ -43,21 +43,21 @@ export default function DayEventList({ date, events, onAdd, onEdit, onRemove, on
     <section
       className={
         isSheet
-          ? 'max-h-[42svh] overflow-hidden rounded-2xl border border-[#b9cdd1] bg-white shadow-[0_10px_32px_rgba(31,78,95,0.22)]'
-          : 'bg-white border border-[#c9d6de] rounded-lg shadow-sm overflow-hidden'
+          ? 'max-h-[42svh] overflow-hidden rounded-2xl border border-[#aabbee] bg-white/90 shadow-[0_10px_32px_rgba(31,78,95,0.22)]'
+          : 'bg-white/90 border border-[#aacce4] rounded-lg shadow-sm overflow-hidden'
       }
     >
-      <div className="flex items-center justify-between px-4 py-3 bg-[#dcebed] border-b border-[#c3dadd]">
+      <div className="flex items-center justify-between px-4 py-3 bg-[#cce0ff] border-b border-[#aaccee]">
         <div>
-          <p className="text-xs font-semibold text-[#55777b]">선택한 날짜</p>
-          <h3 className="text-sm font-bold text-[#1f4e5f]">
+          <p className="text-xs font-semibold text-[#4477cc]">선택한 날짜</p>
+          <h3 className="text-sm font-bold text-[#0044cc]">
             {format(date, 'M월 d일 (EEE)', { locale: ko })}
           </h3>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={onAdd}
-            className="flex items-center gap-1.5 rounded-lg bg-[#1f4e5f] px-3 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#173f4e] active:bg-[#123542]"
+            className="flex items-center gap-1.5 rounded-lg bg-[#0044cc] px-3 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#002080] active:bg-[#123542]"
           >
             <Plus size={16} />
             일정 추가
@@ -66,7 +66,7 @@ export default function DayEventList({ date, events, onAdd, onEdit, onRemove, on
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-[#55777b] active:bg-[#cfe1e4]"
+              className="rounded-lg p-2 text-[#4477cc] active:bg-[#bbd5ff]"
               aria-label="닫기"
             >
               <X size={18} />
@@ -77,14 +77,14 @@ export default function DayEventList({ date, events, onAdd, onEdit, onRemove, on
 
       <div className={isSheet ? 'max-h-[30svh] overflow-y-auto' : ''}>
         {dayEvents.length === 0 ? (
-          <p className="text-center text-[#789094] text-sm py-6">일정이 없습니다</p>
+          <p className="text-center text-[#5577bb] text-sm py-6">일정이 없습니다</p>
         ) : (
-          <ul className="divide-y divide-[#e0eaec] bg-[#fbfdfd]">
+          <ul className="divide-y divide-[#d5e8ff] bg-[#f5f9ff]">
             {dayEvents.map((event) => {
               const isAllDay = !!event.start?.date
               return (
                 <li key={event.id} className="flex items-start gap-3 px-4 py-3">
-                  <div className="flex items-center gap-1.5 text-[#789094] text-xs mt-0.5 w-20 shrink-0">
+                  <div className="flex items-center gap-1.5 text-[#5577bb] text-xs mt-0.5 w-20 shrink-0">
                     {!isAllDay && <Clock size={12} />}
                     <span>{isAllDay ? '종일' : formatTime(event.start?.dateTime)}</span>
                   </div>
@@ -93,11 +93,11 @@ export default function DayEventList({ date, events, onAdd, onEdit, onRemove, on
                     onClick={() => onEdit?.(event)}
                     className="flex-1 min-w-0 text-left"
                   >
-                    <p className="text-sm font-semibold text-[#304852] truncate">
+                    <p className="text-sm font-semibold text-[#1a3d8a] truncate">
                       {event.summary || '(제목 없음)'}
                     </p>
                     {event.description && (
-                      <p className="text-xs text-[#789094] mt-0.5 truncate">
+                      <p className="text-xs text-[#5577bb] mt-0.5 truncate">
                         {event.description}
                       </p>
                     )}
@@ -106,7 +106,7 @@ export default function DayEventList({ date, events, onAdd, onEdit, onRemove, on
                     <button
                       type="button"
                       onClick={() => onEdit?.(event)}
-                      className="p-1.5 rounded-md text-[#55777b] hover:bg-[#e1edef] hover:text-[#1f4e5f]"
+                      className="p-1.5 rounded-md text-[#4477cc] hover:bg-[#d5e8ff] hover:text-[#0044cc]"
                       aria-label="일정 수정"
                     >
                       <Pencil size={14} />

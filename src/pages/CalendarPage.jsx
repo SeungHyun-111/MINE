@@ -137,14 +137,14 @@ export default function CalendarPage({ focusDate, focusKey }) {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-full bg-[#f4f7f7]">
+    <div className="flex flex-col h-full min-h-full bg-[#f0f5ff]">
       {/* Intentionally hidden for now; Google Calendar connection UI will be restored when backend integration is enabled.
       {!connected && (
         <div className="flex items-center justify-between gap-3 bg-[#fff8df] border-b border-[#e7d79a] px-4 py-3">
           <p className="text-sm font-medium text-[#665a2b]">Google Calendar 연결이 필요합니다.</p>
           <button
             onClick={connectCalendar}
-            className="flex items-center gap-1.5 text-sm font-semibold text-[#1f4e5f] bg-[#d6edef] hover:bg-[#c4e1e3] px-3 py-1.5 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 text-sm font-semibold text-[#0044cc] bg-[#d6edef] hover:bg-[#c4e1e3] px-3 py-1.5 rounded-lg transition-colors"
           >
             <RefreshCw size={14} />
             연결하기
@@ -163,7 +163,7 @@ export default function CalendarPage({ focusDate, focusKey }) {
               setUrlError(null)
               connectCalendar()
             }}
-            className="shrink-0 flex items-center gap-1.5 text-sm font-semibold text-[#1f4e5f] bg-[#d6edef] hover:bg-[#c4e1e3] px-3 py-1.5 rounded-lg transition-colors"
+            className="shrink-0 flex items-center gap-1.5 text-sm font-semibold text-[#0044cc] bg-[#d6edef] hover:bg-[#c4e1e3] px-3 py-1.5 rounded-lg transition-colors"
           >
             <RefreshCw size={14} />
             다시 연결
@@ -173,31 +173,31 @@ export default function CalendarPage({ focusDate, focusKey }) {
       */}
 
       {loading && (
-        <div className="flex justify-center py-2 bg-white border-b border-[#d6e1e3]">
-          <div className="w-4 h-4 border-2 border-[#79a8a9] border-t-transparent rounded-full animate-spin" />
+        <div className="flex justify-center py-2 bg-white/90 border-b border-[#bbd0ee]">
+          <div className="w-4 h-4 border-2 border-[#5588bb] border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
-      <div className="shrink-0 bg-[#e8f1f2] border-b border-[#c8dadc] px-4 py-3">
+      <div className="shrink-0 bg-[#e8f1f2] border-b border-[#bbddff] px-4 py-3">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-bold text-[#1f4e5f]">캘린더 검색</h2>
+          <h2 className="text-sm font-bold text-[#0044cc]">캘린더 검색</h2>
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="text-xs font-semibold text-[#55777b] hover:text-[#1f4e5f]"
+              className="text-xs font-semibold text-[#4477cc] hover:text-[#0044cc]"
             >
               초기화
             </button>
           )}
         </div>
         <label className="relative block">
-          <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#79a8a9]" />
+          <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5588bb]" />
           <input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="일정 검색"
-            className="w-full rounded-lg border border-[#aacfd0] bg-white pl-10 pr-3 py-2.5 text-sm shadow-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
+            className="w-full rounded-lg border border-[#99ccff] bg-white/90 pl-10 pr-3 py-2.5 text-sm shadow-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
           />
         </label>
       </div>

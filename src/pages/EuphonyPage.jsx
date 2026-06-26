@@ -17,7 +17,7 @@ function EditableField({ value, className, multiline = false, rows = 1, placehol
   }
 
   if (editing) {
-    const inputClass = `${className} rounded-md bg-white/30 outline-none ring-1 ring-[#6fa39c]`
+    const inputClass = `${className} rounded-md bg-white/30 outline-none ring-1 ring-[#5599cc]`
     if (multiline) {
       const widthCh = Math.min(Math.max(draft.length + 2, 28), 120)
       return (
@@ -84,21 +84,21 @@ function HighlightCard({ highlight, onUpdate, onRemove }) {
       <button
         type="button"
         onClick={() => setMenuOpen((value) => !value)}
-        className="absolute right-3 top-3 rounded-md border border-white/40 bg-white/20 p-1.5 text-[#1f3f3b] hover:bg-white/35"
+        className="absolute right-3 top-3 rounded-md border border-white/40 bg-white/20 p-1.5 text-[#002fa3] hover:bg-white/35"
         aria-label="메뉴"
       >
         <MoreVertical size={16} />
       </button>
 
       {menuOpen && (
-        <div className="absolute right-3 top-11 z-10 w-24 overflow-hidden rounded-md border border-white/50 bg-white/80 text-xs font-bold text-[#1f3f3b] shadow-sm backdrop-blur">
+        <div className="absolute right-3 top-11 z-10 w-24 overflow-hidden rounded-md border border-white/50 bg-white/80 text-xs font-bold text-[#002fa3] shadow-sm backdrop-blur">
           <button
             type="button"
             onClick={() => {
               setEditingText(true)
               setMenuOpen(false)
             }}
-            className="block w-full px-3 py-2 text-left hover:bg-white"
+            className="block w-full px-3 py-2 text-left hover:bg-white/90"
           >
             수정
           </button>
@@ -152,13 +152,13 @@ function HighlightCard({ highlight, onUpdate, onRemove }) {
             value={highlight.author || ''}
             onSave={(value) => onUpdate(highlight.id, { author: value })}
             placeholder="저자"
-            className="rounded-md border border-white/40 bg-white/20 px-3 py-1.5 text-right text-xs font-bold text-[#1f3f3b] placeholder:text-[#557b76]"
+            className="rounded-md border border-white/40 bg-white/20 px-3 py-1.5 text-right text-xs font-bold text-[#002fa3] placeholder:text-[#557b76]"
           />
           <EditableField
             value={highlight.bookTitle || ''}
             onSave={(value) => onUpdate(highlight.id, { bookTitle: value })}
             placeholder="책 제목"
-            className="rounded-md border border-white/40 bg-white/20 px-3 py-1.5 text-right text-xs font-bold text-[#1f3f3b] placeholder:text-[#557b76]"
+            className="rounded-md border border-white/40 bg-white/20 px-3 py-1.5 text-right text-xs font-bold text-[#002fa3] placeholder:text-[#557b76]"
           />
         </div>
       </div>
@@ -181,7 +181,7 @@ export default function EuphonyPage() {
   })
 
   return (
-    <div className="h-full overflow-y-auto bg-[#edf4f2] p-0.5 text-[#173f3d]">
+    <div className="h-full overflow-y-auto bg-[#edf4f2] p-0.5 text-[#002080]">
       <main className="relative isolate min-h-[calc(100svh-4px)] overflow-hidden rounded-sm border border-[#c7d8d5]">
         <img
           src={backgroundImage}
@@ -191,14 +191,14 @@ export default function EuphonyPage() {
         <div className="relative z-10 min-h-[calc(100svh-4px)] px-4 py-5 md:px-8 md:py-7">
           <section className="mb-4 flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.24em] text-[#2f7771]">Euphony</p>
+              <p className="text-sm font-black uppercase tracking-[0.24em] text-[#0055ff]">Euphony</p>
               <h1 className="mt-2 text-4xl font-black leading-tight md:text-6xl">Euphony</h1>
             </div>
             <div className="flex items-center gap-2">
               <select
                 value={selectedBook}
                 onChange={(e) => setSelectedBook(e.target.value)}
-                className="rounded-md border border-white/40 bg-white/20 px-2.5 py-2 text-xs font-bold text-[#1f3f3b] shadow-sm backdrop-blur-[2px] focus:outline-none"
+                className="rounded-md border border-white/40 bg-white/20 px-2.5 py-2 text-xs font-bold text-[#002fa3] shadow-sm backdrop-blur-[2px] focus:outline-none"
               >
                 <option value="">도서명</option>
                 {bookTitles.map((title) => (
@@ -208,7 +208,7 @@ export default function EuphonyPage() {
               <select
                 value={selectedAuthor}
                 onChange={(e) => setSelectedAuthor(e.target.value)}
-                className="rounded-md border border-white/40 bg-white/20 px-2.5 py-2 text-xs font-bold text-[#1f3f3b] shadow-sm backdrop-blur-[2px] focus:outline-none"
+                className="rounded-md border border-white/40 bg-white/20 px-2.5 py-2 text-xs font-bold text-[#002fa3] shadow-sm backdrop-blur-[2px] focus:outline-none"
               >
                 <option value="">저자명</option>
                 {authors.map((author) => (
@@ -218,7 +218,7 @@ export default function EuphonyPage() {
               <button
                 type="button"
                 onClick={addHighlight}
-                className="inline-flex items-center gap-1.5 rounded-md border border-white/40 bg-white/20 px-3 py-2 text-xs font-black text-[#1f3f3b] shadow-sm backdrop-blur-[2px] hover:bg-white/35"
+                className="inline-flex items-center gap-1.5 rounded-md border border-white/40 bg-white/20 px-3 py-2 text-xs font-black text-[#002fa3] shadow-sm backdrop-blur-[2px] hover:bg-white/35"
               >
                 <Plus size={14} />
                 추가

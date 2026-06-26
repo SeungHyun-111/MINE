@@ -86,33 +86,33 @@ export default function CalendarView({
   const startPad = getDay(firstDay)
 
   return (
-    <section className="bg-white border border-[#c9d6de] rounded-lg shadow-sm flex flex-col min-h-[520px] md:flex-1 md:min-h-0 overflow-hidden">
-      <div className="flex items-center justify-center gap-3 px-4 py-3 bg-[#aacfd0] border-b border-[#92bdc0]">
+    <section className="bg-white/90 border border-[#aacce4] rounded-lg shadow-sm flex flex-col min-h-[520px] md:flex-1 md:min-h-0 overflow-hidden">
+      <div className="flex items-center justify-center gap-3 px-4 py-3 bg-[#99ccff] border-b border-[#92bdc0]">
         <button
           onClick={() => onMonthChange(subMonths(currentMonth, 1))}
-          className="p-2 rounded-full bg-[#f4f7f7] text-[#1f4e5f] hover:bg-[#dcebed] active:bg-[#c9dfe1]"
+          className="p-2 rounded-full bg-[#f0f5ff] text-[#0044cc] hover:bg-[#cce0ff] active:bg-[#c9dfe1]"
           aria-label="이전 달"
         >
           <ChevronLeft size={20} />
         </button>
-        <h2 className="w-32 text-center text-lg font-bold text-[#1f4e5f]">
+        <h2 className="w-32 text-center text-lg font-bold text-[#0044cc]">
           {format(currentMonth, 'yyyy년 M월', { locale: ko })}
         </h2>
         <button
           onClick={() => onMonthChange(addMonths(currentMonth, 1))}
-          className="p-2 rounded-full bg-[#f4f7f7] text-[#1f4e5f] hover:bg-[#dcebed] active:bg-[#c9dfe1]"
+          className="p-2 rounded-full bg-[#f0f5ff] text-[#0044cc] hover:bg-[#cce0ff] active:bg-[#c9dfe1]"
           aria-label="다음 달"
         >
           <ChevronRight size={20} />
         </button>
       </div>
 
-      <div className="grid grid-cols-7 bg-[#eef5f5] border-b border-[#d4e1e3] shrink-0">
+      <div className="grid grid-cols-7 bg-[#eef3ff] border-b border-[#bbd5f5] shrink-0">
         {DAYS.map((d, i) => (
           <div
             key={d}
             className={`text-center text-xs font-semibold py-2 ${
-              i === 0 ? 'text-[#ba7373]' : i === 6 ? 'text-[#4f7f91]' : 'text-[#55777b]'
+              i === 0 ? 'text-[#ba7373]' : i === 6 ? 'text-[#4f7f91]' : 'text-[#4477cc]'
             }`}
           >
             {d}
@@ -120,9 +120,9 @@ export default function CalendarView({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 auto-rows-fr flex-1 bg-white">
+      <div className="grid grid-cols-7 auto-rows-fr flex-1 bg-white/90">
         {Array.from({ length: startPad }).map((_, i) => (
-          <div key={`pad-${i}`} className="min-h-[76px] md:min-h-[112px] border-b border-r border-[#e3ecee] bg-[#f7fafa]" />
+          <div key={`pad-${i}`} className="min-h-[76px] md:min-h-[112px] border-b border-r border-[#d5e8ff] bg-[#f5f9ff]" />
         ))}
 
         {days.map((day) => {
@@ -137,21 +137,21 @@ export default function CalendarView({
               key={dateStr}
               onClick={() => onDayClick(day)}
               onDoubleClick={() => onDayDoubleClick?.(day)}
-              className={`min-h-[76px] md:min-h-[112px] p-1.5 border-b border-r border-[#e3ecee] flex flex-col items-center text-left transition-colors ${
-                isSelected ? 'bg-[#e6f2f3]' : 'bg-white hover:bg-[#f4f7f7] active:bg-[#eaf1f2]'
+              className={`min-h-[76px] md:min-h-[112px] p-1.5 border-b border-r border-[#d5e8ff] flex flex-col items-center text-left transition-colors ${
+                isSelected ? 'bg-[#e6f2f3]' : 'bg-white/90 hover:bg-[#f0f5ff] active:bg-[#eaf1f2]'
               }`}
             >
               <span
                 className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold mb-1 ${
                   today
-                    ? 'bg-[#1f4e5f] text-white'
+                    ? 'bg-[#0044cc] text-white'
                     : isSelected
-                      ? 'text-[#1f4e5f]'
+                      ? 'text-[#0044cc]'
                       : dayOfWeek === 0
                         ? 'text-[#ba7373]'
                         : dayOfWeek === 6
                           ? 'text-[#4f7f91]'
-                          : 'text-[#52616a]'
+                          : 'text-[#3355aa]'
                 }`}
               >
                 {format(day, 'd')}
@@ -173,7 +173,7 @@ export default function CalendarView({
                   )
                 })}
                 {dayEvents.length > 2 && (
-                  <div className="text-[10px] text-[#789094] px-1">
+                  <div className="text-[10px] text-[#5577bb] px-1">
                     +{dayEvents.length - 2}
                   </div>
                 )}

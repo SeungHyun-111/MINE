@@ -47,11 +47,11 @@ function StatusBoard({ memos, onSelect }) {
   const timeLabel = today.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
 
   return (
-    <section className="overflow-hidden rounded-md border border-[#526d72] bg-[#142426] shadow-sm">
-      <div className="flex min-h-16 items-center gap-3 px-3 py-2 text-[#c8eef0]">
+    <section className="overflow-hidden rounded-md border border-[#3355aa] bg-[#001133] shadow-sm">
+      <div className="flex min-h-16 items-center gap-3 px-3 py-2 text-[#bbddff]">
         <div className="w-16 shrink-0 border-r border-[#355155] pr-3 text-left font-mono font-black leading-tight">
-          <p className="text-sm text-[#9fe1e3]">{dateLabel}</p>
-          <p className="text-sm text-[#9fe1e3]">{timeLabel}</p>
+          <p className="text-sm text-[#99ccff]">{dateLabel}</p>
+          <p className="text-sm text-[#99ccff]">{timeLabel}</p>
         </div>
 
         <div className="min-w-0 flex-1 overflow-hidden">
@@ -88,23 +88,23 @@ function StatusBoard({ memos, onSelect }) {
           <button
             type="button"
             onClick={() => primary && onSelect(primary.id)}
-            className="text-[#c8d5d6] hover:text-white"
+            className="text-[#bbddff] hover:text-white"
             aria-label="닫기"
           >
             <X size={15} />
           </button>
-          <span className="text-[#9fe1e3]">1/{Math.max(activeMemos.length, 1)}</span>
+          <span className="text-[#99ccff]">1/{Math.max(activeMemos.length, 1)}</span>
           <div className="grid gap-1">
-            <button type="button" className="rounded border border-[#526d72] px-1 text-[#9fe1e3]" aria-label="이전">
+            <button type="button" className="rounded border border-[#3355aa] px-1 text-[#99ccff]" aria-label="이전">
               <ChevronUp size={14} />
             </button>
-            <button type="button" className="rounded border border-[#526d72] px-1 text-[#9fe1e3]" aria-label="다음">
+            <button type="button" className="rounded border border-[#3355aa] px-1 text-[#99ccff]" aria-label="다음">
               <ChevronDown size={14} />
             </button>
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-2 border-t border-[#293f42] px-3 py-1.5 text-[11px] font-bold text-[#8fbcc0]">
+      <div className="flex items-center gap-2 border-t border-[#112244] px-3 py-1.5 text-[11px] font-bold text-[#8fbcc0]">
         <FileText size={13} />
         <span>미완료/진행중 메모 현황</span>
       </div>
@@ -130,25 +130,25 @@ function MemoForm({ onSubmit }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-lg border border-[#c8dadc] bg-[#e8f1f2] p-3 shadow-sm">
+    <form onSubmit={handleSubmit} className="rounded-lg border border-[#bbddff] bg-[#e8f1f2] p-3 shadow-sm">
       <input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         placeholder="메모 제목"
-        className="mb-2 w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
+        className="mb-2 w-full rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
       />
       <textarea
         value={content}
         onChange={(event) => setContent(event.target.value)}
         rows={4}
         placeholder="메모 내용"
-        className="w-full resize-none rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
+        className="w-full resize-none rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
       />
       <div className="mt-2 flex items-center gap-2">
         <select
           value={stage}
           onChange={(event) => setStage(event.target.value)}
-          className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm font-bold text-[#1f4e5f] outline-none"
+          className="rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm font-bold text-[#0044cc] outline-none"
         >
           {MEMO_STAGES.map((item) => (
             <option key={item.id} value={item.id}>{item.label}</option>
@@ -157,14 +157,14 @@ function MemoForm({ onSubmit }) {
         <select
           value={priority}
           onChange={(event) => setPriority(event.target.value)}
-          className="rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm font-bold text-[#1f4e5f] outline-none"
+          className="rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm font-bold text-[#0044cc] outline-none"
         >
           <option value="">우선순위</option>
           {MEMO_PRIORITIES.map((item) => (
             <option key={item.id} value={item.id}>{item.label}</option>
           ))}
         </select>
-        <button className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f4e5f] px-4 py-2 text-sm font-bold text-white hover:bg-[#173f4e]">
+        <button className="inline-flex items-center gap-1.5 rounded-lg bg-[#0044cc] px-4 py-2 text-sm font-bold text-white hover:bg-[#002080]">
           <Plus size={16} />
           추가
         </button>
@@ -186,13 +186,13 @@ function MemoEditor({ memo, onUpdate, onRemove }) {
   const logs = Array.isArray(memo.logs) ? [...memo.logs].reverse() : []
 
   return (
-    <div className="bg-[#f8fbfb]">
-      <div className="flex items-center justify-between border-b border-[#d4e1e3] py-3">
+    <div className="bg-[#f5f9ff]">
+      <div className="flex items-center justify-between border-b border-[#bbd5f5] py-3">
         <span className={`rounded-full border px-3 py-1 text-xs font-black ${meta.tone}`}>{meta.label}</span>
         <button
           type="button"
           onClick={() => onRemove(memo.id)}
-          className="rounded-md p-2 text-[#789094] hover:bg-[#fff0f0] hover:text-[#7a3d3d]"
+          className="rounded-md p-2 text-[#5577bb] hover:bg-[#fff0f0] hover:text-[#7a3d3d]"
           aria-label="삭제"
         >
           <Trash2 size={16} />
@@ -204,7 +204,7 @@ function MemoEditor({ memo, onUpdate, onRemove }) {
           value={titleDraft}
           onChange={(event) => setTitleDraft(event.target.value)}
           onBlur={() => onUpdate(memo, { title: titleDraft })}
-          className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm font-bold outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
+          className="w-full rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm font-bold outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
         />
 
         <textarea
@@ -212,13 +212,13 @@ function MemoEditor({ memo, onUpdate, onRemove }) {
           onChange={(event) => setDraft(event.target.value)}
           onBlur={() => onUpdate(memo, { content: draft })}
           rows={8}
-          className="w-full resize-none rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm outline-none focus:border-[#79a8a9] focus:ring-2 focus:ring-[#d9e8e9]"
+          className="w-full resize-none rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
         />
 
         <select
           value={stageValue(memo.stage)}
           onChange={(event) => onUpdate(memo, { stage: event.target.value })}
-          className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm font-bold text-[#1f4e5f] outline-none"
+          className="w-full rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm font-bold text-[#0044cc] outline-none"
         >
           {MEMO_STAGES.map((item) => (
             <option key={item.id} value={item.id}>{item.label}</option>
@@ -228,7 +228,7 @@ function MemoEditor({ memo, onUpdate, onRemove }) {
         <select
           value={memo.priority || ''}
           onChange={(event) => onUpdate(memo, { priority: event.target.value })}
-          className="w-full rounded-lg border border-[#aacfd0] bg-white px-3 py-2 text-sm font-bold text-[#1f4e5f] outline-none"
+          className="w-full rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm font-bold text-[#0044cc] outline-none"
         >
           <option value="">우선순위 없음</option>
           {MEMO_PRIORITIES.map((item) => (
@@ -237,15 +237,15 @@ function MemoEditor({ memo, onUpdate, onRemove }) {
         </select>
 
         <div>
-          <h3 className="mb-2 text-sm font-black text-[#1f4e5f]">수정로그</h3>
-          <div className="max-h-48 overflow-y-auto rounded-lg border border-[#e0eaec] bg-[#fbfdfd]">
+          <h3 className="mb-2 text-sm font-black text-[#0044cc]">수정로그</h3>
+          <div className="max-h-48 overflow-y-auto rounded-lg border border-[#d5e8ff] bg-[#f5f9ff]">
             {logs.length === 0 ? (
-              <p className="px-3 py-3 text-xs font-bold text-[#9aadb1]">로그 없음</p>
+              <p className="px-3 py-3 text-xs font-bold text-[#7799cc]">로그 없음</p>
             ) : (
               logs.map((log, index) => (
-                <div key={`${log.createdAt}_${index}`} className="border-b border-[#e0eaec] px-3 py-2 last:border-b-0">
-                  <p className="text-xs font-black text-[#304852]">{log.message}</p>
-                  <p className="mt-0.5 text-[11px] font-bold text-[#789094]">{formatLogTime(log.createdAt)}</p>
+                <div key={`${log.createdAt}_${index}`} className="border-b border-[#d5e8ff] px-3 py-2 last:border-b-0">
+                  <p className="text-xs font-black text-[#1a3d8a]">{log.message}</p>
+                  <p className="mt-0.5 text-[11px] font-bold text-[#5577bb]">{formatLogTime(log.createdAt)}</p>
                 </div>
               ))
             )}
@@ -265,7 +265,7 @@ export default function MemoPage() {
   )
 
   return (
-    <div className="min-h-full bg-[#f4f7f7] p-4 md:p-6">
+    <div className="min-h-full bg-[#f0f5ff] p-4 md:p-6">
       <div className="space-y-4">
         <StatusBoard memos={memos} onSelect={setSelectedId} />
 
@@ -276,34 +276,34 @@ export default function MemoPage() {
         )}
 
         {loading && (
-          <div className="flex items-center gap-2 rounded-lg border border-[#c8dadc] bg-white px-3 py-2 text-sm font-medium text-[#55777b]">
-            <div className="h-4 w-4 rounded-full border-2 border-[#79a8a9] border-t-transparent animate-spin" />
+          <div className="flex items-center gap-2 rounded-lg border border-[#bbddff] bg-white/90 px-3 py-2 text-sm font-medium text-[#4477cc]">
+            <div className="h-4 w-4 rounded-full border-2 border-[#5588bb] border-t-transparent animate-spin" />
             RTDB 동기화 중
           </div>
         )}
 
         <MemoForm onSubmit={addMemo} />
 
-        <section className="overflow-hidden rounded-lg border border-[#c9d6de] bg-white shadow-sm">
-          <div className="border-b border-[#d4e1e3] bg-[#dcebed] px-4 py-3">
-            <h2 className="text-base font-bold text-[#1f4e5f]">메모 목록</h2>
+        <section className="overflow-hidden rounded-lg border border-[#aacce4] bg-white/90 shadow-sm">
+          <div className="border-b border-[#bbd5f5] bg-[#cce0ff] px-4 py-3">
+            <h2 className="text-base font-bold text-[#0044cc]">메모 목록</h2>
           </div>
-          <div className="divide-y divide-[#e0eaec]">
+          <div className="divide-y divide-[#d5e8ff]">
             {memos.length === 0 ? (
-              <p className="px-4 py-6 text-sm font-bold text-[#9aadb1]">등록된 메모가 없습니다.</p>
+              <p className="px-4 py-6 text-sm font-bold text-[#7799cc]">등록된 메모가 없습니다.</p>
             ) : (
               memos.map((memo) => {
                 const meta = stageMeta(memo.stage)
                 const isSelected = selectedMemo?.id === memo.id
                 return (
-                  <div key={memo.id} className={isSelected ? 'bg-[#eef7f7]' : 'bg-white'}>
+                  <div key={memo.id} className={isSelected ? 'bg-[#eef7f7]' : 'bg-white/90'}>
                     <button
                       type="button"
                       onClick={() => setSelectedId(isSelected ? '' : memo.id)}
-                      className="block w-full overflow-x-auto px-4 py-3 text-left hover:bg-[#f7fafa]"
+                      className="block w-full overflow-x-auto px-4 py-3 text-left hover:bg-[#f5f9ff]"
                     >
                       <div className="grid min-w-[720px] grid-cols-[92px_112px_minmax(160px,0.8fr)_minmax(260px,1.2fr)] items-center gap-3">
-                        <span className="text-[11px] font-bold text-[#789094]">{formatDate(memo.createdAt)}</span>
+                        <span className="text-[11px] font-bold text-[#5577bb]">{formatDate(memo.createdAt)}</span>
                         <select
                           value={stageValue(memo.stage)}
                           onClick={(event) => event.stopPropagation()}
@@ -320,14 +320,14 @@ export default function MemoPage() {
                               {priorityMeta(memo.priority).label}
                             </span>
                           )}
-                          <p className="truncate text-sm font-black leading-relaxed text-[#304852]">{memo.title || '(제목 없음)'}</p>
+                          <p className="truncate text-sm font-black leading-relaxed text-[#1a3d8a]">{memo.title || '(제목 없음)'}</p>
                         </div>
-                        <p className="truncate text-xs font-medium leading-relaxed text-[#789094]">{memo.content}</p>
+                        <p className="truncate text-xs font-medium leading-relaxed text-[#5577bb]">{memo.content}</p>
                       </div>
                     </button>
 
                     {isSelected && (
-                      <div className="border-t border-[#d4e1e3] px-4 pb-4">
+                      <div className="border-t border-[#bbd5f5] px-4 pb-4">
                         <MemoEditor memo={memo} onUpdate={updateMemo} onRemove={removeMemo} />
                       </div>
                     )}

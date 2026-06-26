@@ -56,7 +56,7 @@ function NewsRow({
   const dept = item.dept ?? ''
 
   return (
-    <div className="border-b border-[#e4ecef] last:border-b-0">
+    <div className="border-b border-[#d5e8ff] last:border-b-0">
       <div
         role="button"
         tabIndex={0}
@@ -73,7 +73,7 @@ function NewsRow({
             onToggleFavorite()
           }}
           className={`h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors ${
-            favorited ? 'text-[#d8a018] bg-[#fff6d8]' : 'text-[#adc0c4] hover:text-[#d8a018] hover:bg-[#fff8df]'
+            favorited ? 'text-[#d8a018] bg-[#fff6d8]' : 'text-[#99bbee] hover:text-[#d8a018] hover:bg-[#fff8df]'
           }`}
           aria-label={favorited ? '스크랩 해제' : '스크랩'}
         >
@@ -82,7 +82,7 @@ function NewsRow({
 
         <div className="hidden md:flex min-w-0">
           {dept && (
-            <span className="truncate text-[11px] font-bold px-1.5 py-0.5 rounded bg-[#dcebed] text-[#2a6470]">
+            <span className="truncate text-[11px] font-bold px-1.5 py-0.5 rounded bg-[#cce0ff] text-[#0055ff]">
               {dept}
             </span>
           )}
@@ -91,18 +91,18 @@ function NewsRow({
         <div className="min-w-0">
           <div className="md:hidden flex items-center gap-1.5 mb-0.5">
             {dept && (
-              <span className="truncate text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#dcebed] text-[#2a6470]">
+              <span className="truncate text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#cce0ff] text-[#0055ff]">
                 {dept}
               </span>
             )}
             {item.sourceLabel && (
-              <span className="text-[10px] text-[#789094]">{item.sourceLabel}</span>
+              <span className="text-[10px] text-[#5577bb]">{item.sourceLabel}</span>
             )}
           </div>
-          <p className="truncate font-medium text-[#1f4e5f]">{item.title}</p>
+          <p className="truncate font-medium text-[#0044cc]">{item.title}</p>
         </div>
 
-        <span className="text-xs text-[#789094] text-right whitespace-nowrap">
+        <span className="text-xs text-[#5577bb] text-right whitespace-nowrap">
           {dateLabel(item.date)}
         </span>
 
@@ -111,7 +111,7 @@ function NewsRow({
           target="_blank"
           rel="noopener noreferrer"
           onClick={(event) => event.stopPropagation()}
-          className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[#adc0c4] hover:text-[#55777b] hover:bg-[#edf3f4]"
+          className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[#99bbee] hover:text-[#4477cc] hover:bg-[#edf3f4]"
           aria-label="원문 열기"
         >
           <ExternalLink size={14} />
@@ -119,11 +119,11 @@ function NewsRow({
       </div>
 
       {expanded && (
-        <div className="px-4 pb-4 pl-[52px] md:pl-[170px] pr-10 bg-[#fbfdfd]">
+        <div className="px-4 pb-4 pl-[52px] md:pl-[170px] pr-10 bg-[#f5f9ff]">
           {detailLoading ? (
-            <div className="text-xs text-[#789094] py-2">본문을 불러오는 중...</div>
+            <div className="text-xs text-[#5577bb] py-2">본문을 불러오는 중...</div>
           ) : (
-            <p className="whitespace-pre-wrap text-sm leading-6 text-[#304852]">
+            <p className="whitespace-pre-wrap text-sm leading-6 text-[#1a3d8a]">
               {item.content || '본문을 불러오지 못했습니다. 원문을 열어 확인해 주세요.'}
             </p>
           )}
@@ -133,9 +133,9 @@ function NewsRow({
   )
 }
 
-export default function NewsPage() {
+export default function NewsPage({ initialTab, focusKey }) {
   const { user } = useAuth()
-  const [tab, setTab] = useState('seoul')
+  const [tab, setTab] = useState(initialTab || 'seoul')
   const [items, setItems] = useState(() => ({
     seoul: getCachedNews('seoul'),
     gangseo: getCachedNews('gangseo'),
@@ -160,6 +160,10 @@ export default function NewsPage() {
   useEffect(() => {
     SOURCE_KEYS.forEach((key) => refreshNews(key))
   }, [])
+
+  useEffect(() => {
+    if (initialTab) setTab(initialTab)
+  }, [initialTab, focusKey])
 
   useEffect(() => {
     if (!scrapsPath) {
@@ -250,18 +254,18 @@ export default function NewsPage() {
     : current.length === 0
 
   return (
-    <div className="min-h-full bg-[#f4f7f7]">
-      <div className="bg-white border-b border-[#d6e1e3] px-4 md:px-6 py-4">
+    <div className="min-h-full bg-[#f0f5ff]">
+      <div className="bg-white/90 border-b border-[#bbd0ee] px-4 md:px-6 py-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Newspaper size={18} className="text-[#55777b]" />
-            <h1 className="text-lg font-bold text-[#1f4e5f]">새소식</h1>
+            <Newspaper size={18} className="text-[#4477cc]" />
+            <h1 className="text-lg font-bold text-[#0044cc]">새소식</h1>
           </div>
           {isSourceTab && (
             <button
               onClick={() => refreshNews(tab, { force: true })}
               disabled={loading[tab]}
-              className="inline-flex items-center gap-1.5 rounded-md bg-[#dcebed] px-3 py-1.5 text-xs font-bold text-[#2a6470] hover:bg-[#c9dfe2] disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-md bg-[#cce0ff] px-3 py-1.5 text-xs font-bold text-[#0055ff] hover:bg-[#bbd8ff] disabled:opacity-50 transition-colors"
             >
               <RefreshCw size={12} className={loading[tab] ? 'animate-spin' : ''} />
               갱신
@@ -279,13 +283,13 @@ export default function NewsPage() {
               }}
               className={`relative px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 tab === key
-                  ? 'bg-[#1f4e5f] text-white'
-                  : 'text-[#55777b] hover:bg-[#f0f5f6]'
+                  ? 'bg-[#0044cc] text-white'
+                  : 'text-[#4477cc] hover:bg-[#f0f5f6]'
               }`}
             >
               {key === 'scraps' ? '스크랩' : SOURCES[key].label}
               {loading[key] && (
-                <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-[#79a8a9] animate-pulse" />
+                <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-[#5588bb] animate-pulse" />
               )}
             </button>
           ))}
@@ -301,12 +305,12 @@ export default function NewsPage() {
 
         {isLoading && (
           <div className="flex justify-center py-16">
-            <div className="w-6 h-6 border-2 border-[#79a8a9] border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#5588bb] border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 
         {isEmpty && (
-          <div className="text-center py-16 text-sm text-[#789094]">
+          <div className="text-center py-16 text-sm text-[#5577bb]">
             {tab === 'scraps'
               ? '스크랩한 새소식이 없습니다'
               : `${source.label} 최근 ${source.days}일치 새소식이 없습니다`}
@@ -314,12 +318,12 @@ export default function NewsPage() {
         )}
 
         {current.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-[#e4ecef]">
-            <div className="px-4 py-2 border-b border-[#e8edf0] flex items-center justify-between">
-              <span className="text-xs font-bold text-[#789094]">
+          <div className="bg-white/90 rounded-lg shadow-sm overflow-hidden border border-[#d5e8ff]">
+            <div className="px-4 py-2 border-b border-[#d5e8ff] flex items-center justify-between">
+              <span className="text-xs font-bold text-[#5577bb]">
                 {tab === 'scraps' ? '스크랩' : `${source.label} · 최근 ${source.days}일`}
               </span>
-              <span className="text-xs text-[#adc0c4]">{current.length}건</span>
+              <span className="text-xs text-[#99bbee]">{current.length}건</span>
             </div>
 
             {current.map((item) => {

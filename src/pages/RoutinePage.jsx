@@ -19,22 +19,22 @@ function RoutineColumn({ type, routines, onAdd, onRemove }) {
   }
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-[#c9d6de] bg-white shadow-sm">
-      <div className="border-b border-[#d4e1e3] bg-[#dcebed] px-4 py-3">
-        <h2 className="text-base font-bold text-[#1f4e5f]">{type.label}</h2>
-        <p className="text-xs font-medium text-[#789094]">{type.sublabel}</p>
+    <div className="flex flex-col overflow-hidden rounded-lg border border-[#aacce4] bg-white/90 shadow-sm">
+      <div className="border-b border-[#bbd5f5] bg-[#cce0ff] px-4 py-3">
+        <h2 className="text-base font-bold text-[#0044cc]">{type.label}</h2>
+        <p className="text-xs font-medium text-[#5577bb]">{type.sublabel}</p>
       </div>
 
-      <form onSubmit={handleAdd} className="flex gap-2 border-b border-[#e0eaec] px-3 py-2.5">
+      <form onSubmit={handleAdd} className="flex gap-2 border-b border-[#d5e8ff] px-3 py-2.5">
         <input
           value={text}
           onChange={(event) => setText(event.target.value)}
           placeholder="일정 추가..."
-          className="min-w-0 flex-1 rounded border border-[#aacfd0] bg-[#f8fbfb] px-2.5 py-1.5 text-sm outline-none focus:border-[#79a8a9]"
+          className="min-w-0 flex-1 rounded border border-[#99ccff] bg-[#f5f9ff] px-2.5 py-1.5 text-sm outline-none focus:border-[#5588bb]"
         />
         <button
           type="submit"
-          className="flex items-center rounded bg-[#1f4e5f] px-2.5 py-1.5 text-xs font-bold text-white hover:bg-[#173f4e]"
+          className="flex items-center rounded bg-[#0044cc] px-2.5 py-1.5 text-xs font-bold text-white hover:bg-[#002080]"
         >
           <Plus size={14} />
         </button>
@@ -42,15 +42,15 @@ function RoutineColumn({ type, routines, onAdd, onRemove }) {
 
       <ul className="flex-1 divide-y divide-[#e8f0f1]">
         {routines.length === 0 ? (
-          <li className="px-4 py-6 text-center text-sm font-bold text-[#9aadb1]">일정 없음</li>
+          <li className="px-4 py-6 text-center text-sm font-bold text-[#7799cc]">일정 없음</li>
         ) : (
           routines.map((routine) => (
             <li key={routine.id} className="flex items-center gap-2 px-4 py-2.5">
-              <span className="min-w-0 flex-1 text-sm font-medium text-[#304852]">{routine.text}</span>
+              <span className="min-w-0 flex-1 text-sm font-medium text-[#1a3d8a]">{routine.text}</span>
               <button
                 type="button"
                 onClick={() => onRemove(routine.id)}
-                className="shrink-0 rounded p-1 text-[#9aadb1] hover:bg-[#fff0f0] hover:text-[#7a3d3d]"
+                className="shrink-0 rounded p-1 text-[#7799cc] hover:bg-[#fff0f0] hover:text-[#7a3d3d]"
                 aria-label="삭제"
               >
                 <Trash2 size={13} />
@@ -67,8 +67,8 @@ export default function RoutinePage() {
   const { routines, loading, error, addRoutine, removeRoutine } = useRoutines()
 
   return (
-    <div className="min-h-full bg-[#f4f7f7] p-4 md:p-6">
-      <h1 className="mb-4 text-lg font-bold text-[#1f4e5f]">정기일정</h1>
+    <div className="min-h-full bg-[#f0f5ff] p-4 md:p-6">
+      <h1 className="mb-4 text-lg font-bold text-[#0044cc]">정기일정</h1>
 
       {error && (
         <div className="mb-4 rounded-lg border border-[#e4bcbc] bg-[#fff0f0] px-4 py-3 text-sm font-medium text-[#7a3d3d]">
@@ -77,8 +77,8 @@ export default function RoutinePage() {
       )}
 
       {loading && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg border border-[#c8dadc] bg-white px-3 py-2 text-sm font-medium text-[#55777b]">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#79a8a9] border-t-transparent" />
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-[#bbddff] bg-white/90 px-3 py-2 text-sm font-medium text-[#4477cc]">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#5588bb] border-t-transparent" />
           RTDB 동기화 중
         </div>
       )}
