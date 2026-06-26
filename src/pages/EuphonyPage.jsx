@@ -182,13 +182,13 @@ export default function EuphonyPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-[#edf4f2] p-0.5 text-[#173f3d]">
-      <main className="relative min-h-[calc(100svh-4px)] overflow-hidden rounded-sm border border-[#c7d8d5]">
+      <main className="relative isolate min-h-[calc(100svh-4px)] overflow-hidden rounded-sm border border-[#c7d8d5]">
         <img
           src={backgroundImage}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover object-top opacity-70"
+          className="pointer-events-none fixed inset-0 -z-10 h-svh w-screen object-cover object-center opacity-70 md:absolute md:h-full md:w-full md:object-top"
         />
-        <div className="relative min-h-[calc(100svh-4px)] px-4 py-5 md:px-8 md:py-7">
+        <div className="relative z-10 min-h-[calc(100svh-4px)] px-4 py-5 md:px-8 md:py-7">
           <section className="mb-4 flex items-start justify-between gap-4">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.24em] text-[#2f7771]">Euphony</p>

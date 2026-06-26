@@ -209,8 +209,9 @@ export function useCalendar() {
     setEvents((prev) => prev.filter((e) => e.id !== eventId))
   }
 
-  const prevMonth = () => setCurrentMonth((d) => addMonths(d, -1))
-  const nextMonth = () => setCurrentMonth((d) => addMonths(d, 1))
+  const prevMonth = useCallback(() => setCurrentMonth((d) => addMonths(d, -1)), [])
+  const nextMonth = useCallback(() => setCurrentMonth((d) => addMonths(d, 1)), [])
+  const goToMonth = useCallback((date) => setCurrentMonth(startOfMonth(date)), [])
 
   return {
     events,
@@ -221,6 +222,7 @@ export function useCalendar() {
     currentMonth,
     prevMonth,
     nextMonth,
+    goToMonth,
     addEvent,
     editEvent,
     removeEvent,

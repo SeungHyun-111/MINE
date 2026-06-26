@@ -20,11 +20,17 @@ function PageFallback() {
 
 export default function HomePage() {
   const [page, setPage] = useState('summary')
+  const [calendarFocus, setCalendarFocus] = useState(null)
+
+  const openCalendarDate = (date) => {
+    setCalendarFocus({ date, requestedAt: Date.now() })
+    setPage('calendar')
+  }
 
   const renderPage = () => {
     switch (page) {
-      case 'summary': return <SummaryPage />
-      case 'calendar': return <CalendarPage />
+      case 'summary': return <SummaryPage onOpenCalendarDate={openCalendarDate} onOpenPage={setPage} />
+      case 'calendar': return <CalendarPage focusDate={calendarFocus?.date} focusKey={calendarFocus?.requestedAt} />
       case 'todo': return <TodoPage />
       case 'weather': return <WeatherPage />
       case 'memo': return <MemoPage />
@@ -32,7 +38,7 @@ export default function HomePage() {
       case 'euphony': return <EuphonyPage />
       case 'news': return <NewsPage />
       case 'settings': return <div className="p-4 text-[#789094]">설정 준비 중...</div>
-      default: return <SummaryPage />
+      default: return <SummaryPage onOpenCalendarDate={openCalendarDate} onOpenPage={setPage} />
     }
   }
 

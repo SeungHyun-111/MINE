@@ -5,7 +5,7 @@ import CalendarView from '@/components/calendar/CalendarView'
 import DayEventList from '@/components/calendar/DayEventList'
 import EventFormModal from '@/components/calendar/EventFormModal'
 
-export default function CalendarPage() {
+export default function CalendarPage({ focusDate, focusKey }) {
   const {
     events,
     calendars,
@@ -13,8 +13,7 @@ export default function CalendarPage() {
     loading,
     error,
     currentMonth,
-    prevMonth,
-    nextMonth,
+    goToMonth,
     addEvent,
     editEvent,
     removeEvent,
@@ -51,6 +50,15 @@ export default function CalendarPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!focusDate) return
+
+    const nextDate = new Date(focusDate)
+    setSelectedDate(nextDate)
+    setIsDetailOpen(true)
+    goToMonth(nextDate)
+  }, [focusDate, focusKey, goToMonth])
+
   const filteredEvents = useMemo(() => {
     const keyword = searchQuery.trim().toLowerCase()
     if (!keyword) return events
@@ -67,8 +75,7 @@ export default function CalendarPage() {
   }, [events, calendars, searchQuery])
 
   const handleMonthChange = (newMonth) => {
-    if (newMonth < currentMonth) prevMonth()
-    else nextMonth()
+    goToMonth(newMonth)
   }
 
   const handleDaySelect = (date) => {
