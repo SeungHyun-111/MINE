@@ -471,3 +471,59 @@ for (let attempt = 0; attempt < 3; attempt += 1) {
 5. 전국 요청 큐를 1-2개 동시 + 실패 도시 캐시 유지 방식으로 변경
 
 이 순서면 기능을 줄이지 않고, 호출 폭주와 콘솔 에러 폭발을 줄일 수 있다.
+
+---
+
+## 클로드 제안 (2026-06-30 코드 리뷰 기준)
+
+현재 코드(`src/lib/weatherApi.js`, `src/hooks/useWeather.js`)를 직접 읽고 MD 내용과 대조한 결과다.
+
+### 이미 반영된 것 ✅
+
+- `sharedRefreshPromise` 전역 락으로 중복 API 묶음 방지
+- 전국 동시성 5→2, 간격 350ms→700ms, 429 backoff 5초
+- 중기예보 6h / 출몰시각 20h 런타임 캐시 (`cachedSettle`)
+- 실패 쿨다운 10분 (`lastRefreshFailedAt`)
+- 전국 호출을 기본 5개 API `await` 이후로 순서 변경
+
+### 남아있는 문제점 및 제안
+
+**🔴 우선순위: 즉시**
+
+1. **API Key 브라우저 노출**
+   - `weatherApi.js` 상단 `SERVICE_KEY`가 소스에 하드코딩되어 번들에 그대로 포함됨
+   - DevTools → Sources에서 누구나 확인 가능
+   - 제안: Netlify Functions 프록시(`/api/weather?...`)로 서버 측에 격리
+
+**🟠 우선순위: 높음**
+
+2. **에러 메시지가 날것 그대로 사용자에게 표시됨**
+   - `useWeather.js` 129줄: `apiErrors.map(e => \`${e.source}: ${e.message}\`).join(' / ')`
+   - 사용자 화면에 `"서울.nationwide: 429 Too Many... / 춘천.nationwide: 429..."` 형태로 노출
+   - 제안: 화면에는 `"전국 일부 지점 데이터 갱신 실패 (N개)"` 요약, 상세는 콘솔에만
+
+3. **`fetchedAt` 타입 혼재**
+   - `weatherApi.js`는 `new Date().toISOString()` (string), `useWeather.js`는 `Date.now()` (number)로 덮어씀
+   - `fetchedTime()`이 두 타입 다 처리하긴 하지만 코드 내 혼재 상태
+   - 제안: `Date.now()`로 통일
+
+**🟡 우선순위: 중간**
+
+4. **수동 갱신이 전국 16개 도시를 항상 포함**
+   - 현재 날씨만 보려고 버튼 눌러도 `fetchWeatherBundle()` 전체 실행
+   - 제안: 기본 버튼은 현재/단기만, 전국 지도 섹션에 별도 갱신 버튼
+
+5. **`fetchJson()` 재시도와 배치 backoff 이중 작동**
+   - 배치 레벨 5초 backoff + 개별 `fetchJson()` 레벨 1.2s/2.4s 재시도가 동시에 작동
+   - 429 발생 시 타이밍 예측이 어려워짐
+   - 제안: 전국 호출은 `fetchJson()` 내 재시도 제거, 배치 backoff에만 의존
+
+**🔵 우선순위: 낮음**
+
+6. **캐시 단일 키 (`weather/global/latest`)**
+   - 전국 데이터 실패 시 현재 날씨 캐시도 함께 오염 가능
+   - 제안: `weather/global/current`, `weather/global/nationwide` 등으로 분리
+
+7. **`requestCache` Map 정리 로직 없음**
+   - 중기예보/출몰시각 런타임 캐시가 탭 생애 동안 계속 누적
+   - 제안: TTL 만료 항목 제거 또는 Map 최대 크기 제한
