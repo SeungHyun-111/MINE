@@ -16,6 +16,7 @@ import { useTodos } from '@/hooks/useTodos'
 import { useWeather } from '@/hooks/useWeather'
 import { useRoutines } from '@/hooks/useRoutines'
 import { usePet } from '@/hooks/usePet'
+import CharacterSprite from '@/components/game/CharacterSprite'
 import { db } from '@/lib/firebase'
 import { addDateKeyDays, formatDateKey, getDateTimeDateKey, parseDateKey } from '@/lib/dateTime'
 
@@ -522,80 +523,63 @@ function NewsScrapsSummary({ className = '', onOpenNewsPage }) {
   )
 }
 
-const PET_ANIM = {
-  신남: { css: 'pet-excited', duration: '0.55s', filter: 'brightness(1.1) saturate(1.3)' },
-  행복: { css: 'pet-happy',   duration: '1.2s',  filter: 'brightness(1.05)' },
-  보통: { css: 'pet-normal',  duration: '2.4s',  filter: 'none' },
-  슬픔: { css: 'pet-sad',     duration: '3.5s',  filter: 'brightness(0.85) saturate(0.5) hue-rotate(200deg)' },
-  위기: { css: 'pet-crisis',  duration: '0.45s', filter: 'brightness(0.9) hue-rotate(330deg)' },
+const PET_FILTER = {
+  신남: 'brightness(1.12) saturate(1.3)',
+  행복: 'brightness(1.06) saturate(1.15)',
+  보통: 'none',
+  슬픔: 'brightness(0.88) saturate(0.6) hue-rotate(200deg)',
+  위기: 'brightness(0.9) saturate(0.8) hue-rotate(330deg)',
 }
 
 function PetWidget({ onOpenPage }) {
   const { pet, emotion, daysTogether } = usePet()
-  const anim = emotion ? (PET_ANIM[emotion.label] ?? PET_ANIM['보통']) : PET_ANIM['보통']
+  const spriteFilter = PET_FILTER[emotion?.label] ?? 'none'
 
   if (!pet) return null
 
   return (
-    <>
-      <style>{`
-        @keyframes pet-excited { 0%,100%{transform:translateY(0) scale(1) rotate(-2deg)} 30%{transform:translateY(-12px) scale(1.08) rotate(2deg)} 70%{transform:translateY(-8px) scale(1.05) rotate(-1deg)} }
-        @keyframes pet-happy   { 0%,100%{transform:translateY(0)} 45%{transform:translateY(-9px) rotate(1deg)} 65%{transform:translateY(-7px) rotate(-1deg)} }
-        @keyframes pet-normal  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
-        @keyframes pet-sad     { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-2px) rotate(1deg)} }
-        @keyframes pet-crisis  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px) rotate(-2deg)} 75%{transform:translateX(4px) rotate(2deg)} }
-      `}</style>
-      <button
-        type="button"
-        onClick={() => onOpenPage?.('game')}
-        className="relative overflow-hidden rounded-lg border border-[#bbd5f5] shadow-sm active:brightness-95"
-        style={{
-          backgroundImage: 'url(/game-bg.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center bottom',
-          imageRendering: 'pixelated',
-          minHeight: 120,
-        }}
-      >
-        {/* 이름 + 감정 뱃지 */}
-        <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
-          <span className="rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-black text-white backdrop-blur-sm">
-            {pet.name}
+    <button
+      type="button"
+      onClick={() => onOpenPage?.('game')}
+      className="relative overflow-hidden rounded-lg border border-[#bbd5f5] shadow-sm active:brightness-95"
+      style={{
+        backgroundImage: 'url(/game-bg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center bottom',
+        imageRendering: 'pixelated',
+        minHeight: 120,
+      }}
+    >
+      {/* 이름 + 감정 뱃지 */}
+      <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
+        <span className="rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-black text-white backdrop-blur-sm">
+          {pet.name}
+        </span>
+        {emotion && (
+          <span
+            className="rounded-full px-2 py-0.5 text-[10px] font-black backdrop-blur-sm"
+            style={{ background: emotion.bg + 'dd', color: emotion.color }}
+          >
+            {emotion.emoji} {emotion.label}
           </span>
-          {emotion && (
-            <span
-              className="rounded-full px-2 py-0.5 text-[10px] font-black backdrop-blur-sm"
-              style={{ background: emotion.bg + 'dd', color: emotion.color }}
-            >
-              {emotion.emoji} {emotion.label}
-            </span>
-          )}
-        </div>
+        )}
+      </div>
 
-        {/* 함께한 날 */}
-        <div className="absolute right-2 top-2 rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-black text-white backdrop-blur-sm">
-          {daysTogether}일째
-        </div>
+      {/* 함께한 날 */}
+      <div className="absolute right-2 top-2 rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-black text-white backdrop-blur-sm">
+        {daysTogether}일째
+      </div>
 
-        {/* 캐릭터 */}
-        <img
-          src="/character.png"
-          alt={pet.name}
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 80,
-            height: 80,
-            objectFit: 'contain',
-            imageRendering: 'pixelated',
-            filter: anim.filter,
-            animation: `${anim.css} ${anim.duration} ease-in-out infinite`,
-          }}
+      {/* 캐릭터 */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
+        <CharacterSprite
+          emotionLabel={emotion?.label}
+          filter={spriteFilter}
+          size={80}
+          walkLimit={46}
         />
-      </button>
-    </>
+      </div>
+    </button>
   )
 }
 

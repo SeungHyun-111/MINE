@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ACTIONS, usePet } from '@/hooks/usePet'
-import CharacterSprite, { SPRITE_ACTION, SPRITE_LAUGH, SPRITE_STAND } from '@/components/game/CharacterSprite'
+import CharacterSprite, { SPRITE_ACTION, SPRITE_LAUGH } from '@/components/game/CharacterSprite'
 
 const EMOTION_FILTER = {
   신남: 'brightness(1.12) saturate(1.3)',
@@ -142,18 +142,26 @@ export default function GamePage() {
 
   useEffect(() => () => clearTimeout(actionTimerRef.current), [])
 
-  const handleAction = async (key) => {
-    const ok = await doAction(key)
-    if (!ok) return
-    const emojis = ACTION_PARTICLES[key] || ['✨']
-    setParticles((prev) => [...prev, ...emojis.map((emoji, i) => ({ id: Date.now() + i, emoji, index: i }))])
-
-    setActiveAction(key)
+  const startActionMotion = (key) => {
+    const actionRun = { key, id: Date.now() }
+    setActiveAction(actionRun)
     clearTimeout(actionTimerRef.current)
     actionTimerRef.current = setTimeout(
-      () => setActiveAction(null),
+      () => setActiveAction((current) => current?.id === actionRun.id ? null : current),
       SPRITE_ACTION[key]?.duration ?? 2000,
     )
+    return actionRun
+  }
+
+  const handleAction = async (key) => {
+    const actionRun = startActionMotion(key)
+    const ok = await doAction(key)
+    if (!ok) {
+      setActiveAction((current) => current?.id === actionRun.id ? null : current)
+      return
+    }
+    const emojis = ACTION_PARTICLES[key] || ['✨']
+    setParticles((prev) => [...prev, ...emojis.map((emoji, i) => ({ id: Date.now() + i, emoji, index: i }))])
   }
 
   const removeParticle = (id) => setParticles((prev) => prev.filter((p) => p.id !== id))
@@ -230,8 +238,9 @@ export default function GamePage() {
 
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
               <CharacterSprite
+                key={activeAction ? activeAction.id : `idle-${emotion?.label ?? 'none'}`}
                 emotionLabel={emotion?.label}
-                activeAction={activeAction}
+                activeAction={activeAction?.key}
                 filter={spriteFilter}
                 size={120}
               />
