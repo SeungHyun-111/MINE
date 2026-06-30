@@ -1,21 +1,32 @@
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { Clock, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { ChevronDown, Clock, Pencil, Plus, Trash2 } from 'lucide-react'
+import { addDateKeyDays, getDateTimeDateKey, getDateTimeTime } from '@/lib/dateTime'
+
+const EVENT_STATUSES = [
+  { id: 'pending', label: '미완료' },
+  { id: 'done', label: '완료' },
+  { id: 'carried', label: '이월' },
+]
+
+const EVENT_PRIORITIES = [
+  { id: 'high', label: '높음' },
+  { id: 'medium', label: '보통' },
+  { id: 'low', label: '낮음' },
+]
 
 function addDays(dateString, days) {
-  const date = new Date(`${dateString}T00:00:00`)
-  date.setDate(date.getDate() + days)
-  return date.toISOString().slice(0, 10)
+  return addDateKeyDays(dateString, days)
 }
 
 function formatTime(dateTimeStr) {
   if (!dateTimeStr) return '종일'
-  return dateTimeStr.slice(11, 16)
+  return getDateTimeTime(dateTimeStr)
 }
 
 function getEventRange(event) {
-  const start = event.start?.date || event.start?.dateTime?.slice(0, 10)
-  const rawEnd = event.end?.date || event.end?.dateTime?.slice(0, 10) || start
+  const start = event.start?.date || getDateTimeDateKey(event.start?.dateTime)
+  const rawEnd = event.end?.date || getDateTimeDateKey(event.end?.dateTime) || start
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(start || '')) {
     return { start: null, end: null }
@@ -32,22 +43,32 @@ function includesDate(event, dateStr) {
   return !!start && start <= dateStr && dateStr <= end
 }
 
-export default function DayEventList({ date, events, onAdd, onEdit, onRemove, onClose, variant = 'inline' }) {
+export default function DayEventList({
+  date,
+  events,
+  onAdd,
+  onEdit,
+  onRemove,
+  onStatusChange,
+  onPriorityChange,
+  onClose,
+  variant = 'inline',
+}) {
   if (!date) return null
 
   const dateStr = format(date, 'yyyy-MM-dd')
   const dayEvents = events.filter((event) => includesDate(event, dateStr))
-  const isSheet = variant === 'sheet'
+  const isPanel = variant === 'panel'
 
   return (
     <section
       className={
-        isSheet
-          ? 'max-h-[42svh] overflow-hidden rounded-2xl border border-[#aabbee] bg-white/90 shadow-[0_10px_32px_rgba(31,78,95,0.22)]'
-          : 'bg-white/90 border border-[#aacce4] rounded-lg shadow-sm overflow-hidden'
+        isPanel
+          ? 'flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-[#aacce4] bg-white/90 shadow-sm'
+          : 'overflow-hidden rounded-lg border border-[#aacce4] bg-white/90 shadow-sm'
       }
     >
-      <div className="flex items-center justify-between px-4 py-3 bg-[#cce0ff] border-b border-[#aaccee]">
+      <div className="flex shrink-0 items-center justify-between border-b border-[#aaccee] bg-[#cce0ff] px-4 py-3">
         <div>
           <p className="text-xs font-semibold text-[#4477cc]">선택한 날짜</p>
           <h3 className="text-sm font-bold text-[#0044cc]">
@@ -56,57 +77,90 @@ export default function DayEventList({ date, events, onAdd, onEdit, onRemove, on
         </div>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={onAdd}
             className="flex items-center gap-1.5 rounded-lg bg-[#0044cc] px-3 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#002080] active:bg-[#123542]"
           >
             <Plus size={16} />
             일정 추가
           </button>
-          {isSheet && (
+          {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-[#4477cc] active:bg-[#bbd5ff]"
-              aria-label="닫기"
+              className="rounded-lg p-2 text-[#4477cc] hover:bg-[#bbd5ff] hover:text-[#0044cc]"
+              aria-label="일정 목록 접기"
             >
-              <X size={18} />
+              <ChevronDown size={18} />
             </button>
           )}
         </div>
       </div>
 
-      <div className={isSheet ? 'max-h-[30svh] overflow-y-auto' : ''}>
+      <div className={isPanel ? 'min-h-0 flex-1 overflow-y-auto' : ''}>
         {dayEvents.length === 0 ? (
-          <p className="text-center text-[#5577bb] text-sm py-6">일정이 없습니다</p>
+          <p className="py-6 text-center text-sm text-[#5577bb]">일정이 없습니다</p>
         ) : (
           <ul className="divide-y divide-[#d5e8ff] bg-[#f5f9ff]">
             {dayEvents.map((event) => {
               const isAllDay = !!event.start?.date
+              const isDone = event.status === 'done'
+              const isHigh = event.priority === 'high'
+
               return (
                 <li key={event.id} className="flex items-start gap-3 px-4 py-3">
-                  <div className="flex items-center gap-1.5 text-[#5577bb] text-xs mt-0.5 w-20 shrink-0">
+                  <div className="mt-0.5 flex w-20 shrink-0 items-center gap-1.5 text-xs text-[#5577bb]">
                     {!isAllDay && <Clock size={12} />}
                     <span>{isAllDay ? '종일' : formatTime(event.start?.dateTime)}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => onEdit?.(event)}
-                    className="flex-1 min-w-0 text-left"
+                    className="min-w-0 flex-1 text-left"
                   >
-                    <p className="text-sm font-semibold text-[#1a3d8a] truncate">
+                    <p className={`truncate text-sm font-semibold text-[#1a3d8a] ${isDone ? 'text-[#5577bb] line-through' : ''}`}>
                       {event.summary || '(제목 없음)'}
                     </p>
                     {event.description && (
-                      <p className="text-xs text-[#5577bb] mt-0.5 truncate">
+                      <p className={`mt-0.5 truncate text-xs text-[#5577bb] ${isDone ? 'line-through' : ''}`}>
                         {event.description}
                       </p>
                     )}
+                    {isHigh && (
+                      <span className="mt-1 inline-flex rounded bg-[#e85252] px-1.5 py-0.5 text-[10px] font-black leading-none text-white">
+                        중요
+                      </span>
+                    )}
                   </button>
                   <div className="flex shrink-0 items-center gap-1">
+                    <select
+                      value={event.priority || 'medium'}
+                      onChange={(changeEvent) => onPriorityChange?.(event, changeEvent.target.value)}
+                      className={`h-8 rounded-md border px-1.5 text-xs font-bold outline-none ${
+                        isHigh
+                          ? 'border-[#e85252] bg-[#e85252] text-white'
+                          : 'border-[#bbd5f5] bg-white/90 text-[#0044cc]'
+                      }`}
+                      aria-label="중요도"
+                    >
+                      {EVENT_PRIORITIES.map((priority) => (
+                        <option key={priority.id} value={priority.id}>{priority.label}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={event.status || 'pending'}
+                      onChange={(changeEvent) => onStatusChange?.(event, changeEvent.target.value)}
+                      className="h-8 rounded-md border border-[#bbd5f5] bg-white/90 px-1.5 text-xs font-bold text-[#0044cc] outline-none"
+                      aria-label="상태"
+                    >
+                      {EVENT_STATUSES.map((status) => (
+                        <option key={status.id} value={status.id}>{status.label}</option>
+                      ))}
+                    </select>
                     <button
                       type="button"
                       onClick={() => onEdit?.(event)}
-                      className="p-1.5 rounded-md text-[#4477cc] hover:bg-[#d5e8ff] hover:text-[#0044cc]"
+                      className="rounded-md p-1.5 text-[#4477cc] hover:bg-[#d5e8ff] hover:text-[#0044cc]"
                       aria-label="일정 수정"
                     >
                       <Pencil size={14} />
@@ -114,7 +168,7 @@ export default function DayEventList({ date, events, onAdd, onEdit, onRemove, on
                     <button
                       type="button"
                       onClick={() => onRemove?.(event)}
-                      className="p-1.5 rounded-md text-[#9d5c5c] hover:bg-[#fff0f0] hover:text-[#7a3d3d]"
+                      className="rounded-md p-1.5 text-[#9d5c5c] hover:bg-[#fff0f0] hover:text-[#7a3d3d]"
                       aria-label="일정 삭제"
                     >
                       <Trash2 size={14} />

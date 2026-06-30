@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AlertCircle, RefreshCw, Search } from 'lucide-react'
+import { isSameDay } from 'date-fns'
+import { Search } from 'lucide-react'
 import { useCalendar } from '@/hooks/useCalendar'
 import CalendarView from '@/components/calendar/CalendarView'
 import DayEventList from '@/components/calendar/DayEventList'
@@ -9,7 +10,6 @@ export default function CalendarPage({ focusDate, focusKey }) {
   const {
     events,
     calendars,
-    connected,
     loading,
     error,
     currentMonth,
@@ -17,31 +17,19 @@ export default function CalendarPage({ focusDate, focusKey }) {
     addEvent,
     editEvent,
     removeEvent,
-    connectCalendar,
+    updateEventStatus,
+    updateEventPriority,
   } = useCalendar()
-  const [selectedDate, setSelectedDate] = useState(new Date())
-  const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [selectedDate, setSelectedDate] = useState(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
   const [formError, setFormError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [urlError, setUrlError] = useState(null)
-  const effectiveError = urlError || error
-
-  void AlertCircle
-  void RefreshCw
-  void connected
-  void connectCalendar
-  void effectiveError
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const calendarError = params.get('calendarError')
-
-    if (calendarError) setUrlError(calendarError)
-
-    if (calendarError || params.has('calendarConnected')) {
+    if (params.get('calendarError') || params.has('calendarConnected')) {
       params.delete('calendarError')
       params.delete('calendarConnected')
       const query = params.toString()
@@ -55,7 +43,6 @@ export default function CalendarPage({ focusDate, focusKey }) {
 
     const nextDate = new Date(focusDate)
     setSelectedDate(nextDate)
-    setIsDetailOpen(true)
     goToMonth(nextDate)
   }, [focusDate, focusKey, goToMonth])
 
@@ -74,16 +61,13 @@ export default function CalendarPage({ focusDate, focusKey }) {
     })
   }, [events, calendars, searchQuery])
 
-  const handleMonthChange = (newMonth) => {
-    goToMonth(newMonth)
-  }
-
   const handleDaySelect = (date) => {
-    setSelectedDate(date)
-    setIsDetailOpen(true)
+    setSelectedDate((current) => (
+      current && isSameDay(current, date) ? null : date
+    ))
   }
 
-  const openAddForm = (date = selectedDate) => {
+  const openAddForm = (date = selectedDate || new Date()) => {
     setSelectedDate(date)
     setEditingEvent(null)
     setFormError(null)
@@ -113,7 +97,6 @@ export default function CalendarPage({ focusDate, focusKey }) {
         await addEvent(formData)
       }
       closeForm()
-      setIsDetailOpen(true)
     } catch (e) {
       console.error(e)
       setFormError(e.message)
@@ -123,7 +106,7 @@ export default function CalendarPage({ focusDate, focusKey }) {
   }
 
   const handleRemoveEvent = async (event) => {
-    if (!window.confirm('이 일정을 삭제할까요?')) return
+    if (!window.confirm('일정을 삭제할까요?')) return
 
     setFormError(null)
     try {
@@ -136,50 +119,60 @@ export default function CalendarPage({ focusDate, focusKey }) {
     }
   }
 
+  const handleStatusChange = async (event, status) => {
+    setFormError(null)
+    try {
+      await updateEventStatus(event.id, status)
+    } catch (e) {
+      console.error(e)
+      setFormError(e.message)
+    }
+  }
+
+  const handlePriorityChange = async (event, priority) => {
+    setFormError(null)
+    try {
+      await updateEventPriority(event.id, priority)
+    } catch (e) {
+      console.error(e)
+      setFormError(e.message)
+    }
+  }
+
+  const renderDayList = (variant = 'inline') => {
+    if (!selectedDate) return null
+
+    return (
+      <DayEventList
+        date={selectedDate}
+        events={filteredEvents}
+        onAdd={() => openAddForm()}
+        onEdit={openEditForm}
+        onRemove={handleRemoveEvent}
+        onStatusChange={handleStatusChange}
+        onPriorityChange={handlePriorityChange}
+        onClose={() => setSelectedDate(null)}
+        variant={variant}
+      />
+    )
+  }
+
   return (
-    <div className="flex flex-col h-full min-h-full bg-[#f0f5ff]">
-      {/* Intentionally hidden for now; Google Calendar connection UI will be restored when backend integration is enabled.
-      {!connected && (
-        <div className="flex items-center justify-between gap-3 bg-[#fff8df] border-b border-[#e7d79a] px-4 py-3">
-          <p className="text-sm font-medium text-[#665a2b]">Google Calendar 연결이 필요합니다.</p>
-          <button
-            onClick={connectCalendar}
-            className="flex items-center gap-1.5 text-sm font-semibold text-[#0044cc] bg-[#d6edef] hover:bg-[#c4e1e3] px-3 py-1.5 rounded-lg transition-colors"
-          >
-            <RefreshCw size={14} />
-            연결하기
-          </button>
-        </div>
-      )}
-
-      {effectiveError && (
-        <div className="flex items-start justify-between gap-3 bg-[#fff0f0] border-b border-[#e4bcbc] px-4 py-3">
-          <div className="flex items-start gap-2 text-sm font-medium text-[#7a3d3d]">
-            <AlertCircle size={16} className="mt-0.5 shrink-0" />
-            <p>{effectiveError}</p>
-          </div>
-          <button
-            onClick={() => {
-              setUrlError(null)
-              connectCalendar()
-            }}
-            className="shrink-0 flex items-center gap-1.5 text-sm font-semibold text-[#0044cc] bg-[#d6edef] hover:bg-[#c4e1e3] px-3 py-1.5 rounded-lg transition-colors"
-          >
-            <RefreshCw size={14} />
-            다시 연결
-          </button>
-        </div>
-      )}
-      */}
-
+    <div className="flex h-full min-h-full flex-col bg-[#f0f5ff]">
       {loading && (
-        <div className="flex justify-center py-2 bg-white/90 border-b border-[#bbd0ee]">
-          <div className="w-4 h-4 border-2 border-[#5588bb] border-t-transparent rounded-full animate-spin" />
+        <div className="flex justify-center border-b border-[#bbd0ee] bg-white/90 py-2">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#5588bb] border-t-transparent" />
         </div>
       )}
 
-      <div className="shrink-0 bg-[#e8f1f2] border-b border-[#bbddff] px-4 py-3">
-        <div className="flex items-center justify-between mb-2">
+      {(error || formError) && (
+        <div className="border-b border-[#e4bcbc] bg-[#fff0f0] px-4 py-2 text-sm font-bold text-[#7a3d3d]">
+          {formError || error}
+        </div>
+      )}
+
+      <div className="shrink-0 border-b border-[#bbddff] bg-[#e8f1f2] px-4 py-3">
+        <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-bold text-[#0044cc]">캘린더 검색</h2>
           {searchQuery && (
             <button
@@ -197,50 +190,47 @@ export default function CalendarPage({ focusDate, focusKey }) {
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="일정 검색"
-            className="w-full rounded-lg border border-[#99ccff] bg-white/90 pl-10 pr-3 py-2.5 text-sm shadow-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
+            className="w-full rounded-lg border border-[#99ccff] bg-white/90 py-2.5 pl-10 pr-3 text-sm shadow-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
           />
         </label>
       </div>
 
-      <div className="flex flex-col flex-1 min-h-0 gap-3 overflow-y-auto p-3 pb-24 md:pb-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 p-3 md:hidden">
+        <div className={`min-h-0 flex-1 rounded-lg ${selectedDate ? 'overflow-y-auto' : 'overflow-hidden'}`}>
+          <CalendarView
+            events={filteredEvents}
+            calendars={calendars}
+            currentMonth={currentMonth}
+            onMonthChange={goToMonth}
+            onDayClick={handleDaySelect}
+            onDayDoubleClick={openAddForm}
+            selectedDate={selectedDate}
+          />
+        </div>
+
+        {selectedDate && (
+          <div className="h-[34svh] min-h-[220px] shrink-0 overflow-hidden rounded-lg">
+            {renderDayList('panel')}
+          </div>
+        )}
+      </div>
+
+      <div className="hidden min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 md:flex">
         <CalendarView
           events={filteredEvents}
           calendars={calendars}
           currentMonth={currentMonth}
-          onMonthChange={handleMonthChange}
+          onMonthChange={goToMonth}
           onDayClick={handleDaySelect}
           onDayDoubleClick={openAddForm}
           selectedDate={selectedDate}
         />
-
-        <div className="hidden md:block">
-          <DayEventList
-            date={selectedDate}
-            events={filteredEvents}
-            onAdd={() => openAddForm()}
-            onEdit={openEditForm}
-            onRemove={handleRemoveEvent}
-          />
-        </div>
+        {renderDayList()}
       </div>
-
-      {isDetailOpen && (
-        <div className="fixed inset-x-0 bottom-[82px] z-30 px-3 md:hidden">
-          <DayEventList
-            date={selectedDate}
-            events={filteredEvents}
-            onAdd={() => openAddForm()}
-            onEdit={openEditForm}
-            onRemove={handleRemoveEvent}
-            onClose={() => setIsDetailOpen(false)}
-            variant="sheet"
-          />
-        </div>
-      )}
 
       {isFormOpen && (
         <EventFormModal
-          date={selectedDate}
+          date={selectedDate || new Date()}
           eventToEdit={editingEvent}
           error={formError}
           saving={saving}

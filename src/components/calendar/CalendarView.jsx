@@ -11,27 +11,26 @@ import {
 } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { addDateKeyDays, getDateTimeDateKey, getDateTimeTime } from '@/lib/dateTime'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 
 const COLOR_MAP = {
-  '1': 'bg-blue-400',
-  '2': 'bg-green-500',
-  '3': 'bg-purple-400',
-  '4': 'bg-red-400',
-  '5': 'bg-yellow-400',
-  '6': 'bg-orange-400',
-  '7': 'bg-teal-400',
-  '8': 'bg-gray-400',
-  '9': 'bg-indigo-400',
-  '10': 'bg-lime-500',
-  '11': 'bg-pink-400',
+  1: 'bg-blue-400',
+  2: 'bg-green-500',
+  3: 'bg-purple-400',
+  4: 'bg-red-400',
+  5: 'bg-yellow-400',
+  6: 'bg-orange-400',
+  7: 'bg-teal-400',
+  8: 'bg-gray-400',
+  9: 'bg-indigo-400',
+  10: 'bg-lime-500',
+  11: 'bg-pink-400',
 }
 
 function addDays(dateString, days) {
-  const date = new Date(`${dateString}T00:00:00`)
-  date.setDate(date.getDate() + days)
-  return date.toISOString().slice(0, 10)
+  return addDateKeyDays(dateString, days)
 }
 
 function getEventStyle(event, calendars) {
@@ -48,8 +47,8 @@ function getEventStyle(event, calendars) {
 }
 
 function getEventRange(event) {
-  const start = event.start?.date || event.start?.dateTime?.slice(0, 10)
-  const rawEnd = event.end?.date || event.end?.dateTime?.slice(0, 10) || start
+  const start = event.start?.date || getDateTimeDateKey(event.start?.dateTime)
+  const rawEnd = event.end?.date || getDateTimeDateKey(event.end?.dateTime) || start
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(start || '')) {
     return { start: null, end: null }
@@ -68,7 +67,23 @@ function includesDate(event, dateStr) {
 
 function getBadgeTime(event) {
   if (event.start?.date) return '종일'
-  return event.start?.dateTime?.slice(11, 16) || ''
+  return getDateTimeTime(event.start?.dateTime)
+}
+
+function groupEventsByTime(events) {
+  return events.reduce((groups, event) => {
+    const time = getBadgeTime(event)
+    const key = time || 'all-day'
+    const group = groups.find((item) => item.key === key)
+
+    if (group) {
+      group.events.push(event)
+    } else {
+      groups.push({ key, time, events: [event] })
+    }
+
+    return groups
+  }, [])
 }
 
 export default function CalendarView({
@@ -86,11 +101,14 @@ export default function CalendarView({
   const startPad = getDay(firstDay)
 
   return (
-    <section className="bg-white/90 border border-[#aacce4] rounded-lg shadow-sm flex flex-col min-h-[520px] md:flex-1 md:min-h-0 overflow-hidden">
-      <div className="flex items-center justify-center gap-3 px-4 py-3 bg-[#99ccff] border-b border-[#92bdc0]">
+    <section className={`flex w-full flex-1 flex-col overflow-hidden rounded-lg border border-[#aacce4] bg-white/90 shadow-sm md:min-h-0 ${
+      selectedDate ? 'min-h-[520px]' : 'h-full min-h-0'
+    }`}>
+      <div className="flex items-center justify-center gap-3 border-b border-[#92bdc0] bg-[#99ccff] px-4 py-3">
         <button
+          type="button"
           onClick={() => onMonthChange(subMonths(currentMonth, 1))}
-          className="p-2 rounded-full bg-[#f0f5ff] text-[#0044cc] hover:bg-[#cce0ff] active:bg-[#c9dfe1]"
+          className="rounded-full bg-[#f0f5ff] p-2 text-[#0044cc] hover:bg-[#cce0ff] active:bg-[#c9dfe1]"
           aria-label="이전 달"
         >
           <ChevronLeft size={20} />
@@ -99,50 +117,53 @@ export default function CalendarView({
           {format(currentMonth, 'yyyy년 M월', { locale: ko })}
         </h2>
         <button
+          type="button"
           onClick={() => onMonthChange(addMonths(currentMonth, 1))}
-          className="p-2 rounded-full bg-[#f0f5ff] text-[#0044cc] hover:bg-[#cce0ff] active:bg-[#c9dfe1]"
+          className="rounded-full bg-[#f0f5ff] p-2 text-[#0044cc] hover:bg-[#cce0ff] active:bg-[#c9dfe1]"
           aria-label="다음 달"
         >
           <ChevronRight size={20} />
         </button>
       </div>
 
-      <div className="grid grid-cols-7 bg-[#eef3ff] border-b border-[#bbd5f5] shrink-0">
-        {DAYS.map((d, i) => (
+      <div className="grid shrink-0 grid-cols-7 border-b border-[#bbd5f5] bg-[#eef3ff]">
+        {DAYS.map((day, index) => (
           <div
-            key={d}
-            className={`text-center text-xs font-semibold py-2 ${
-              i === 0 ? 'text-[#ba7373]' : i === 6 ? 'text-[#4f7f91]' : 'text-[#4477cc]'
+            key={day}
+            className={`py-2 text-center text-xs font-semibold ${
+              index === 0 ? 'text-[#ba7373]' : index === 6 ? 'text-[#4f7f91]' : 'text-[#4477cc]'
             }`}
           >
-            {d}
+            {day}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 auto-rows-fr flex-1 bg-white/90">
-        {Array.from({ length: startPad }).map((_, i) => (
-          <div key={`pad-${i}`} className="min-h-[76px] md:min-h-[112px] border-b border-r border-[#d5e8ff] bg-[#f5f9ff]" />
+      <div className="grid flex-1 grid-cols-7 auto-rows-fr bg-white/90">
+        {Array.from({ length: startPad }).map((_, index) => (
+          <div key={`pad-${index}`} className="min-h-[86px] border-b border-r border-[#d5e8ff] bg-[#f5f9ff] md:min-h-[112px]" />
         ))}
 
         {days.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd')
           const dayEvents = events.filter((event) => includesDate(event, dateStr))
+          const dayEventGroups = groupEventsByTime(dayEvents)
           const isSelected = selectedDate && isSameDay(day, selectedDate)
           const today = isToday(day)
           const dayOfWeek = getDay(day)
 
           return (
             <button
+              type="button"
               key={dateStr}
               onClick={() => onDayClick(day)}
               onDoubleClick={() => onDayDoubleClick?.(day)}
-              className={`min-h-[76px] md:min-h-[112px] p-1.5 border-b border-r border-[#d5e8ff] flex flex-col items-center text-left transition-colors ${
+              className={`flex min-h-[86px] flex-col items-center border-b border-r border-[#d5e8ff] p-1.5 text-left transition-colors md:min-h-[112px] ${
                 isSelected ? 'bg-[#e6f2f3]' : 'bg-white/90 hover:bg-[#f0f5ff] active:bg-[#eaf1f2]'
               }`}
             >
               <span
-                className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold mb-1 ${
+                className={`mb-1 flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
                   today
                     ? 'bg-[#0044cc] text-white'
                     : isSelected
@@ -157,24 +178,29 @@ export default function CalendarView({
                 {format(day, 'd')}
               </span>
 
-              <div className="flex flex-col gap-1 w-full min-w-0">
-                {dayEvents.slice(0, 2).map((event) => {
+              <div className="flex w-full min-w-0 flex-col gap-1">
+                {dayEventGroups.slice(0, 2).map((group) => {
+                  const event = group.events[0]
                   const { className, style } = getEventStyle(event, calendars)
-                  const time = getBadgeTime(event)
+                  const isDone = group.events.every((item) => item.status === 'done')
+                  const isHigh = group.events.some((item) => item.priority === 'high')
+                  const suffix = group.events.length > 1 ? ` 외 ${group.events.length - 1}` : ''
+
                   return (
                     <div
-                      key={event.id}
-                      className={`text-white text-[10px] leading-tight rounded px-1.5 py-0.5 truncate ${className}`}
-                      style={style}
+                      key={`${dateStr}_${group.key}`}
+                      className={`truncate rounded px-1.5 py-0.5 text-[10px] leading-tight text-white ${isDone ? 'line-through opacity-70' : ''} ${isHigh ? 'bg-[#e85252]' : className}`}
+                      style={isHigh ? {} : style}
                     >
-                      {time && <span className="hidden sm:inline font-semibold mr-1">{time}</span>}
-                      {event.summary || '(제목 없음)'}
+                      {isHigh && <span className="mr-1 font-black">중요</span>}
+                      {group.time && <span className="font-semibold">{group.time} </span>}
+                      {event.summary || '(제목 없음)'}{suffix}
                     </div>
                   )
                 })}
-                {dayEvents.length > 2 && (
-                  <div className="text-[10px] text-[#5577bb] px-1">
-                    +{dayEvents.length - 2}
+                {dayEventGroups.length > 2 && (
+                  <div className="px-1 text-[10px] text-[#5577bb]">
+                    +{dayEventGroups.length - 2}
                   </div>
                 )}
               </div>

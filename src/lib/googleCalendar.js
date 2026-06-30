@@ -1,5 +1,6 @@
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '@/lib/firebase'
+import { addDateKeyDays } from '@/lib/dateTime'
 
 function callable(name) {
   return httpsCallable(functions, name)
@@ -10,9 +11,7 @@ function functionError(error, fallback) {
 }
 
 function nextDate(date) {
-  const next = new Date(`${date}T00:00:00`)
-  next.setDate(next.getDate() + 1)
-  return next.toISOString().slice(0, 10)
+  return addDateKeyDays(date, 1)
 }
 
 export async function getCalendarConnectionStatus() {
@@ -110,7 +109,7 @@ export async function deleteEvent(_accessToken, calendarId, eventId) {
   }
 }
 
-export function makeEvent({ title, date, startDate, endDate, startTime, endTime, memo }) {
+export function makeEvent({ title, date, startDate, endDate, startTime, endTime, memo, priority = 'medium' }) {
   const safeStartDate = startDate || date
   const safeEndDate = endDate || safeStartDate
   const isAllDay = !startTime
@@ -119,6 +118,7 @@ export function makeEvent({ title, date, startDate, endDate, startTime, endTime,
     return {
       summary: title,
       description: memo || '',
+      priority,
       start: { date: safeStartDate },
       end: { date: nextDate(safeEndDate) },
     }
@@ -129,6 +129,7 @@ export function makeEvent({ title, date, startDate, endDate, startTime, endTime,
   return {
     summary: title,
     description: memo || '',
+    priority,
     start: { dateTime: `${safeStartDate}T${startTime}:00`, timeZone: 'Asia/Seoul' },
     end: { dateTime: `${safeEndDate}T${safeEndTime}:00`, timeZone: 'Asia/Seoul' },
   }

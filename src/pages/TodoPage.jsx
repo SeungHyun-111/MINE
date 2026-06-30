@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { addDays, format, isSameDay, startOfWeek } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { CalendarRange, Check, Plus, Trash2, X } from 'lucide-react'
+import { CalendarRange, Check, ChevronLeft, ChevronRight, Plus, Trash2, X } from 'lucide-react'
 import { useTodos } from '@/hooks/useTodos'
+import { clampDateInputYear, formatDateKey, parseDateKey } from '@/lib/dateTime'
 
 const PRIORITIES = {
   high: { label: '높음', className: 'bg-[#e9b5b5] text-[#743b3b]' },
@@ -15,8 +16,9 @@ function toDateString(date) {
 }
 
 function diffDays(startDate, endDate) {
-  const start = new Date(`${startDate}T00:00:00`)
-  const end = new Date(`${endDate}T00:00:00`)
+  const start = parseDateKey(startDate)
+  const end = parseDateKey(endDate)
+  if (!start || !end) return 0
   return Math.round((end - start) / 86400000)
 }
 
@@ -84,12 +86,16 @@ function TodoAddModal({ sections, initialValues, onClose, onSubmit }) {
               type="date"
               value={startDate}
               onChange={(event) => setStartDate(event.target.value)}
+              onInput={clampDateInputYear}
+              max="9999-12-31"
               className="rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb]"
             />
             <input
               type="date"
               value={endDate}
               onChange={(event) => setEndDate(event.target.value)}
+              onInput={clampDateInputYear}
+              max="9999-12-31"
               className="rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb]"
             />
           </div>
@@ -165,6 +171,15 @@ function displayEndDate(todo, todayString) {
   return end
 }
 
+function ganttEndDate(todo, todayString, rangeEndString) {
+  const start = todo.startDate || todayString
+  const end = todo.endDate || start
+  if (!todo.completed && todo.sectionId !== 'done' && end < todayString) {
+    return rangeEndString >= todayString ? todayString : rangeEndString
+  }
+  return end
+}
+
 function nextTodoAction(todo) {
   const sectionId = todo.sectionId || 'todo'
   if (sectionId === 'todo') return '진행 중으로 이동'
@@ -173,16 +188,17 @@ function nextTodoAction(todo) {
 }
 
 function GanttChart({ sections, todos, onCellDoubleClick }) {
+  const [weekOffset, setWeekOffset] = useState(0)
   const today = new Date()
   const todayString = toDateString(today)
-  const rangeStart = startOfWeek(today, { weekStartsOn: 0 })
+  const rangeStart = startOfWeek(addDays(today, weekOffset * 7), { weekStartsOn: 0 })
   const days = Array.from({ length: 14 }, (_, index) => addDays(rangeStart, index))
   const rangeStartString = toDateString(rangeStart)
   const rangeEndString = toDateString(days[days.length - 1])
 
   const visibleTodos = todos.filter((todo) => {
     const start = todo.startDate || rangeStartString
-    const end = todo.endDate || start
+    const end = ganttEndDate(todo, todayString, rangeEndString)
     return end >= rangeStartString && start <= rangeEndString
   })
   const todosBySection = visibleTodos.reduce((acc, todo) => {
@@ -204,7 +220,31 @@ function GanttChart({ sections, todos, onCellDoubleClick }) {
             </p>
           </div>
         </div>
-        <p className="text-xs font-semibold text-[#0044cc]">2주 보기</p>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setWeekOffset((value) => value - 1)}
+            className="rounded-full bg-[#f0f5ff] p-2 text-[#0044cc] hover:bg-[#cce0ff]"
+            aria-label="직전 주차"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setWeekOffset(0)}
+            className="rounded-lg bg-[#f0f5ff] px-3 py-2 text-xs font-black text-[#0044cc] hover:bg-[#cce0ff]"
+          >
+            이번 주
+          </button>
+          <button
+            type="button"
+            onClick={() => setWeekOffset((value) => value + 1)}
+            className="rounded-full bg-[#f0f5ff] p-2 text-[#0044cc] hover:bg-[#cce0ff]"
+            aria-label="다음 주차"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -213,7 +253,7 @@ function GanttChart({ sections, todos, onCellDoubleClick }) {
             <div className="px-3 py-2 text-xs font-bold text-[#4477cc]">섹션</div>
             {days.map((day) => (
               <div
-                key={day.toISOString()}
+                key={formatDateKey(day)}
                 className={`border-l border-[#bbd5f5] px-1 py-2 text-center ${
                   isSameDay(day, today) ? 'bg-[#cce0ff]' : ''
                 }`}
@@ -249,7 +289,7 @@ function GanttChart({ sections, todos, onCellDoubleClick }) {
                     {days.map((day) => (
                       <button
                         type="button"
-                        key={`${section.id}_${day.toISOString()}`}
+                        key={`${section.id}_${formatDateKey(day)}`}
                         onDoubleClick={() => onCellDoubleClick({
                           sectionId: section.id,
                           startDate: toDateString(day),
@@ -262,7 +302,7 @@ function GanttChart({ sections, todos, onCellDoubleClick }) {
                   </div>
                   {sectionTodos.map((todo, index) => {
                     const startOffset = clamp(diffDays(rangeStartString, todo.startDate || rangeStartString), 0, 13)
-                    const endOffset = clamp(diffDays(rangeStartString, displayEndDate(todo, todayString)), 0, 13)
+                    const endOffset = clamp(diffDays(rangeStartString, ganttEndDate(todo, todayString, rangeEndString)), 0, 13)
                     const span = Math.max(endOffset - startOffset + 1, 1)
 
                     return (

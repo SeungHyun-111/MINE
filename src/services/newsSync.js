@@ -1,13 +1,12 @@
 import { SOURCES } from './newsSources'
+import { addDateKeyDays, getSeoulDateKey } from '@/lib/dateTime'
 
 const CACHE_TTL_MS = 30 * 60 * 1000
 const CACHE_PREFIX = 'mine:news:'
 const NEWS_PROXY_URL = 'https://news-proxy.weras1993.workers.dev/?url='
 
 function cutoffDate(days) {
-  const d = new Date()
-  d.setDate(d.getDate() - days)
-  return d.toISOString().slice(0, 10)
+  return addDateKeyDays(getSeoulDateKey(), -days)
 }
 
 function cacheKey(key) {

@@ -17,6 +17,7 @@ import { useWeather } from '@/hooks/useWeather'
 import { useRoutines } from '@/hooks/useRoutines'
 import { usePet } from '@/hooks/usePet'
 import { db } from '@/lib/firebase'
+import { addDateKeyDays, formatDateKey, getDateTimeDateKey, parseDateKey } from '@/lib/dateTime'
 
 const ROUTINE_LABELS = {
   daily: 'Daily',
@@ -37,9 +38,7 @@ const LIQUID_BG_IMAGES = Object.values(import.meta.glob('../assets/liquid-bg/*.{
 }))
 
 function addDateDays(dateString, days) {
-  const date = new Date(`${dateString}T00:00:00`)
-  date.setDate(date.getDate() + days)
-  return date.toISOString().slice(0, 10)
+  return addDateKeyDays(dateString, days)
 }
 
 function objectToList(value) {
@@ -47,8 +46,8 @@ function objectToList(value) {
 }
 
 function getEventRange(event) {
-  const start = event.start?.date || event.start?.dateTime?.slice(0, 10)
-  const rawEnd = event.end?.date || event.end?.dateTime?.slice(0, 10) || start
+  const start = event.start?.date || getDateTimeDateKey(event.start?.dateTime)
+  const rawEnd = event.end?.date || getDateTimeDateKey(event.end?.dateTime) || start
   const end = event.end?.date ? addDateDays(rawEnd, -1) : rawEnd
   return { start, end: end && end >= start ? end : start }
 }
@@ -65,9 +64,9 @@ function weatherDateLabel(value, fallbackDate = new Date()) {
   const dashed = normalized.includes('-')
     ? normalized
     : normalized.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3')
-  const date = new Date(`${dashed}T00:00:00`)
+  const date = parseDateKey(dashed)
 
-  return Number.isNaN(date.getTime()) ? format(fallbackDate, 'MM.dd') : format(date, 'MM.dd')
+  return !date || Number.isNaN(date.getTime()) ? format(fallbackDate, 'MM.dd') : format(date, 'MM.dd')
 }
 
 function shortTitle(value) {
@@ -76,6 +75,15 @@ function shortTitle(value) {
 
 function shortRoutine(value) {
   return (value || '일정').trim().slice(0, 3)
+}
+
+function todoGanttEndDate(todo, todayString, rangeEndString) {
+  const start = todo.startDate || todayString
+  const end = todo.endDate || start
+  if (!todo.completed && todo.sectionId !== 'done' && end < todayString) {
+    return rangeEndString >= todayString ? todayString : rangeEndString
+  }
+  return end
 }
 
 function useNewsScraps() {
@@ -120,7 +128,7 @@ function WeeklySchedule({ events, today, weekDays, onOpenCalendarDate }) {
           const isToday = isSameDay(day, today)
           return (
             <div
-              key={day.toISOString()}
+              key={formatDateKey(day)}
               className={`border-r border-[#bbd5f5] px-1 py-1 text-center last:border-r-0 ${
                 isToday ? 'bg-[#cce0ff]' : ''
               }`}
@@ -136,7 +144,7 @@ function WeeklySchedule({ events, today, weekDays, onOpenCalendarDate }) {
         })}
       </div>
 
-      <div className="grid h-[92px] grid-cols-7 bg-white/90">
+      <div className="grid grid-cols-7 bg-white/90">
         {weekDays.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd')
           const dayEvents = events.filter((event) => includesDate(event, dateStr))
@@ -147,11 +155,11 @@ function WeeklySchedule({ events, today, weekDays, onOpenCalendarDate }) {
               type="button"
               key={dateStr}
               onClick={() => onOpenCalendarDate?.(day)}
-              className={`min-w-0 overflow-hidden border-r border-[#d5e8ff] px-1 py-1.5 text-center transition-colors last:border-r-0 active:bg-[#e6f2f3] ${
+              className={`min-w-0 border-r border-[#d5e8ff] px-1 py-1.5 text-center transition-colors last:border-r-0 active:bg-[#e6f2f3] ${
                 isToday ? 'bg-[#f3fbfb]' : ''
               }`}
             >
-              <div className="flex h-full min-w-0 flex-col items-center justify-start gap-1">
+              <div className="flex min-h-[92px] min-w-0 flex-col items-center justify-start gap-1">
                 {dayEvents.length === 0 ? (
                   <span className="mt-7 text-[9px] leading-none text-[#7799cc]">없음</span>
                 ) : (
@@ -160,20 +168,20 @@ function WeeklySchedule({ events, today, weekDays, onOpenCalendarDate }) {
                       {dayEvents.length}건
                     </span>
                     <div className="flex min-w-0 flex-col gap-0.5">
-                      {dayEvents.slice(0, 2).map((event) => (
-                        <span
-                          key={event.id}
-                          className="w-8 rounded bg-[#d5e8ff] px-1 py-0.5 text-[10px] font-bold leading-none text-[#0044cc]"
-                        >
-                          {shortTitle(event.summary)}
-                        </span>
-                      ))}
+                      {dayEvents.map((event) => {
+                        const isHigh = event.priority === 'high'
+                        return (
+                          <span
+                            key={event.id}
+                            className={`max-w-full rounded px-1 py-0.5 text-[10px] font-bold leading-none ${
+                              isHigh ? 'bg-[#e85252] text-white' : 'bg-[#d5e8ff] text-[#0044cc]'
+                            } ${event.status === 'done' ? 'line-through opacity-70' : ''}`}
+                          >
+                            {isHigh ? '!' : ''}{shortTitle(event.summary)}
+                          </span>
+                        )
+                      })}
                     </div>
-                    {dayEvents.length > 2 && (
-                      <span className="rounded-full bg-[#cce0ff] px-1.5 text-[10px] font-black leading-none text-[#4477cc]">
-                        ...
-                      </span>
-                    )}
                   </>
                 )}
               </div>
@@ -388,11 +396,12 @@ function TodoGanttChart({ onOpenPage }) {
   const weekStart = startOfWeek(today, { weekStartsOn: 0 })
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
   const dayStrings = days.map((d) => format(d, 'yyyy-MM-dd'))
+  const todayString = format(today, 'yyyy-MM-dd')
 
   const activeTodos = todos
     .filter((t) => !t.completed && t.startDate)
     .filter((t) => {
-      const end = t.endDate || t.startDate
+      const end = todoGanttEndDate(t, todayString, dayStrings[6])
       return t.startDate <= dayStrings[6] && end >= dayStrings[0]
     })
     .slice(0, 7)
@@ -410,7 +419,7 @@ function TodoGanttChart({ onOpenPage }) {
       <div className="grid grid-cols-7 border-b border-[#d5e8ff] bg-[#eef3ff]">
         {days.map((day) => (
           <div
-            key={day.toISOString()}
+            key={formatDateKey(day)}
             className={`py-1 text-center ${isSameDay(day, today) ? 'bg-[#cce0ff]' : ''}`}
           >
             <p className="text-[9px] font-bold text-[#4477cc]">{format(day, 'EEE', { locale: ko })}</p>
@@ -425,7 +434,7 @@ function TodoGanttChart({ onOpenPage }) {
         ) : (
           activeTodos.map((todo) => {
             const startDate = todo.startDate
-            const endDate = todo.endDate || startDate
+            const endDate = todoGanttEndDate(todo, todayString, dayStrings[6])
 
             const barStartIdx = (() => {
               const idx = dayStrings.findIndex((d) => d >= startDate)

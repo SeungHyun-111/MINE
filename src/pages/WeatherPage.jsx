@@ -3,6 +3,7 @@ import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { ChevronRight, RefreshCw, Star } from 'lucide-react'
 import { useWeather } from '@/hooks/useWeather'
+import { parseDateKey } from '@/lib/dateTime'
 
 const CITY_WEATHER = [
   { city: '백령', temp: '23.2', tone: 'partly', x: 13, y: 29 },
@@ -106,7 +107,8 @@ function formatShortDate(date) {
 function weekdayFromDate(date) {
   if (!date) return '-'
   const normalized = date.includes('-') ? date : `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`
-  const value = new Date(`${normalized}T00:00:00`)
+  const value = parseDateKey(normalized)
+  if (!value) return '-'
   return WEEKDAYS[value.getDay()] || '-'
 }
 

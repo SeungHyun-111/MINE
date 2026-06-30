@@ -3,6 +3,7 @@ import { addMonths, endOfMonth, startOfMonth } from 'date-fns'
 import { onValue, push, ref, remove, serverTimestamp, set, update } from 'firebase/database'
 import { useAuth } from '@/hooks/useAuth'
 import { db } from '@/lib/firebase'
+import { getDateTimeDateKey } from '@/lib/dateTime'
 import {
   connectCalendar,
   createEvent,
@@ -209,6 +210,70 @@ export function useCalendar() {
     setEvents((prev) => prev.filter((e) => e.id !== eventId))
   }
 
+  const updateEventStatus = async (eventId, status) => {
+    if (CALENDAR_BACKEND_ENABLED) {
+      throw new Error('濡쒖뻄 罹섎┛???먯꽌留??ъ슜 媛?ν빀?덈떎.')
+    }
+    if (!user) throw new Error('濡쒓렇?몄씠 ?꾩슂?⑸땲??')
+
+    await update(calendarEventRef(user.uid, eventId), {
+      status,
+      updatedAt: serverTimestamp(),
+    })
+  }
+
+  const updateEventPriority = async (eventId, priority) => {
+    if (CALENDAR_BACKEND_ENABLED) {
+      throw new Error('嚥≪뮇六?筌?꼶????癒?퐣筌?????揶쎛?館鍮??덈뼄.')
+    }
+    if (!user) throw new Error('嚥≪뮄??紐꾩뵠 ?袁⑹뒄??몃빍??')
+
+    await update(calendarEventRef(user.uid, eventId), {
+      priority,
+      updatedAt: serverTimestamp(),
+    })
+  }
+
+  const replaceRoutineEventsForDate = async (date, routines) => {
+    if (CALENDAR_BACKEND_ENABLED) {
+      throw new Error('濡쒖뻄 罹섎┛???먯꽌留??ъ슜 媛?ν빀?덈떎.')
+    }
+    if (!user) throw new Error('濡쒓렇?몄씠 ?꾩슂?⑸땲??')
+
+    const updates = {}
+
+    events.forEach((event) => {
+      const eventDate = event.start?.date || getDateTimeDateKey(event.start?.dateTime)
+      if (eventDate === date && event.mineType === 'routine') {
+        updates[event.id] = null
+      }
+    })
+
+    routines.forEach((routine) => {
+      const newRef = push(calendarEventsRef(user.uid))
+      const formData = {
+        title: routine.title,
+        startDate: date,
+        endDate: date,
+        startTime: routine.startTime,
+        endTime: routine.endTime,
+        memo: routine.content,
+        priority: routine.priority || 'medium',
+      }
+
+      updates[newRef.key] = {
+        ...makeEvent(formData),
+        calendarId: LOCAL_CALENDAR.id,
+        mineType: 'routine',
+        status: 'pending',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }
+    })
+
+    await update(calendarEventsRef(user.uid), updates)
+  }
+
   const prevMonth = useCallback(() => setCurrentMonth((d) => addMonths(d, -1)), [])
   const nextMonth = useCallback(() => setCurrentMonth((d) => addMonths(d, 1)), [])
   const goToMonth = useCallback((date) => setCurrentMonth(startOfMonth(date)), [])
@@ -226,6 +291,9 @@ export function useCalendar() {
     addEvent,
     editEvent,
     removeEvent,
+    updateEventStatus,
+    updateEventPriority,
+    replaceRoutineEventsForDate,
     connectCalendar: startCalendarConnection,
     reload: load,
     reloadCalendars: loadCalendars,

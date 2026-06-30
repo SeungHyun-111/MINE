@@ -5,6 +5,7 @@ import { ko } from 'date-fns/locale'
 import { onValue, ref, remove, serverTimestamp, set, update } from 'firebase/database'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/hooks/useAuth'
+import { parseDateKey } from '@/lib/dateTime'
 import { getCachedNews, loadNews, loadNewsDetail } from '@/services/newsSync'
 import { SOURCES } from '@/services/newsSources'
 
@@ -21,7 +22,8 @@ function itemLink(sourceKey, item) {
 
 function dateLabel(date) {
   if (!date) return ''
-  return format(new Date(`${date}T00:00:00`), 'M.d (E)', { locale: ko })
+  const parsed = parseDateKey(date)
+  return parsed ? format(parsed, 'M.d (E)', { locale: ko }) : ''
 }
 
 function objectToList(value) {

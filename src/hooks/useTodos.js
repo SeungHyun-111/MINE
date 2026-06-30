@@ -10,6 +10,7 @@ import {
 } from 'firebase/database'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/hooks/useAuth'
+import { addDateKeyDays, getSeoulDateKey } from '@/lib/dateTime'
 
 const DEFAULT_SECTIONS = [
   { id: 'todo', title: '할 일', order: 1 },
@@ -18,13 +19,11 @@ const DEFAULT_SECTIONS = [
 ]
 
 function todayString() {
-  return new Date().toISOString().slice(0, 10)
+  return getSeoulDateKey()
 }
 
 function addDays(dateString, days) {
-  const date = new Date(`${dateString}T00:00:00`)
-  date.setDate(date.getDate() + days)
-  return date.toISOString().slice(0, 10)
+  return addDateKeyDays(dateString, days)
 }
 
 function objectToList(value) {
