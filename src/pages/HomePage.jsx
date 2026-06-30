@@ -10,6 +10,7 @@ const EuphonyPage = lazy(() => import('@/pages/EuphonyPage'))
 const RoutinePage = lazy(() => import('@/pages/RoutinePage'))
 const NewsPage = lazy(() => import('@/pages/NewsPage'))
 const GamePage = lazy(() => import('@/pages/GamePage'))
+const SasekPage = lazy(() => import('@/pages/SasekPage'))
 
 function PageFallback() {
   return (
@@ -45,6 +46,7 @@ export default function HomePage() {
       case 'euphony': return <EuphonyPage />
       case 'news': return <NewsPage initialTab={newsFocus?.tab} focusKey={newsFocus?.requestedAt} />
       case 'game': return <GamePage />
+      case 'sasek': return <SasekPage />
       default: return <SummaryPage onOpenCalendarDate={openCalendarDate} onOpenPage={setPage} onOpenNewsPage={openNewsPage} />
 
     }

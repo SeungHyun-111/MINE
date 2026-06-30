@@ -11,7 +11,22 @@ const NAV_ITEMS = [
   { icon: Music2, label: 'Euphony', key: 'euphony' },
   { icon: Newspaper, label: '새소식', key: 'news' },
   { icon: Gamepad2, label: '게임', key: 'game' },
+  { char: '正', label: '正', key: 'sasek' },
 ]
+
+function NavIcon({ item, size }) {
+  if (item.char) {
+    return (
+      <span
+        style={{ fontSize: size === 18 ? 16 : 20, fontWeight: 'bold', fontFamily: 'serif', lineHeight: 1 }}
+      >
+        {item.char}
+      </span>
+    )
+  }
+  const Icon = item.icon
+  return <Icon size={size} />
+}
 
 export default function AppLayout({ page, onPageChange, children }) {
   const { user, logout } = useAuth()
@@ -21,18 +36,18 @@ export default function AppLayout({ page, onPageChange, children }) {
       <aside className="hidden md:flex flex-col w-56 bg-white/90 border-r border-[#bbd0ee] py-6 px-3">
         <h1 className="text-lg font-bold text-[#0044cc] px-3 mb-6">개인 일정</h1>
         <nav className="flex flex-col gap-1 flex-1">
-          {NAV_ITEMS.map(({ icon: Icon, label, key }) => (
+          {NAV_ITEMS.map((item) => (
             <button
-              key={key}
-              onClick={() => onPageChange(key)}
+              key={item.key}
+              onClick={() => onPageChange(item.key)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                page === key
+                page === item.key
                   ? 'bg-[#cce0ff] text-[#0044cc]'
                   : 'text-[#4477cc] hover:bg-[#f0f5ff]'
               }`}
             >
-              <Icon size={18} />
-              {label}
+              <NavIcon item={item} size={18} />
+              {item.label}
             </button>
           ))}
         </nav>
@@ -57,18 +72,18 @@ export default function AppLayout({ page, onPageChange, children }) {
       <nav
         className="mobile-tab-rail md:hidden fixed bottom-2 left-2 right-2 z-40 flex overflow-x-auto overscroll-x-contain rounded-2xl bg-[#0033aa] shadow-[0_8px_32px_rgba(0,51,170,0.45),0_2px_8px_rgba(0,0,0,0.18)]"
       >
-        {NAV_ITEMS.map(({ icon: Icon, label, key }) => (
+        {NAV_ITEMS.map((item) => (
           <button
-            key={key}
-            onClick={() => onPageChange(key)}
+            key={item.key}
+            onClick={() => onPageChange(item.key)}
             className={`mobile-tab-item flex basis-[20%] shrink-0 flex-col items-center justify-center gap-1 px-1 py-2.5 text-[11px] font-medium leading-tight transition-colors ${
-              page === key
+              page === item.key
                 ? 'bg-white/20 text-white'
                 : 'text-white/55 active:bg-white/10'
             }`}
           >
-            <Icon size={21} />
-            <span className="min-h-7 max-w-full break-keep text-center">{label}</span>
+            <NavIcon item={item} size={21} />
+            <span className="min-h-7 max-w-full break-keep text-center">{item.label}</span>
           </button>
         ))}
         <button
