@@ -499,17 +499,14 @@ export default function SasekPage() {
   }
 
   return (
-    <div
-      className="min-h-full relative"
-      style={{
-        backgroundImage: 'url(/jBackG.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-      }}
-    >
+    <div className="min-h-full relative isolate overflow-hidden">
+      <img
+        src="/jBackG.jpg"
+        alt=""
+        className="pointer-events-none fixed inset-0 -z-10 h-svh w-screen object-cover object-center md:absolute md:h-full md:w-full"
+      />
       {/* 배경 오버레이 */}
-      <div className="absolute inset-0" style={{ background: 'rgba(43,38,32,0.38)' }} />
+      <div className="absolute inset-0 -z-[5]" style={{ background: 'rgba(43,38,32,0.38)' }} />
 
       <div className="relative z-10 max-w-lg mx-auto px-4 py-6 pb-28">
         {/* 헤더 */}

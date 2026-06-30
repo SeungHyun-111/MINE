@@ -189,12 +189,12 @@ export default function EuphonyPage() {
           className="pointer-events-none fixed inset-0 -z-10 h-svh w-screen object-cover object-center opacity-70 md:absolute md:h-full md:w-full md:object-top"
         />
         <div className="relative z-10 min-h-[calc(100svh-4px)] px-4 py-5 md:px-8 md:py-7">
-          <section className="mb-4 flex items-start justify-between gap-4">
+          <section className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.24em] text-[#0055ff]">Euphony</p>
               <h1 className="mt-2 text-4xl font-black leading-tight md:text-6xl">Euphony</h1>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <select
                 value={selectedBook}
                 onChange={(e) => setSelectedBook(e.target.value)}
