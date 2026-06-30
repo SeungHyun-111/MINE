@@ -5,8 +5,13 @@ const KMA_SHORT_URL = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0
 const KMA_MID_URL = 'https://apis.data.go.kr/1360000/MidFcstInfoService'
 const RISE_SET_URL = 'https://apis.data.go.kr/B090041/openapi/service/RiseSetInfoService/getAreaRiseSetInfo'
 const ENABLE_RISE_SET_API = true
-const NATIONWIDE_FETCH_CONCURRENCY = 5
-const NATIONWIDE_BATCH_DELAY_MS = 350
+const NATIONWIDE_FETCH_CONCURRENCY = 2
+const NATIONWIDE_BATCH_DELAY_MS = 700
+const NATIONWIDE_429_BACKOFF_MS = 5000
+const MID_FORECAST_CACHE_TTL_MS = 6 * 60 * 60 * 1000
+const RISE_SET_CACHE_TTL_MS = 20 * 60 * 60 * 1000
+
+const requestCache = new Map()
 
 export const DEFAULT_WEATHER_LOCATION = {
   name: '마포구 상암동',
@@ -145,6 +150,20 @@ async function settle(name, promise) {
       name,
     }
   }
+}
+
+async function cachedSettle(name, key, ttlMs, request) {
+  const cached = requestCache.get(key)
+  if (cached && Date.now() - cached.savedAt < ttlMs) {
+    return cached.result
+  }
+
+  const result = await settle(name, request())
+  requestCache.set(key, {
+    savedAt: Date.now(),
+    result,
+  })
+  return result
 }
 
 function getItems(data) {
@@ -317,6 +336,11 @@ async function fetchNationwideWeather(baseTimes) {
       })
     })
 
+    const hitRateLimit = apiErrors.some((error) => String(error.message || '').startsWith('429'))
+    if (hitRateLimit) {
+      await wait(NATIONWIDE_429_BACKOFF_MS)
+    }
+
     if (index + NATIONWIDE_FETCH_CONCURRENCY < NATIONWIDE_LOCATIONS.length) {
       await wait(NATIONWIDE_BATCH_DELAY_MS)
     }
@@ -374,16 +398,31 @@ export async function fetchWeatherBundle(location = DEFAULT_WEATHER_LOCATION) {
   const commonShort = `serviceKey=${serviceKey()}&pageNo=1&numOfRows=1000&dataType=JSON&nx=${location.nx}&ny=${location.ny}`
 
   const baseTimes = { ultra, vilage, mid: tmFc }
-  const [currentResult, forecastResult, midLandResult, midTempResult, riseSetResult, nationwideResult] = await Promise.allSettled([
-    fetchJson(`${KMA_SHORT_URL}/getUltraSrtNcst?${commonShort}&base_date=${ultra.baseDate}&base_time=${ultra.baseTime}`),
-    fetchJson(`${KMA_SHORT_URL}/getVilageFcst?${commonShort}&base_date=${vilage.baseDate}&base_time=${vilage.baseTime}`),
-    fetchJson(`${KMA_MID_URL}/getMidLandFcst?serviceKey=${serviceKey()}&pageNo=1&numOfRows=10&dataType=JSON&regId=${location.midLandRegId}&tmFc=${tmFc}`),
-    fetchJson(`${KMA_MID_URL}/getMidTa?serviceKey=${serviceKey()}&pageNo=1&numOfRows=10&dataType=JSON&regId=${location.midTempRegId}&tmFc=${tmFc}`),
+  const [currentResult, forecastResult, midLandResult, midTempResult, riseSetResult] = await Promise.all([
+    settle('shortCurrent', fetchJson(`${KMA_SHORT_URL}/getUltraSrtNcst?${commonShort}&base_date=${ultra.baseDate}&base_time=${ultra.baseTime}`)),
+    settle('shortForecast', fetchJson(`${KMA_SHORT_URL}/getVilageFcst?${commonShort}&base_date=${vilage.baseDate}&base_time=${vilage.baseTime}`)),
+    cachedSettle(
+      'midLand',
+      `midLand:${location.midLandRegId}:${tmFc}`,
+      MID_FORECAST_CACHE_TTL_MS,
+      () => fetchJson(`${KMA_MID_URL}/getMidLandFcst?serviceKey=${serviceKey()}&pageNo=1&numOfRows=10&dataType=JSON&regId=${location.midLandRegId}&tmFc=${tmFc}`)
+    ),
+    cachedSettle(
+      'midTemp',
+      `midTemp:${location.midTempRegId}:${tmFc}`,
+      MID_FORECAST_CACHE_TTL_MS,
+      () => fetchJson(`${KMA_MID_URL}/getMidTa?serviceKey=${serviceKey()}&pageNo=1&numOfRows=10&dataType=JSON&regId=${location.midTempRegId}&tmFc=${tmFc}`)
+    ),
     ENABLE_RISE_SET_API
-      ? fetchText(`${RISE_SET_URL}?serviceKey=${serviceKey()}&locdate=${today}&location=${encodeURIComponent(location.riseSetLocation)}`)
-      : Promise.reject(new Error('RiseSetInfoService is disabled until API access is approved')),
-    fetchNationwideWeather(baseTimes),
+      ? cachedSettle(
+        'sunriseSunset',
+        `riseSet:${location.riseSetLocation}:${today}`,
+        RISE_SET_CACHE_TTL_MS,
+        () => fetchText(`${RISE_SET_URL}?serviceKey=${serviceKey()}&locdate=${today}&location=${encodeURIComponent(location.riseSetLocation)}`)
+      )
+      : settle('sunriseSunset', Promise.reject(new Error('RiseSetInfoService is disabled until API access is approved'))),
   ])
+  const nationwideResult = await settle('nationwide', fetchNationwideWeather(baseTimes))
 
   const currentData = settledValue(currentResult, null)
   const forecastData = settledValue(forecastResult, null)

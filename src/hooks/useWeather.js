@@ -4,7 +4,11 @@ import { db } from '@/lib/firebase'
 import { DEFAULT_WEATHER_LOCATION, fetchWeatherBundle } from '@/lib/weatherApi'
 
 const WEATHER_REFRESH_INTERVAL_MS = 8 * 60 * 60 * 1000
+const WEATHER_FAILURE_COOLDOWN_MS = 10 * 60 * 1000
 const GLOBAL_WEATHER_PATH = 'weather/global/latest'
+
+let sharedRefreshPromise = null
+let lastRefreshFailedAt = 0
 
 function fetchedTime(value) {
   if (!value) return 0
@@ -15,7 +19,11 @@ function fetchedTime(value) {
 
 function isWeatherStale(weather) {
   const latestTime = fetchedTime(weather?.fetchedAt)
-  return !latestTime || !weather?.nationwide?.cities?.length || Date.now() - latestTime >= WEATHER_REFRESH_INTERVAL_MS
+  return !latestTime || Date.now() - latestTime >= WEATHER_REFRESH_INTERVAL_MS
+}
+
+function isInFailureCooldown() {
+  return lastRefreshFailedAt && Date.now() - lastRefreshFailedAt < WEATHER_FAILURE_COOLDOWN_MS
 }
 
 // Firebase RTDB stores arrays as numeric-keyed objects; normalize back to arrays
@@ -95,24 +103,34 @@ export function useWeather() {
     setSaveStatus('saving')
 
     try {
-      const data = await fetchWeatherBundle(DEFAULT_WEATHER_LOCATION)
-      const fetchedAt = Date.now()
+      if (!sharedRefreshPromise) {
+        sharedRefreshPromise = (async () => {
+          const data = await fetchWeatherBundle(DEFAULT_WEATHER_LOCATION)
+          const fetchedAt = Date.now()
+          const payload = {
+            ...data,
+            fetchedAt,
+            updatedAt: serverTimestamp(),
+          }
 
-      const payload = {
-        ...data,
-        fetchedAt,
-        updatedAt: serverTimestamp(),
+          // Shared weather cache: weather/global/latest
+          await set(latestRef, payload)
+          return payload
+        })().finally(() => {
+          sharedRefreshPromise = null
+        })
       }
 
-      // Shared weather cache: weather/global/latest
-      await set(latestRef, payload)
+      const payload = await sharedRefreshPromise
+      const apiErrors = payload.apiErrors || []
 
-      setWeather(normalizeWeather({ ...payload, updatedAt: fetchedAt }))
+      setWeather(normalizeWeather({ ...payload, updatedAt: payload.fetchedAt }))
       setSaveStatus('saved')
-      setError(data.apiErrors?.length ? data.apiErrors.map((e) => `${e.source}: ${e.message}`).join(' / ') : null)
+      setError(apiErrors.length ? apiErrors.map((e) => `${e.source}: ${e.message}`).join(' / ') : null)
       return payload
     } catch (e) {
       console.error(e)
+      lastRefreshFailedAt = Date.now()
       setSaveStatus('error')
       setError(`날씨 갱신 실패: ${e.message}`)
       return null
@@ -123,7 +141,7 @@ export function useWeather() {
   }, [latestRef, weather])
 
   useEffect(() => {
-    if (cacheChecked && !loading && !error && !autoRefreshStarted.current && isWeatherStale(weather)) {
+    if (cacheChecked && !loading && !error && !autoRefreshStarted.current && !isInFailureCooldown() && isWeatherStale(weather)) {
       autoRefreshStarted.current = true
       refresh()
     }
