@@ -114,6 +114,11 @@ export function usePet() {
     })
   }, [path])
 
+  const resetCooldowns = useCallback(async () => {
+    if (!path) return
+    await update(ref(db, path), { lastActions: {} })
+  }, [path])
+
   const doAction = useCallback(async (actionKey) => {
     if (!path || !raw) return false
     const action = ACTIONS[actionKey]
@@ -139,5 +144,5 @@ export function usePet() {
     return true
   }, [path, raw])
 
-  return { pet, loading, emotion, affLevel, daysTogether, cooldowns, initPet, doAction }
+  return { pet, loading, emotion, affLevel, daysTogether, cooldowns, initPet, doAction, resetCooldowns }
 }
