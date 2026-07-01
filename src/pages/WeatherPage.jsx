@@ -362,7 +362,7 @@ function NationwideWeather({ daily, nationwide, selectedDate, selectedPeriod, on
         </div>
         <div className="relative mx-auto aspect-[2/3] w-full max-w-[287px] overflow-visible rounded-md">
           <img
-            src="/korea-map.png"
+            src="/korea-map.webp"
             alt=""
             className="absolute inset-0 h-full w-full object-contain opacity-95 drop-shadow-sm"
           />

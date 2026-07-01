@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { CalendarDays, CloudSun, Gamepad2, Grid2X2, ListTodo, LogOut, Music2, Newspaper, Repeat, StickyNote } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -14,7 +15,7 @@ const NAV_ITEMS = [
   { char: '正', label: '正', key: 'sasek' },
 ]
 
-function NavIcon({ item, size }) {
+const NavIcon = memo(function NavIcon({ item, size }) {
   if (item.char) {
     return (
       <span
@@ -26,9 +27,9 @@ function NavIcon({ item, size }) {
   }
   const Icon = item.icon
   return <Icon size={size} />
-}
+})
 
-export default function AppLayout({ page, onPageChange, children }) {
+function AppLayout({ page, onPageChange, children }) {
   const { user, logout } = useAuth()
 
   return (
@@ -97,3 +98,5 @@ export default function AppLayout({ page, onPageChange, children }) {
     </div>
   )
 }
+
+export default memo(AppLayout)

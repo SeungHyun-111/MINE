@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { addMonths, endOfMonth, startOfMonth } from 'date-fns'
-import { onValue, push, ref, remove, serverTimestamp, set, update } from 'firebase/database'
+import { addDays, addMonths, endOfMonth, format, getDay, startOfMonth, startOfWeek } from 'date-fns'
+import { get, onValue, push, ref, serverTimestamp, update } from 'firebase/database'
 import { useAuth } from '@/hooks/useAuth'
 import { db } from '@/lib/firebase'
 import { getDateTimeDateKey } from '@/lib/dateTime'
@@ -30,6 +30,79 @@ function calendarEventsRef(uid) {
 
 function calendarEventRef(uid, eventId) {
   return ref(db, `users/${uid}/pages/calendar/events/${eventId}`)
+}
+
+function calendarEventsByDateRef(uid, date) {
+  return ref(db, `users/${uid}/pages/calendar/eventsByDate/${date}`)
+}
+
+function addDateKeyDays(dateString, days) {
+  const date = new Date(`${dateString}T00:00:00`)
+  date.setDate(date.getDate() + days)
+  return format(date, 'yyyy-MM-dd')
+}
+
+function getEventRange(event) {
+  const start = event.start?.date || getDateTimeDateKey(event.start?.dateTime)
+  const rawEnd = event.end?.date || getDateTimeDateKey(event.end?.dateTime) || start
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start || '')) {
+    return { start: null, end: null }
+  }
+
+  const exclusiveEnd = event.end?.date && rawEnd > start ? addDateKeyDays(rawEnd, -1) : rawEnd
+  const end = exclusiveEnd && exclusiveEnd >= start ? exclusiveEnd : start
+
+  return { start, end }
+}
+
+function getEventDateKeys(event) {
+  const { start, end } = getEventRange(event)
+  if (!start || !end) return []
+
+  const keys = []
+  let cursor = start
+  while (cursor <= end) {
+    keys.push(cursor)
+    cursor = addDateKeyDays(cursor, 1)
+  }
+  return keys
+}
+
+function getVisibleMonthDateKeys(month) {
+  const firstDay = startOfMonth(month)
+  const visibleStart = startOfWeek(firstDay, { weekStartsOn: 0 })
+  const rowCount = Math.ceil((getDay(firstDay) + endOfMonth(month).getDate()) / 7)
+
+  return Array.from({ length: rowCount * 7 }, (_, index) => format(addDays(visibleStart, index), 'yyyy-MM-dd'))
+}
+
+async function writeEventWithDateIndex(uid, eventId, event, previousEvent = null) {
+  const updates = {
+    [`users/${uid}/pages/calendar/events/${eventId}`]: event,
+  }
+
+  getEventDateKeys(previousEvent || {}).forEach((date) => {
+    updates[`users/${uid}/pages/calendar/eventsByDate/${date}/${eventId}`] = null
+  })
+
+  getEventDateKeys(event).forEach((date) => {
+    updates[`users/${uid}/pages/calendar/eventsByDate/${date}/${eventId}`] = true
+  })
+
+  await update(ref(db), updates)
+}
+
+async function removeEventWithDateIndex(uid, eventId, event = null) {
+  const updates = {
+    [`users/${uid}/pages/calendar/events/${eventId}`]: null,
+  }
+
+  getEventDateKeys(event || {}).forEach((date) => {
+    updates[`users/${uid}/pages/calendar/eventsByDate/${date}/${eventId}`] = null
+  })
+
+  await update(ref(db), updates)
 }
 
 function sortEvents(items) {
@@ -102,18 +175,97 @@ export function useCalendar() {
     setLoading(true)
     setError(null)
 
-    return onValue(
-      calendarEventsRef(user.uid),
-      (snapshot) => {
-        const value = snapshot.val() || {}
-        const items = Object.entries(value).map(([id, event]) => ({
-          ...event,
-          id,
-          calendarId: event.calendarId || LOCAL_CALENDAR.id,
-        }))
+    const dateKeys = getVisibleMonthDateKeys(currentMonth)
+    const indexByDate = new Map()
+    const eventsById = new Map()
+    const eventUnsubs = new Map()
+    const loadedIndexDates = new Set()
+    let fallbackChecked = false
+    let disposed = false
 
-        setEvents(sortEvents(items))
-        setLoading(false)
+    const publish = () => {
+      if (disposed) return
+      setEvents(sortEvents([...eventsById.values()]))
+      setLoading(false)
+    }
+
+    const reconcileEventSubscriptions = () => {
+      const nextIds = new Set()
+      indexByDate.forEach((value) => {
+        Object.keys(value || {}).forEach((id) => nextIds.add(id))
+      })
+
+      eventUnsubs.forEach((unsubscribe, id) => {
+        if (nextIds.has(id)) return
+        unsubscribe()
+        eventUnsubs.delete(id)
+        eventsById.delete(id)
+      })
+
+      nextIds.forEach((id) => {
+        if (eventUnsubs.has(id)) return
+
+        const unsubscribe = onValue(
+          calendarEventRef(user.uid, id),
+          (snapshot) => {
+            if (snapshot.exists()) {
+              const event = snapshot.val()
+              eventsById.set(id, {
+                ...event,
+                id,
+                calendarId: event.calendarId || LOCAL_CALENDAR.id,
+              })
+            } else {
+              eventsById.delete(id)
+            }
+            publish()
+          },
+          (e) => {
+            console.error(e)
+            setError(e.message)
+            setLoading(false)
+          }
+        )
+
+        eventUnsubs.set(id, unsubscribe)
+      })
+
+      publish()
+    }
+
+    const backfillMissingIndex = async () => {
+      if (fallbackChecked || loadedIndexDates.size !== dateKeys.length) return
+      fallbackChecked = true
+
+      const hasIndexedEvents = [...indexByDate.values()].some((value) => Object.keys(value || {}).length > 0)
+      if (hasIndexedEvents) return
+
+      const snapshot = await get(calendarEventsRef(user.uid))
+      const value = snapshot.val() || {}
+      const updates = {}
+
+      Object.entries(value).forEach(([id, event]) => {
+        getEventDateKeys(event).forEach((date) => {
+          updates[`users/${user.uid}/pages/calendar/eventsByDate/${date}/${id}`] = true
+        })
+      })
+
+      if (Object.keys(updates).length > 0) {
+        await update(ref(db), updates)
+      }
+    }
+
+    const indexUnsubs = dateKeys.map((date) => onValue(
+      calendarEventsByDateRef(user.uid, date),
+      (snapshot) => {
+        indexByDate.set(date, snapshot.val() || {})
+        loadedIndexDates.add(date)
+        reconcileEventSubscriptions()
+        backfillMissingIndex().catch((e) => {
+          console.error(e)
+          setError(e.message)
+          setLoading(false)
+        })
       },
       (e) => {
         console.error(e)
@@ -121,8 +273,14 @@ export function useCalendar() {
         setError(e.message)
         setLoading(false)
       }
-    )
-  }, [user])
+    ))
+
+    return () => {
+      disposed = true
+      indexUnsubs.forEach((unsubscribe) => unsubscribe())
+      eventUnsubs.forEach((unsubscribe) => unsubscribe())
+    }
+  }, [user, currentMonth])
 
   const load = useCallback(async () => {
     if (!CALENDAR_BACKEND_ENABLED || !user || !connected || calendars.length === 0) return
@@ -168,7 +326,7 @@ export function useCalendar() {
         updatedAt: serverTimestamp(),
       }
 
-      await set(newRef, saved)
+      await writeEventWithDateIndex(user.uid, newRef.key, saved)
       return { ...saved, id: newRef.key }
     }
 
@@ -189,7 +347,8 @@ export function useCalendar() {
         updatedAt: serverTimestamp(),
       }
 
-      await update(calendarEventRef(user.uid, eventId), updated)
+      const previousEvent = events.find((eventItem) => eventItem.id === eventId)
+      await writeEventWithDateIndex(user.uid, eventId, updated, previousEvent)
       return { ...updated, id: eventId }
     }
 
@@ -202,7 +361,8 @@ export function useCalendar() {
     if (!CALENDAR_BACKEND_ENABLED) {
       if (!user) throw new Error('로그인이 필요합니다.')
 
-      await remove(calendarEventRef(user.uid, eventId))
+      const previousEvent = events.find((eventItem) => eventItem.id === eventId)
+      await removeEventWithDateIndex(user.uid, eventId, previousEvent)
       return
     }
 
@@ -245,7 +405,10 @@ export function useCalendar() {
     events.forEach((event) => {
       const eventDate = event.start?.date || getDateTimeDateKey(event.start?.dateTime)
       if (eventDate === date && event.mineType === 'routine') {
-        updates[event.id] = null
+        updates[`users/${user.uid}/pages/calendar/events/${event.id}`] = null
+        getEventDateKeys(event).forEach((dateKey) => {
+          updates[`users/${user.uid}/pages/calendar/eventsByDate/${dateKey}/${event.id}`] = null
+        })
       }
     })
 
@@ -261,7 +424,7 @@ export function useCalendar() {
         priority: routine.priority || 'medium',
       }
 
-      updates[newRef.key] = {
+      const event = {
         ...makeEvent(formData),
         calendarId: LOCAL_CALENDAR.id,
         mineType: 'routine',
@@ -269,9 +432,14 @@ export function useCalendar() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       }
+
+      updates[`users/${user.uid}/pages/calendar/events/${newRef.key}`] = event
+      getEventDateKeys(event).forEach((dateKey) => {
+        updates[`users/${user.uid}/pages/calendar/eventsByDate/${dateKey}/${newRef.key}`] = true
+      })
     })
 
-    await update(calendarEventsRef(user.uid), updates)
+    await update(ref(db), updates)
   }
 
   const prevMonth = useCallback(() => setCurrentMonth((d) => addMonths(d, -1)), [])

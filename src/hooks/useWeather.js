@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { onValue, ref, serverTimestamp, set } from 'firebase/database'
+import { onValue, ref, serverTimestamp, update } from 'firebase/database'
 import { db } from '@/lib/firebase'
 import { DEFAULT_WEATHER_LOCATION, fetchWeatherBundle } from '@/lib/weatherApi'
 
 const WEATHER_REFRESH_INTERVAL_MS = 8 * 60 * 60 * 1000
 const WEATHER_FAILURE_COOLDOWN_MS = 10 * 60 * 1000
-const GLOBAL_WEATHER_PATH = 'weather/global/latest'
+const GLOBAL_WEATHER_PATH = 'weather/global'
+const GLOBAL_WEATHER_LEGACY_PATH = `${GLOBAL_WEATHER_PATH}/latest`
+const WEATHER_SUMMARY_KEYS = ['current', 'daily', 'sunriseSunset', 'location', 'meta']
+const WEATHER_FULL_KEYS = ['current', 'hourly', 'daily', 'midTerm', 'nationwide', 'sunriseSunset', 'location', 'baseTimes', 'meta']
 
 let sharedRefreshPromise = null
 let lastRefreshFailedAt = 0
@@ -35,8 +38,14 @@ function toArray(value) {
 
 function normalizeWeather(data) {
   if (!data) return data
+  const meta = data.meta || {}
+  const fetchedAt = data.fetchedAt ?? meta.fetchedAt
+  const updatedAt = data.updatedAt ?? meta.updatedAt
+
   return {
     ...data,
+    fetchedAt,
+    updatedAt,
     hourly: toArray(data.hourly),
     daily: toArray(data.daily),
     midTerm: toArray(data.midTerm),
@@ -50,7 +59,44 @@ function normalizeWeather(data) {
   }
 }
 
-export function useWeather() {
+function splitWeatherPayload(data, fetchedAt) {
+  return {
+    current: data.current || null,
+    hourly: data.hourly || [],
+    daily: data.daily || [],
+    midTerm: data.midTerm || [],
+    nationwide: data.nationwide || null,
+    sunriseSunset: data.sunriseSunset || null,
+    location: data.location || DEFAULT_WEATHER_LOCATION,
+    baseTimes: data.baseTimes || null,
+    meta: {
+      fetchedAt,
+      apiErrors: data.apiErrors || [],
+      updatedAt: serverTimestamp(),
+    },
+  }
+}
+
+function composeWeather(parts) {
+  if (!parts) return null
+  const meta = parts.meta || {}
+
+  return normalizeWeather({
+    current: parts.current,
+    hourly: parts.hourly,
+    daily: parts.daily,
+    midTerm: parts.midTerm,
+    nationwide: parts.nationwide,
+    sunriseSunset: parts.sunriseSunset,
+    location: parts.location,
+    baseTimes: parts.baseTimes,
+    apiErrors: meta.apiErrors || parts.apiErrors || [],
+    fetchedAt: meta.fetchedAt ?? parts.fetchedAt,
+    updatedAt: meta.updatedAt ?? parts.updatedAt,
+  })
+}
+
+export function useWeather({ scope = 'full' } = {}) {
   const [weather, setWeather] = useState(null)
   const [loading, setLoading] = useState(false)
   const [cacheLoading, setCacheLoading] = useState(true)
@@ -60,7 +106,9 @@ export function useWeather() {
   const refreshInFlight = useRef(false)
   const autoRefreshStarted = useRef(false)
 
-  const latestRef = useMemo(() => ref(db, GLOBAL_WEATHER_PATH), [])
+  const weatherKeys = useMemo(() => (
+    scope === 'summary' ? WEATHER_SUMMARY_KEYS : WEATHER_FULL_KEYS
+  ), [scope])
 
   useEffect(() => {
     autoRefreshStarted.current = false
@@ -69,15 +117,42 @@ export function useWeather() {
 
   useEffect(() => {
     setCacheLoading(true)
-    return onValue(
-      latestRef,
-      (snapshot) => {
-        if (snapshot.exists()) {
-          setWeather(normalizeWeather(snapshot.val()))
+    const parts = {}
+    const loaded = new Set()
+    let hasSplitData = false
+    let legacyLoaded = false
+    let legacyWeather = null
+
+    const commit = () => {
+      if (hasSplitData) {
+        setWeather(composeWeather(parts))
+        setError(null)
+        setCacheLoading(false)
+        setCacheChecked(true)
+        return
+      }
+
+      if (legacyLoaded) {
+        if (legacyWeather) {
+          setWeather(normalizeWeather(legacyWeather))
           setError(null)
         }
         setCacheLoading(false)
         setCacheChecked(true)
+      }
+    }
+
+    const unsubs = weatherKeys.map((key) => onValue(
+      ref(db, `${GLOBAL_WEATHER_PATH}/${key}`),
+      (snapshot) => {
+        if (snapshot.exists()) {
+          hasSplitData = true
+          parts[key] = snapshot.val()
+        } else {
+          delete parts[key]
+        }
+        loaded.add(key)
+        if (loaded.size === weatherKeys.length) commit()
       },
       (e) => {
         console.error(e)
@@ -85,8 +160,25 @@ export function useWeather() {
         setCacheLoading(false)
         setCacheChecked(true)
       }
+    ))
+
+    const legacyUnsub = onValue(
+      ref(db, GLOBAL_WEATHER_LEGACY_PATH),
+      (snapshot) => {
+        legacyLoaded = true
+        legacyWeather = snapshot.exists() ? snapshot.val() : null
+        if (loaded.size === weatherKeys.length) commit()
+      },
+      (e) => {
+        console.error(e)
+      }
     )
-  }, [latestRef])
+
+    return () => {
+      unsubs.forEach((unsubscribe) => unsubscribe())
+      legacyUnsub()
+    }
+  }, [weatherKeys])
 
   const refresh = useCallback(async ({ force = false } = {}) => {
     if (refreshInFlight.current) return null
@@ -107,14 +199,19 @@ export function useWeather() {
         sharedRefreshPromise = (async () => {
           const data = await fetchWeatherBundle(DEFAULT_WEATHER_LOCATION)
           const fetchedAt = Date.now()
-          const payload = {
-            ...data,
-            fetchedAt,
-            updatedAt: serverTimestamp(),
-          }
+          const payload = splitWeatherPayload(data, fetchedAt)
 
-          // Shared weather cache: weather/global/latest
-          await set(latestRef, payload)
+          await update(ref(db), {
+            [`${GLOBAL_WEATHER_PATH}/current`]: payload.current,
+            [`${GLOBAL_WEATHER_PATH}/hourly`]: payload.hourly,
+            [`${GLOBAL_WEATHER_PATH}/daily`]: payload.daily,
+            [`${GLOBAL_WEATHER_PATH}/midTerm`]: payload.midTerm,
+            [`${GLOBAL_WEATHER_PATH}/nationwide`]: payload.nationwide,
+            [`${GLOBAL_WEATHER_PATH}/sunriseSunset`]: payload.sunriseSunset,
+            [`${GLOBAL_WEATHER_PATH}/location`]: payload.location,
+            [`${GLOBAL_WEATHER_PATH}/baseTimes`]: payload.baseTimes,
+            [`${GLOBAL_WEATHER_PATH}/meta`]: payload.meta,
+          })
           return payload
         })().finally(() => {
           sharedRefreshPromise = null
@@ -122,9 +219,9 @@ export function useWeather() {
       }
 
       const payload = await sharedRefreshPromise
-      const apiErrors = payload.apiErrors || []
+      const apiErrors = payload.meta?.apiErrors || []
 
-      setWeather(normalizeWeather({ ...payload, updatedAt: payload.fetchedAt }))
+      setWeather(composeWeather({ ...payload, meta: { ...payload.meta, updatedAt: payload.meta.fetchedAt } }))
       setSaveStatus('saved')
       setError(apiErrors.length ? apiErrors.map((e) => `${e.source}: ${e.message}`).join(' / ') : null)
       return payload
@@ -138,7 +235,7 @@ export function useWeather() {
       refreshInFlight.current = false
       setLoading(false)
     }
-  }, [latestRef, weather])
+  }, [weather])
 
   useEffect(() => {
     if (cacheChecked && !loading && !error && !autoRefreshStarted.current && !isInFailureCooldown() && isWeatherStale(weather)) {

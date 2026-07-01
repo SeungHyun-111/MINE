@@ -1,4 +1,5 @@
 import './LiquidMemoBoard.css'
+import { memo, useMemo } from 'react'
 import { useMemos } from '@/hooks/useMemos'
 
 const MEMO_STAGE_LABELS = {
@@ -11,17 +12,19 @@ function memoStageValue(stage) {
   return stage === 'review' ? 'progress' : stage || 'pending'
 }
 
-export default function LiquidMemoBoard({ className = '' }) {
+function LiquidMemoBoard({ className = '' }) {
   const { memos } = useMemos()
-  const counts = ['pending', 'progress', 'done'].map((stage) => ({
-    stage,
-    count: memos.filter((memo) => memoStageValue(memo.stage) === stage).length,
-  }))
-  const activeMemos = memos.filter((memo) => {
-    const stage = memoStageValue(memo.stage)
-    return stage === 'pending' || stage === 'progress'
-  })
-  const rolling = activeMemos.length > 0 ? [...activeMemos, ...activeMemos].slice(0, Math.min(activeMemos.length * 2, 10)) : []
+  const { counts, rolling } = useMemo(() => {
+    const normalized = memos.map((memo) => ({ ...memo, normalizedStage: memoStageValue(memo.stage) }))
+    const counts = ['pending', 'progress', 'done'].map((stage) => ({
+      stage,
+      count: normalized.filter((memo) => memo.normalizedStage === stage).length,
+    }))
+    const activeMemos = normalized.filter((memo) => memo.normalizedStage === 'pending' || memo.normalizedStage === 'progress')
+    const rolling = activeMemos.length > 0 ? [...activeMemos, ...activeMemos].slice(0, Math.min(activeMemos.length * 2, 10)) : []
+
+    return { counts, rolling }
+  }, [memos])
 
   return (
     <section className={`liquid-memo-box ${className}`} aria-label="메모 현황판">
@@ -36,7 +39,7 @@ export default function LiquidMemoBoard({ className = '' }) {
               rolling.map((memo, index) => (
                 <div key={`${memo.id}_${index}`} className="liquid-memo-row">
                   <span className="liquid-memo-stage">
-                    {MEMO_STAGE_LABELS[memoStageValue(memo.stage)]}
+                    {MEMO_STAGE_LABELS[memo.normalizedStage]}
                   </span>
                   <span className="liquid-memo-text">{memo.title || memo.content}</span>
                 </div>
@@ -54,3 +57,5 @@ export default function LiquidMemoBoard({ className = '' }) {
     </section>
   )
 }
+
+export default memo(LiquidMemoBoard)

@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
+import imageOptimizer from './scripts/vite-image-optimizer.js'
 
 export default defineConfig({
   plugins: [
@@ -42,8 +43,23 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
+        globIgnores: ['**/*.{png,jpg,jpeg,webp,avif}'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === 'image',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'image-runtime-cache',
+              expiration: {
+                maxEntries: 80,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+            },
+          },
+        ],
       },
     }),
+    imageOptimizer(),
   ],
   resolve: {
     alias: {

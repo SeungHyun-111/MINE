@@ -227,7 +227,7 @@ export default function GamePage() {
           <div
             className="relative flex h-56 flex-col items-end justify-end overflow-hidden rounded-3xl pb-4"
             style={{
-              backgroundImage: 'url(/game-bg.jpg)',
+              backgroundImage: 'image-set(url("/game-bg.webp") type("image/webp"), url("/game-bg.jpg") type("image/jpeg"))',
               backgroundSize: 'cover',
               backgroundPosition: 'center bottom',
             }}

@@ -501,7 +501,7 @@ export default function SasekPage() {
   return (
     <div className="min-h-full relative isolate overflow-hidden">
       <img
-        src="/jBackG.jpg"
+        src="/jBackG.webp"
         alt=""
         className="pointer-events-none fixed inset-0 -z-10 h-svh w-screen object-cover object-center md:absolute md:h-full md:w-full"
       />

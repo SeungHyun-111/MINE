@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { addDays, format, isSameDay, startOfWeek } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { CalendarRange, Check, ChevronLeft, ChevronRight, Plus, Trash2, X } from 'lucide-react'
+import { CalendarRange, Check, ChevronLeft, ChevronRight, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useTodos } from '@/hooks/useTodos'
 import { clampDateInputYear, formatDateKey, parseDateKey } from '@/lib/dateTime'
 
@@ -35,12 +35,46 @@ function sectionLabel(section) {
   return labels[section.id] || section.title
 }
 
-function TodoAddModal({ sections, initialValues, onClose, onSubmit }) {
-  const [title, setTitle] = useState('')
+function formatDateRange(startDate, endDate) {
+  const start = parseDateKey(startDate)
+  const end = parseDateKey(endDate)
+
+  if (!start && !end) return '일정 없음'
+  if (startDate === endDate || !end) {
+    return start ? format(start, 'M.d (EEE)', { locale: ko }) : startDate
+  }
+
+  const startLabel = start ? format(start, 'M.d (EEE)', { locale: ko }) : startDate
+  const endLabel = end ? format(end, 'M.d (EEE)', { locale: ko }) : endDate
+  return `${startLabel} ~ ${endLabel}`
+}
+
+function plannedDateRange(todo) {
+  const startDate = todo.startDate
+  const endDate = todo.endDate || startDate
+  return formatDateRange(startDate, endDate)
+}
+
+function progressDateRange(todo, todayString = toDateString(new Date())) {
+  const sectionId = todo.sectionId || 'todo'
+  if (sectionId === 'todo') return null
+
+  const startDate = todo.progressStartDate || todo.startDate || todayString
+  const endDate = sectionId === 'done'
+    ? todo.progressEndDate || startDate
+    : todayString
+
+  return formatDateRange(startDate, endDate)
+}
+
+function TodoModal({ mode = 'add', sections, initialValues, onClose, onSubmit }) {
+  const [title, setTitle] = useState(initialValues?.title || '')
   const [startDate, setStartDate] = useState(initialValues?.startDate || toDateString(new Date()))
   const [endDate, setEndDate] = useState(initialValues?.endDate || initialValues?.startDate || toDateString(new Date()))
   const [sectionId, setSectionId] = useState(initialValues?.sectionId || 'todo')
-  const [priority, setPriority] = useState('medium')
+  const [priority, setPriority] = useState(initialValues?.priority || 'medium')
+  const titleText = mode === 'edit' ? 'Todo 수정' : 'Todo 추가'
+  const submitText = mode === 'edit' ? '수정' : '추가'
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -60,7 +94,7 @@ function TodoAddModal({ sections, initialValues, onClose, onSubmit }) {
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#0044cc]/45 px-3 sm:items-center">
       <div className="w-full max-w-md rounded-t-lg border border-[#aacce4] bg-[#f0f5ff] shadow-xl sm:rounded-lg">
         <div className="flex items-center justify-between border-b border-[#aaccee] bg-[#cce0ff] px-4 py-3">
-          <h2 className="text-base font-bold text-[#0044cc]">Todo 추가</h2>
+          <h2 className="text-base font-bold text-[#0044cc]">{titleText}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -134,7 +168,7 @@ function TodoAddModal({ sections, initialValues, onClose, onSubmit }) {
               className="inline-flex items-center gap-1.5 rounded-lg bg-[#0044cc] px-4 py-2 text-sm font-bold text-white hover:bg-[#002080]"
             >
               <Plus size={16} />
-              추가
+              {submitText}
             </button>
           </div>
         </form>
@@ -156,35 +190,26 @@ function ganttBarClass(todo, todayString) {
   return 'bg-[#0044cc] text-white'
 }
 
-function displayEndDate(todo, todayString) {
-  const start = todo.startDate || todayString
-  const end = todo.endDate || start
-  if (
-    !todo.completed &&
-    todo.sectionId !== 'done' &&
-    start <= todayString &&
-    end < todayString
-  ) {
-    return todayString
+function ganttRange(todo, todayString) {
+  const sectionId = todo.sectionId || 'todo'
+  if (sectionId === 'doing') {
+    const start = todo.progressStartDate || todo.startDate || todayString
+    return { start, end: todayString }
+  }
+  if (sectionId === 'done') {
+    const start = todo.progressStartDate || todo.startDate || todayString
+    return { start, end: todo.progressEndDate || start }
   }
 
-  return end
-}
-
-function ganttEndDate(todo, todayString, rangeEndString) {
   const start = todo.startDate || todayString
-  const end = todo.endDate || start
-  if (!todo.completed && todo.sectionId !== 'done' && end < todayString) {
-    return rangeEndString >= todayString ? todayString : rangeEndString
-  }
-  return end
+  return { start, end: todo.endDate || start }
 }
 
 function nextTodoAction(todo) {
   const sectionId = todo.sectionId || 'todo'
   if (sectionId === 'todo') return '진행 중으로 이동'
   if (sectionId === 'doing') return '완료로 이동'
-  return todo.calendarReady ? '캘린더 반영 대기 중' : '캘린더 반영 표시'
+  return '다시 할 일로 이동'
 }
 
 function GanttChart({ sections, todos, onCellDoubleClick }) {
@@ -197,8 +222,7 @@ function GanttChart({ sections, todos, onCellDoubleClick }) {
   const rangeEndString = toDateString(days[days.length - 1])
 
   const visibleTodos = todos.filter((todo) => {
-    const start = todo.startDate || rangeStartString
-    const end = ganttEndDate(todo, todayString, rangeEndString)
+    const { start, end } = ganttRange(todo, todayString)
     return end >= rangeStartString && start <= rangeEndString
   })
   const todosBySection = visibleTodos.reduce((acc, todo) => {
@@ -301,8 +325,9 @@ function GanttChart({ sections, todos, onCellDoubleClick }) {
                     ))}
                   </div>
                   {sectionTodos.map((todo, index) => {
-                    const startOffset = clamp(diffDays(rangeStartString, todo.startDate || rangeStartString), 0, 13)
-                    const endOffset = clamp(diffDays(rangeStartString, ganttEndDate(todo, todayString, rangeEndString)), 0, 13)
+                    const { start, end } = ganttRange(todo, todayString)
+                    const startOffset = clamp(diffDays(rangeStartString, start || rangeStartString), 0, 13)
+                    const endOffset = clamp(diffDays(rangeStartString, end || start || rangeStartString), 0, 13)
                     const span = Math.max(endOffset - startOffset + 1, 1)
 
                     return (
@@ -329,7 +354,7 @@ function GanttChart({ sections, todos, onCellDoubleClick }) {
   )
 }
 
-function TodoList({ sections, todos, onAdvance, onUpdate, onRemove, onAdd }) {
+function TodoList({ sections, todos, onAdvance, onEdit, onRemove, onAdd }) {
   const todosBySection = todos.reduce((acc, todo) => {
     const key = todo.sectionId || 'todo'
     if (!acc[key]) acc[key] = []
@@ -380,36 +405,36 @@ function TodoList({ sections, todos, onAdvance, onUpdate, onRemove, onAdd }) {
                       </button>
 
                       <div className="min-w-0 flex-1">
-                        <textarea
-                          value={todo.title || ''}
-                          rows={2}
-                          onChange={(event) => onUpdate(todo.id, { title: event.target.value })}
-                          className={`w-full resize-none overflow-hidden break-words bg-transparent text-sm font-semibold leading-5 text-[#1a3d8a] outline-none ${
+                        <p
+                          className={`break-words text-sm font-semibold leading-5 text-[#1a3d8a] ${
                             todo.completed ? 'line-through text-[#5577bb]' : ''
                           }`}
-                        />
+                        >
+                          {todo.title || '(제목 없음)'}
+                        </p>
                         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[#5577bb]">
-                          <span className="break-keep">{todo.startDate} - {todo.endDate}</span>
-                          {todo.calendarReady && (
-                            <span className="rounded-full bg-[#fff2df] px-2 py-0.5 font-bold text-[#7a4a10]">
-                              캘린더 반영 대기
+                          <span className="break-keep">계획 {plannedDateRange(todo)}</span>
+                          {progressDateRange(todo) && (
+                            <span className="break-keep rounded-full bg-[#eef3ff] px-2 py-0.5 font-bold text-[#0044cc]">
+                              진행 {progressDateRange(todo)}
                             </span>
                           )}
                           <span className={`rounded-full px-2 py-0.5 font-bold ${PRIORITIES[todo.priority || 'medium'].className}`}>
                             {PRIORITIES[todo.priority || 'medium'].label}
                           </span>
-                          <select
-                            value={todo.sectionId || 'todo'}
-                            onChange={(event) => onUpdate(todo.id, { sectionId: event.target.value })}
-                            className="rounded-md border border-[#99ccff] bg-white/90 px-2 py-1 text-xs text-[#0044cc] outline-none"
-                          >
-                            {sections.map((item) => (
-                              <option key={item.id} value={item.id}>{sectionLabel(item)}</option>
-                            ))}
-                          </select>
+                          <span className="rounded-full bg-white/90 px-2 py-0.5 font-bold text-[#0044cc]">
+                            {sectionLabel(sections.find((item) => item.id === (todo.sectionId || 'todo')) || { id: todo.sectionId })}
+                          </span>
                         </div>
                       </div>
 
+                      <button
+                        onClick={() => onEdit(todo)}
+                        className="shrink-0 p-2 text-[#5577bb] hover:text-[#0044cc]"
+                        aria-label="수정"
+                      >
+                        <Pencil size={16} />
+                      </button>
                       <button
                         onClick={() => onRemove(todo.id)}
                         className="shrink-0 p-2 text-[#5577bb] hover:text-[#7a3d3d]"
@@ -432,6 +457,8 @@ function TodoList({ sections, todos, onAdvance, onUpdate, onRemove, onAdd }) {
 export default function TodoPage() {
   const { sections, todos, loading, error, addTodo, updateTodo, advanceTodo, removeTodo } = useTodos()
   const [addModal, setAddModal] = useState(null)
+  const [editTodo, setEditTodo] = useState(null)
+  const todayString = toDateString(new Date())
 
   const openAddModal = (initialValues = {}) => {
     setAddModal(initialValues)
@@ -463,7 +490,7 @@ export default function TodoPage() {
           sections={sections}
           todos={todos}
           onAdvance={advanceTodo}
-          onUpdate={updateTodo}
+          onEdit={setEditTodo}
           onRemove={removeTodo}
           onAdd={() => openAddModal()}
         />
@@ -471,11 +498,39 @@ export default function TodoPage() {
       </div>
 
       {addModal && (
-        <TodoAddModal
+        <TodoModal
           sections={sections}
           initialValues={addModal}
           onClose={() => setAddModal(null)}
           onSubmit={addTodo}
+        />
+      )}
+      {editTodo && (
+        <TodoModal
+          mode="edit"
+          sections={sections}
+          initialValues={editTodo}
+          onClose={() => setEditTodo(null)}
+          onSubmit={(payload) => {
+            const previousSection = editTodo.sectionId || 'todo'
+            const nextSection = payload.sectionId || 'todo'
+            const nextPayload = { ...payload }
+
+            if (nextSection === 'todo') {
+              nextPayload.progressStartDate = null
+              nextPayload.progressEndDate = null
+            } else if (nextSection === 'doing') {
+              nextPayload.progressStartDate = editTodo.progressStartDate || todayString
+              nextPayload.progressEndDate = null
+            } else if (nextSection === 'done') {
+              nextPayload.progressStartDate = editTodo.progressStartDate || todayString
+              nextPayload.progressEndDate = previousSection === 'done'
+                ? editTodo.progressEndDate || todayString
+                : todayString
+            }
+
+            return updateTodo(editTodo.id, nextPayload)
+          }}
         />
       )}
     </div>

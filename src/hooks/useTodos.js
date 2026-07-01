@@ -104,16 +104,17 @@ export function useTodos() {
 
     const startDate = payload.startDate || todayString()
     const endDate = payload.endDate || startDate
+    const sectionId = payload.sectionId || 'todo'
     const todoRef = push(ref(db, paths.todos))
 
     await set(todoRef, {
       title: payload.title,
       memo: payload.memo || '',
-      sectionId: payload.sectionId || 'todo',
+      sectionId,
       priority: payload.priority || 'medium',
       startDate,
       endDate: endDate < startDate ? startDate : endDate,
-      completed: false,
+      completed: sectionId === 'done',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
@@ -122,8 +123,19 @@ export function useTodos() {
   const updateTodo = useCallback(async (todoId, payload) => {
     if (!paths) return
 
+    const nextPayload = { ...payload }
+    if (nextPayload.startDate || nextPayload.endDate) {
+      const startDate = nextPayload.startDate || todayString()
+      const endDate = nextPayload.endDate || startDate
+      nextPayload.startDate = startDate
+      nextPayload.endDate = endDate < startDate ? startDate : endDate
+    }
+    if (nextPayload.sectionId) {
+      nextPayload.completed = nextPayload.sectionId === 'done'
+    }
+
     await update(ref(db, `${paths.todos}/${todoId}`), {
-      ...payload,
+      ...nextPayload,
       updatedAt: serverTimestamp(),
     })
   }, [paths])
@@ -135,6 +147,8 @@ export function useTodos() {
       await updateTodo(todo.id, {
         completed: false,
         sectionId: 'doing',
+        progressStartDate: todo.progressStartDate || todayString(),
+        progressEndDate: null,
       })
       return
     }
@@ -143,13 +157,17 @@ export function useTodos() {
       await updateTodo(todo.id, {
         completed: true,
         sectionId: 'done',
+        progressStartDate: todo.progressStartDate || todayString(),
+        progressEndDate: todayString(),
       })
       return
     }
 
     await updateTodo(todo.id, {
-      calendarReady: true,
-      calendarReadyAt: serverTimestamp(),
+      completed: false,
+      sectionId: 'todo',
+      progressStartDate: null,
+      progressEndDate: null,
     })
   }, [updateTodo])
 

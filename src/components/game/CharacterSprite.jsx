@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 
 import stand1 from '@/assets/charcters/서있음1.png'
 import walk1  from '@/assets/charcters/걷기1.png'
@@ -76,7 +76,7 @@ export const SPRITE_ACTION = {
 
 export { laugh as SPRITE_LAUGH, stand1 as SPRITE_STAND }
 
-export default function CharacterSprite({
+function CharacterSprite({
   emotionLabel = '보통',
   activeAction = null,
   filter = 'none',
@@ -147,3 +147,5 @@ export default function CharacterSprite({
     </div>
   )
 }
+
+export default memo(CharacterSprite)

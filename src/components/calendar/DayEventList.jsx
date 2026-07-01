@@ -126,11 +126,6 @@ export default function DayEventList({
                         {event.description}
                       </p>
                     )}
-                    {isHigh && (
-                      <span className="mt-1 inline-flex rounded bg-[#e85252] px-1.5 py-0.5 text-[10px] font-black leading-none text-white">
-                        중요
-                      </span>
-                    )}
                   </button>
                   <div className="flex shrink-0 items-center gap-1">
                     <select
@@ -141,7 +136,7 @@ export default function DayEventList({
                           ? 'border-[#e85252] bg-[#e85252] text-white'
                           : 'border-[#bbd5f5] bg-white/90 text-[#0044cc]'
                       }`}
-                      aria-label="중요도"
+                      aria-label="우선순위"
                     >
                       {EVENT_PRIORITIES.map((priority) => (
                         <option key={priority.id} value={priority.id}>{priority.label}</option>

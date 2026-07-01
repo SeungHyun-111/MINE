@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   addDays,
   format,
@@ -195,7 +195,7 @@ function WeeklySchedule({ events, today, weekDays, onOpenCalendarDate }) {
 }
 
 function LegacyWeatherSummary() {
-  const { weather, cacheLoading } = useWeather()
+  const { weather, cacheLoading } = useWeather({ scope: 'summary' })
   const current = weather?.current
   const today = weather?.daily?.[0]
 
@@ -222,7 +222,7 @@ function LegacyWeatherSummary() {
 void LegacyWeatherSummary
 
 function WeatherSummary({ onOpenWeather }) {
-  const { weather, cacheLoading } = useWeather()
+  const { weather, cacheLoading } = useWeather({ scope: 'summary' })
   const current = weather?.current
   const today = weather?.daily?.[0]
   const tomorrow = weather?.daily?.[1]
@@ -292,7 +292,7 @@ function WeatherSummary({ onOpenWeather }) {
 void WeatherSummary
 
 function CompactWeatherSummary({ onOpenWeather }) {
-  const { weather, cacheLoading } = useWeather()
+  const { weather, cacheLoading } = useWeather({ scope: 'summary' })
   const current = weather?.current
   const today = weather?.daily?.[0]
   const tomorrow = weather?.daily?.[1]
@@ -306,45 +306,50 @@ function CompactWeatherSummary({ onOpenWeather }) {
       onClick={onOpenWeather}
       className="w-full overflow-hidden rounded-lg border border-[#bbd5f5] bg-white/90 px-4 py-3 text-left shadow-sm transition active:scale-[0.99] active:bg-[#f7fbfb]"
     >
-      <div className="flex items-center gap-1.5">
+      <div className="flex min-w-0 items-center gap-1.5">
         <span className="text-[#aabbdd]">★</span>
-        <h2 className="truncate text-sm font-black text-[#3f484d]">마포구 상암동</h2>
-        <span className="text-xs font-black text-[#9aa7ad]">⊕</span>
+        <h2 className="min-w-0 flex-1 truncate text-sm font-black text-[#3f484d]">마포구 상암동</h2>
+        <span className="shrink-0 text-xs font-black text-[#9aa7ad]">⊕</span>
       </div>
 
-      <div className="mt-2 flex items-center justify-between gap-3">
+      <div className="mt-3 flex min-w-0 items-center gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#ffc400] text-[11px] font-black text-[#e0a000]">
           맑
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-2">
-            <span className="rounded-full border border-[#bbd0ee] px-2 py-0.5 text-[10px] font-black text-[#223366]">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="shrink-0 rounded-full border border-[#bbd0ee] px-2 py-0.5 text-[10px] font-black text-[#223366]">
               현재 {todayDate}
             </span>
-            <span className="truncate text-xs font-black text-black">{current?.sky || '-'}</span>
+            <span className="min-w-0 truncate text-xs font-black text-black">{current?.sky || '-'}</span>
           </div>
-          <div className="flex items-end gap-2">
+          <div className="mt-1 flex min-w-0 items-end gap-2">
             <p className="text-[38px] font-black leading-none tracking-tight text-black">
               {cacheLoading ? '-' : current?.temp || '-'}°
             </p>
-            <p className="pb-1 text-[11px] font-black text-[#4466aa]">
-              최저{today?.minTemp || '-'}° · 최고{today?.maxTemp || '-'}°
+            <p className="min-w-0 truncate pb-1 text-[11px] font-black text-[#4466aa]">
+              최저 {today?.minTemp || '-'}° · 최고 {today?.maxTemp || '-'}°
             </p>
           </div>
         </div>
+      </div>
 
-        <div className="ml-auto grid min-w-[164px] grid-cols-2 gap-2 border-l border-[#ccddf0] pl-3 text-[10px] font-black leading-tight text-[#223366]">
-          <div>
-            <p className="mb-1 text-[#4466aa]">내일 {tomorrowDate}</p>
-            <p>{tomorrow?.minTemp || '-'}°/{tomorrow?.maxTemp || '-'}°</p>
-            <p>오전 <span className="text-[#1769ff]">{tomorrow?.pop || '-'}%</span></p>
-          </div>
-          <div>
-            <p className="mb-1 text-[#4466aa]">일출·일몰</p>
-            <p>↑ {sunriseSunset.sunrise || '-'}</p>
-            <p>↓ {sunriseSunset.sunset || '-'}</p>
-          </div>
+      <div className="mt-3 grid grid-cols-3 gap-2 text-[10px] font-black leading-tight text-[#223366]">
+        <div className="min-w-0 rounded-md border border-[#d5e8ff] bg-[#f8fbff] px-2 py-2">
+          <p className="truncate text-[#4466aa]">오늘</p>
+          <p className="mt-1 truncate text-[11px] text-black">{today?.minTemp || '-'}°/{today?.maxTemp || '-'}°</p>
+          <p className="mt-1 truncate">강수 <span className="text-[#1769ff]">{today?.pop || '-'}%</span></p>
+        </div>
+        <div className="min-w-0 rounded-md border border-[#d5e8ff] bg-[#f8fbff] px-2 py-2">
+          <p className="truncate text-[#4466aa]">내일 {tomorrowDate}</p>
+          <p className="mt-1 truncate text-[11px] text-black">{tomorrow?.minTemp || '-'}°/{tomorrow?.maxTemp || '-'}°</p>
+          <p className="mt-1 truncate">강수 <span className="text-[#1769ff]">{tomorrow?.pop || '-'}%</span></p>
+        </div>
+        <div className="min-w-0 rounded-md border border-[#d5e8ff] bg-[#f8fbff] px-2 py-2">
+          <p className="truncate text-[#4466aa]">일출·일몰</p>
+          <p className="mt-1 truncate">↑ {sunriseSunset.sunrise || '-'}</p>
+          <p className="mt-1 truncate">↓ {sunriseSunset.sunset || '-'}</p>
         </div>
       </div>
     </button>
@@ -352,7 +357,7 @@ function CompactWeatherSummary({ onOpenWeather }) {
 }
 
 function EuphonySummary({ onOpenPage }) {
-  const { highlights } = useEuphony()
+  const { highlights } = useEuphony({ seedDefaults: false })
   const pick = useMemo(() => {
     if (highlights.length === 0) return null
     return highlights[Math.floor(Math.random() * highlights.length)]
@@ -393,11 +398,19 @@ function EuphonySummary({ onOpenPage }) {
 
 function TodoGanttChart({ onOpenPage }) {
   const { todos } = useTodos()
-  const today = new Date()
-  const weekStart = startOfWeek(today, { weekStartsOn: 0 })
-  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
-  const dayStrings = days.map((d) => format(d, 'yyyy-MM-dd'))
-  const todayString = format(today, 'yyyy-MM-dd')
+  const currentDateKey = format(new Date(), 'yyyy-MM-dd')
+  const { today, days, dayStrings, todayString } = useMemo(() => {
+    const today = new Date()
+    const weekStart = startOfWeek(today, { weekStartsOn: 0 })
+    const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+
+    return {
+      today,
+      days,
+      dayStrings: days.map((d) => format(d, 'yyyy-MM-dd')),
+      todayString: format(today, 'yyyy-MM-dd'),
+    }
+  }, [currentDateKey])
 
   const activeTodos = todos
     .filter((t) => !t.completed && t.startDate)
@@ -543,7 +556,7 @@ function PetWidget({ onOpenPage }) {
       onClick={() => onOpenPage?.('game')}
       className="relative overflow-hidden rounded-lg border border-[#bbd5f5] shadow-sm active:brightness-95"
       style={{
-        backgroundImage: 'url(/game-bg.jpg)',
+        backgroundImage: 'image-set(url("/game-bg.webp") type("image/webp"), url("/game-bg.jpg") type("image/jpeg"))',
         backgroundSize: 'cover',
         backgroundPosition: 'center bottom',
         imageRendering: 'pixelated',
@@ -625,14 +638,23 @@ function RoutineSummary({ onOpenPage }) {
 
 export default function SummaryPage({ onOpenCalendarDate, onOpenPage, onOpenNewsPage }) {
   const { events } = useCalendar()
-  const today = new Date()
-  const weekStart = startOfWeek(today, { weekStartsOn: 0 })
-  const weekDays = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index))
+  const currentDateKey = format(new Date(), 'yyyy-MM-dd')
+  const { today, weekDays } = useMemo(() => {
+    const today = new Date()
+    const weekStart = startOfWeek(today, { weekStartsOn: 0 })
+
+    return {
+      today,
+      weekDays: Array.from({ length: 7 }, (_, index) => addDays(weekStart, index)),
+    }
+  }, [currentDateKey])
+  const openWeatherPage = useCallback(() => onOpenPage?.('weather'), [onOpenPage])
+  const openMemoPage = useCallback(() => onOpenPage?.('memo'), [onOpenPage])
 
   return (
     <div className="min-h-full bg-[#f0f5ff] p-3 md:p-6">
       <div className="mx-auto flex max-w-5xl flex-col gap-3">
-        <CompactWeatherSummary onOpenWeather={() => onOpenPage?.('weather')} />
+        <CompactWeatherSummary onOpenWeather={openWeatherPage} />
 
         <div className="grid grid-cols-2 gap-3">
           <EuphonySummary onOpenPage={onOpenPage} />
@@ -640,7 +662,7 @@ export default function SummaryPage({ onOpenCalendarDate, onOpenPage, onOpenNews
           <PetWidget onOpenPage={onOpenPage} />
           <div
             className="col-span-full cursor-pointer active:brightness-[0.97]"
-            onClick={() => onOpenPage?.('memo')}
+            onClick={openMemoPage}
           >
             <LiquidMemoBoard className="col-span-full" />
           </div>

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react'
 import AppLayout from '@/components/layout/AppLayout'
 
 const SummaryPage = lazy(() => import('@/pages/SummaryPage'))
@@ -25,17 +25,17 @@ export default function HomePage() {
   const [calendarFocus, setCalendarFocus] = useState(null)
   const [newsFocus, setNewsFocus] = useState(null)
 
-  const openCalendarDate = (date) => {
+  const openCalendarDate = useCallback((date) => {
     setCalendarFocus({ date, requestedAt: Date.now() })
     setPage('calendar')
-  }
+  }, [])
 
-  const openNewsPage = (tab = 'seoul') => {
+  const openNewsPage = useCallback((tab = 'seoul') => {
     setNewsFocus({ tab, requestedAt: Date.now() })
     setPage('news')
-  }
+  }, [])
 
-  const renderPage = () => {
+  const pageContent = useMemo(() => {
     switch (page) {
       case 'summary': return <SummaryPage onOpenCalendarDate={openCalendarDate} onOpenPage={setPage} onOpenNewsPage={openNewsPage} />
       case 'calendar': return <CalendarPage focusDate={calendarFocus?.date} focusKey={calendarFocus?.requestedAt} />
@@ -50,12 +50,12 @@ export default function HomePage() {
       default: return <SummaryPage onOpenCalendarDate={openCalendarDate} onOpenPage={setPage} onOpenNewsPage={openNewsPage} />
 
     }
-  }
+  }, [calendarFocus, newsFocus, openCalendarDate, openNewsPage, page])
 
   return (
     <AppLayout page={page} onPageChange={setPage}>
       <Suspense fallback={<PageFallback />}>
-        {renderPage()}
+        {pageContent}
       </Suspense>
     </AppLayout>
   )
