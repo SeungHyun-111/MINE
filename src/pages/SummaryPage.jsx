@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   addDays,
   format,
@@ -358,6 +358,9 @@ function CompactWeatherSummary({ onOpenWeather }) {
 
 function EuphonySummary({ onOpenPage }) {
   const { highlights } = useEuphony({ seedDefaults: false })
+  const quoteViewportRef = useRef(null)
+  const quoteContentRef = useRef(null)
+  const [quoteScroll, setQuoteScroll] = useState({ enabled: false, distance: 0, duration: 7 })
   const pick = useMemo(() => {
     if (highlights.length === 0) return null
     return highlights[Math.floor(Math.random() * highlights.length)]
@@ -367,10 +370,29 @@ function EuphonySummary({ onOpenPage }) {
     return LIQUID_BG_IMAGES[Math.floor(Math.random() * LIQUID_BG_IMAGES.length)]
   }, [])
 
+  useLayoutEffect(() => {
+    const updateQuoteScroll = () => {
+      const viewport = quoteViewportRef.current
+      const content = quoteContentRef.current
+      if (!viewport || !content) return
+
+      const overflow = content.scrollHeight - viewport.clientHeight
+      setQuoteScroll({
+        enabled: overflow > 2,
+        distance: Math.max(0, overflow),
+        duration: Math.min(14, Math.max(6, overflow / 16)),
+      })
+    }
+
+    updateQuoteScroll()
+    window.addEventListener('resize', updateQuoteScroll)
+    return () => window.removeEventListener('resize', updateQuoteScroll)
+  }, [pick])
+
   return (
     <section
       onClick={() => onOpenPage?.('euphony')}
-      className="liquid-glass col-span-full min-h-[168px] cursor-pointer rounded-[28px] px-4 py-4 text-[#002fa3] active:brightness-[0.97]"
+      className="liquid-glass col-span-full flex h-[168px] cursor-pointer flex-col rounded-[28px] px-4 py-4 text-[#002fa3] active:brightness-[0.97]"
     >
       {liquidBg && (
         <div className="euphony-liquid-bg-wrap" aria-hidden="true">
@@ -386,12 +408,23 @@ function EuphonySummary({ onOpenPage }) {
         </h2>
       </div>
 
-      <p className="mt-3 text-[clamp(11px,3.2vw,14px)] font-black leading-[1.45] text-[#14384b] drop-shadow-[0_1px_0_rgba(255,255,255,0.72)]">
-        {pick?.text || '저장된 문장을 기다리는 중'}
-      </p>
-      <p className="mt-3 text-[clamp(9px,2.6vw,11px)] font-bold leading-snug text-[#4b6d78] drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]">
-        {pick?.bookTitle || 'Euphony'} {pick?.author ? `· ${pick.author}` : ''}
-      </p>
+      <div ref={quoteViewportRef} className="mt-3 min-h-0 flex-1 overflow-hidden">
+        <div
+          ref={quoteContentRef}
+          className={quoteScroll.enabled ? 'euphony-summary-roll' : ''}
+          style={{
+            '--euphony-roll-distance': `${quoteScroll.distance}px`,
+            animationDuration: `${quoteScroll.duration}s`,
+          }}
+        >
+          <p className="text-[clamp(11px,3.2vw,14px)] font-black leading-[1.45] text-[#14384b] drop-shadow-[0_1px_0_rgba(255,255,255,0.72)]">
+            {pick?.text || '저장된 문장을 기다리는 중'}
+          </p>
+          <p className="mt-3 text-[clamp(9px,2.6vw,11px)] font-bold leading-snug text-[#4b6d78] drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]">
+            {pick?.bookTitle || 'Euphony'} {pick?.author ? `· ${pick.author}` : ''}
+          </p>
+        </div>
+      </div>
     </section>
   )
 }
@@ -505,7 +538,7 @@ const NEWS_ROW_H = 28
 function NewsScrapsSummary({ className = '', onOpenNewsPage }) {
   const scraps = useNewsScraps()
   const rolling = scraps.length > 0 ? [...scraps, ...scraps] : []
-  const duration = Math.max(9, scraps.length * 3)
+  const duration = Math.max(5, scraps.length * 1.6)
 
   return (
     <Card icon={Newspaper} title={`스크랩한 소식 · ${scraps.length}건`} className={className} onClick={() => onOpenNewsPage?.('scraps')}>

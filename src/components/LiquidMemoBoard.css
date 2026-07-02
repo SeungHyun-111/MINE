@@ -63,7 +63,7 @@
 }
 
 .liquid-memo-roll {
-  animation: liquid-memo-roll 18s linear infinite;
+  animation: liquid-memo-roll 8s linear infinite;
 }
 
 .liquid-memo-box:hover .liquid-memo-roll {

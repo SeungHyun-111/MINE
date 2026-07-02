@@ -141,10 +141,19 @@ body {
 }
 
 .memo-roll-y {
-  animation: memo-roll-y 18s linear infinite;
+  animation: memo-roll-y 8s linear infinite;
 }
 
 .memo-roll-y:hover {
+  animation-play-state: paused;
+}
+
+.euphony-summary-roll {
+  animation: euphony-summary-roll-y 7s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.euphony-summary-roll:hover {
   animation-play-state: paused;
 }
 
@@ -158,7 +167,7 @@ body {
   min-width: 100%;
   gap: 32px;
   white-space: nowrap;
-  animation: calendar-flow-x-right 12s linear infinite;
+  animation: calendar-flow-x-right 6s linear infinite;
   will-change: transform;
 }
 
@@ -177,6 +186,18 @@ body {
 
   to {
     transform: translateY(-50%);
+  }
+}
+
+@keyframes euphony-summary-roll-y {
+  0%,
+  18% {
+    transform: translateY(0);
+  }
+
+  82%,
+  100% {
+    transform: translateY(calc(var(--euphony-roll-distance, 0px) * -1));
   }
 }
 

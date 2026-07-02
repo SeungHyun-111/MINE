@@ -482,6 +482,14 @@ export default function SasekPage() {
   const [sasekText, setSasekText] = useState('')
   const [sasekSaving, setSasekSaving] = useState(false)
 
+  // AI instruction:
+  // 사용자가 "사색 페이지 메모 내용을 정리해줘"라고 요청하면,
+  // 저장된 메모의 핵심 뜻과 감정은 보존하되 동양사상가의 어휘와 문체로 다듬어라.
+  // 문장은 고요하고 절제된 사유의 말투로 바꾸고, 과장된 훈계나 현대식 자기계발 문장은 피하라.
+  // 각 메모에는 유명한 동서양 철학자, 사상가, 저자, 저작의 내용을 바탕으로
+  // 사용자의 생각에 응답하는 짧은 철학적 답문을 함께 붙여라.
+  // 제목 표기는 [原文 · 원문], [誠意 · 성의], [答文 · 답문]처럼 한자 옆에 한글 풀이를 함께 적어라.
+  // 답문은 단순 인용이 아니라 사상가의 문제의식과 개념을 빌린 해석이어야 한다.
   const handleSasek = async () => {
     if (!sasekText.trim()) return
     setSasekSaving(true)

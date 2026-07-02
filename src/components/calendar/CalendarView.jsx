@@ -409,7 +409,7 @@ export default function CalendarView({
                       >
                         <span
                           className="calendar-flow-track"
-                          style={{ animationDuration: `${Math.max(9, segment.spanDays * 4)}s` }}
+                          style={{ animationDuration: `${Math.max(5, segment.spanDays * 2)}s` }}
                         >
                           <span className="calendar-flow-copy">
                             {event.summary || '(제목 없음)'}
