@@ -3,7 +3,7 @@ import { getDay } from 'date-fns'
 import { CalendarPlus, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { useCalendar } from '@/hooks/useCalendar'
 import { useRoutines } from '@/hooks/useRoutines'
-import { getDateTimeDateKey, getSeoulDateKey } from '@/lib/dateTime'
+import { formatCompleteTimeInput, formatPartialTimeInput, getDateTimeDateKey, getSeoulDateKey } from '@/lib/dateTime'
 
 const ROUTINE_TYPES = [
   { id: 'daily', label: 'Daily', sublabel: '매일' },
@@ -162,7 +162,8 @@ function TimeInput({ value, onChange, ariaLabel, placeholder = '09:00' }) {
       maxLength={5}
       placeholder={placeholder}
       value={value || ''}
-      onChange={(event) => onChange(event.target.value)}
+      onChange={(event) => onChange(formatPartialTimeInput(event.target.value))}
+      onBlur={(event) => onChange(formatCompleteTimeInput(event.target.value))}
       className="h-9 w-[72px] shrink-0 rounded-lg border border-[#d5e8ff] bg-white/90 px-2 text-xs font-bold text-[#0044cc] outline-none focus:border-[#5588bb]"
       aria-label={ariaLabel}
     />

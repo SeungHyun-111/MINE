@@ -108,9 +108,9 @@ export default function DayEventList({
               const isHigh = event.priority === 'high'
 
               return (
-                <li key={event.id} className="flex items-start gap-3 px-4 py-3">
-                  <div className="mt-0.5 flex w-20 shrink-0 items-center gap-1.5 text-xs text-[#5577bb]">
-                    {!isAllDay && <Clock size={12} />}
+                <li key={event.id} className="flex items-start gap-1.5 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+                  <div className="mt-0.5 flex w-14 shrink-0 items-center gap-1 text-[10px] text-[#5577bb] sm:w-20 sm:gap-1.5 sm:text-xs">
+                    {!isAllDay && <Clock size={11} className="shrink-0 sm:size-3" />}
                     <span>{isAllDay ? '종일' : formatTime(event.start?.dateTime)}</span>
                   </div>
                   <button
@@ -118,20 +118,20 @@ export default function DayEventList({
                     onClick={() => onEdit?.(event)}
                     className="min-w-0 flex-1 text-left"
                   >
-                    <p className={`truncate text-sm font-semibold text-[#1a3d8a] ${isDone ? 'text-[#5577bb] line-through' : ''}`}>
+                    <p className={`truncate text-[11px] font-semibold text-[#1a3d8a] sm:text-sm ${isDone ? 'text-[#5577bb] line-through' : ''}`}>
                       {event.summary || '(제목 없음)'}
                     </p>
                     {event.description && (
-                      <p className={`mt-0.5 truncate text-xs text-[#5577bb] ${isDone ? 'line-through' : ''}`}>
+                      <p className={`mt-0.5 truncate text-[10px] text-[#5577bb] sm:text-xs ${isDone ? 'line-through' : ''}`}>
                         {event.description}
                       </p>
                     )}
                   </button>
-                  <div className="flex shrink-0 items-center gap-1">
+                  <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
                     <select
                       value={event.priority || 'medium'}
                       onChange={(changeEvent) => onPriorityChange?.(event, changeEvent.target.value)}
-                      className={`h-8 rounded-md border px-1.5 text-xs font-bold outline-none ${
+                      className={`h-7 w-14 rounded-md border px-1 text-[10px] font-bold outline-none sm:h-8 sm:w-auto sm:px-1.5 sm:text-xs ${
                         isHigh
                           ? 'border-[#e85252] bg-[#e85252] text-white'
                           : 'border-[#bbd5f5] bg-white/90 text-[#0044cc]'
@@ -145,7 +145,7 @@ export default function DayEventList({
                     <select
                       value={event.status || 'pending'}
                       onChange={(changeEvent) => onStatusChange?.(event, changeEvent.target.value)}
-                      className="h-8 rounded-md border border-[#bbd5f5] bg-white/90 px-1.5 text-xs font-bold text-[#0044cc] outline-none"
+                      className="h-7 w-16 rounded-md border border-[#bbd5f5] bg-white/90 px-1 text-[10px] font-bold text-[#0044cc] outline-none sm:h-8 sm:w-auto sm:px-1.5 sm:text-xs"
                       aria-label="상태"
                     >
                       {EVENT_STATUSES.map((status) => (
@@ -155,18 +155,18 @@ export default function DayEventList({
                     <button
                       type="button"
                       onClick={() => onEdit?.(event)}
-                      className="rounded-md p-1.5 text-[#4477cc] hover:bg-[#d5e8ff] hover:text-[#0044cc]"
+                      className="rounded-md p-1 text-[#4477cc] hover:bg-[#d5e8ff] hover:text-[#0044cc] sm:p-1.5"
                       aria-label="일정 수정"
                     >
-                      <Pencil size={14} />
+                      <Pencil size={13} />
                     </button>
                     <button
                       type="button"
                       onClick={() => onRemove?.(event)}
-                      className="rounded-md p-1.5 text-[#9d5c5c] hover:bg-[#fff0f0] hover:text-[#7a3d3d]"
+                      className="rounded-md p-1 text-[#9d5c5c] hover:bg-[#fff0f0] hover:text-[#7a3d3d] sm:p-1.5"
                       aria-label="일정 삭제"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 </li>

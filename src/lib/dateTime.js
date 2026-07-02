@@ -55,3 +55,41 @@ export function clampDateInputYear(event) {
 
   input.value = [year.slice(0, 4), month, day].filter(Boolean).join('-')
 }
+
+export function formatPartialTimeInput(value) {
+  const digits = String(value || '').replace(/\D/g, '').slice(0, 4)
+
+  if (digits.length <= 2) return digits
+
+  if (digits.length === 3 && Number(digits.slice(0, 2)) > 23) {
+    return `0${digits[0]}:${digits.slice(1)}`
+  }
+
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`
+}
+
+export function formatCompleteTimeInput(value) {
+  const digits = String(value || '').replace(/\D/g, '').slice(0, 4)
+
+  if (digits.length === 0) return ''
+  if (digits.length === 1) return `0${digits}:00`
+  if (digits.length === 2) return `${digits}:00`
+
+  if (digits.length === 3) {
+    if (Number(digits.slice(0, 2)) > 23) {
+      return `0${digits[0]}:${digits.slice(1)}`
+    }
+
+    return `${digits.slice(0, 2)}:${digits[2]}0`
+  }
+
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`
+}
+
+export function formatTimeInput(event) {
+  event.currentTarget.value = formatPartialTimeInput(event.currentTarget.value)
+}
+
+export function completeTimeInput(event) {
+  event.currentTarget.value = formatCompleteTimeInput(event.currentTarget.value)
+}

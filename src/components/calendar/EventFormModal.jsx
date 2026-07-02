@@ -1,6 +1,13 @@
 import { format } from 'date-fns'
 import { X } from 'lucide-react'
-import { addDateKeyDays, clampDateInputYear, getDateTimeDateKey, getDateTimeTime } from '@/lib/dateTime'
+import {
+  addDateKeyDays,
+  clampDateInputYear,
+  completeTimeInput,
+  formatTimeInput,
+  getDateTimeDateKey,
+  getDateTimeTime,
+} from '@/lib/dateTime'
 
 function addDays(dateString, days) {
   return addDateKeyDays(dateString, days)
@@ -145,6 +152,8 @@ export default function EventFormModal({ date, eventToEdit, error, saving, onClo
                 maxLength={5}
                 placeholder="09:00"
                 defaultValue={defaults.startTime}
+                onInput={formatTimeInput}
+                onBlur={completeTimeInput}
                 className="w-full rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
               />
             </label>
@@ -158,6 +167,8 @@ export default function EventFormModal({ date, eventToEdit, error, saving, onClo
                 maxLength={5}
                 placeholder="10:00"
                 defaultValue={defaults.endTime}
+                onInput={formatTimeInput}
+                onBlur={completeTimeInput}
                 className="w-full rounded-lg border border-[#99ccff] bg-white/90 px-3 py-2 text-sm outline-none focus:border-[#5588bb] focus:ring-2 focus:ring-[#c8dfff]"
               />
             </label>
