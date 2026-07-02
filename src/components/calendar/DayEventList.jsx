@@ -65,7 +65,7 @@ export default function DayEventList({
       className={
         isPanel
           ? 'flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-[#aacce4] bg-white/90 shadow-sm'
-          : 'overflow-hidden rounded-lg border border-[#aacce4] bg-white/90 shadow-sm'
+          : 'flex max-h-[42svh] min-h-[220px] flex-col overflow-hidden rounded-lg border border-[#aacce4] bg-white/90 shadow-sm'
       }
     >
       <div className="flex shrink-0 items-center justify-between border-b border-[#aaccee] bg-[#cce0ff] px-4 py-3">
@@ -97,7 +97,7 @@ export default function DayEventList({
         </div>
       </div>
 
-      <div className={isPanel ? 'min-h-0 flex-1 overflow-y-auto' : ''}>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {dayEvents.length === 0 ? (
           <p className="py-6 text-center text-sm text-[#5577bb]">일정이 없습니다</p>
         ) : (
