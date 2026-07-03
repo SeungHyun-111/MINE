@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getDay } from 'date-fns'
-import { CalendarPlus, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react'
+import { CalendarPlus, Check, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { useCalendar } from '@/hooks/useCalendar'
 import { useRoutines } from '@/hooks/useRoutines'
 import { formatCompleteTimeInput, formatPartialTimeInput, getDateTimeDateKey, getSeoulDateKey } from '@/lib/dateTime'
@@ -174,43 +174,17 @@ function TimeInput({ value, onChange, onBlur, ariaLabel, placeholder = '09:00' }
   )
 }
 
-function WeeklyRoutineRow({ routine, index, dayKey, isEditing, onToggle, onUpdate, onRemove }) {
-  const [draft, setDraft] = useState(routine)
-
-  useEffect(() => {
-    if (!isEditing) setDraft(routine)
-  }, [isEditing, routine])
-
-  const normalizeRoutine = (value) => ({
-    startTime: value.startTime,
-    endTime: value.endTime || value.startTime,
-    title: value.title?.trim() || '',
-    content: value.content?.trim() || '',
-    priority: value.priority || 'medium',
-  })
+function WeeklyRoutineRow({ routine, draft, isEditing, onToggle, onUpdateDraft, onCommit, onRemove }) {
+  const display = isEditing ? draft : routine
 
   const updateField = (name, value) => {
-    setDraft((prev) => ({ ...prev, [name]: value }))
+    onUpdateDraft((prev) => ({ ...(prev || draft), [name]: value }))
   }
 
-  const commitDraft = (nextDraft = draft) => {
-    const next = normalizeRoutine(nextDraft)
-    const current = normalizeRoutine(routine)
-    if (JSON.stringify(next) !== JSON.stringify(current)) {
-      onUpdate(dayKey, index, next)
-    }
-  }
-
-  const commitField = (name, value) => {
-    const next = { ...draft, [name]: value }
-    setDraft(next)
-    commitDraft(next)
-  }
-
-  const timeText = `${draft.startTime || '--:--'}-${draft.endTime || draft.startTime || '--:--'}`
-  const titleText = draft.title?.trim() || '제목 없음'
-  const contentText = draft.content?.trim()
-  const isHigh = draft.priority === 'high'
+  const timeText = `${display.startTime || '--:--'}-${display.endTime || display.startTime || '--:--'}`
+  const titleText = display.title?.trim() || '제목 없음'
+  const contentText = display.content?.trim()
+  const isHigh = display.priority === 'high'
 
   return (
     <li className="px-3 py-1.5">
@@ -233,7 +207,7 @@ function WeeklyRoutineRow({ routine, index, dayKey, isEditing, onToggle, onUpdat
         </button>
         <button
           type="button"
-          onClick={() => onRemove(dayKey, index)}
+          onClick={onRemove}
           className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9d5c5c] hover:bg-[#fff0f0]"
           aria-label="삭제"
         >
@@ -241,37 +215,35 @@ function WeeklyRoutineRow({ routine, index, dayKey, isEditing, onToggle, onUpdat
         </button>
       </div>
       {isEditing && (
-        <div className="grid gap-2 pb-2 pl-7 pt-1 md:grid-cols-[88px_88px_minmax(150px,1fr)_minmax(180px,1.1fr)_96px]">
+        <div className="grid gap-2 pb-2 pl-7 pt-1 md:grid-cols-[88px_88px_minmax(150px,1fr)_minmax(180px,1.1fr)_96px_44px]">
           <TimeInput
             value={draft.startTime}
             onChange={(value) => updateField('startTime', value)}
-            onBlur={(value) => commitField('startTime', value)}
+            onBlur={(value) => updateField('startTime', value)}
             ariaLabel="시작시간"
           />
           <TimeInput
             value={draft.endTime}
             onChange={(value) => updateField('endTime', value)}
-            onBlur={(value) => commitField('endTime', value)}
+            onBlur={(value) => updateField('endTime', value)}
             ariaLabel="종료시간"
             placeholder="10:00"
           />
           <input
             value={draft.title || ''}
             onChange={(event) => updateField('title', event.target.value)}
-            onBlur={() => commitDraft()}
             className="rounded-lg border border-[#d5e8ff] bg-white/90 px-2 py-1.5 text-sm font-bold text-[#1a3d8a] outline-none"
             aria-label="제목"
           />
           <input
             value={draft.content || ''}
             onChange={(event) => updateField('content', event.target.value)}
-            onBlur={() => commitDraft()}
             className="rounded-lg border border-[#d5e8ff] bg-white/90 px-2 py-1.5 text-sm text-[#3355aa] outline-none"
             aria-label="내용"
           />
           <select
             value={draft.priority || 'medium'}
-            onChange={(event) => commitField('priority', event.target.value)}
+            onChange={(event) => updateField('priority', event.target.value)}
             className={`rounded-lg border px-2 py-1.5 text-sm font-bold outline-none ${
               isHigh
                 ? 'border-[#e85252] bg-[#e85252] text-white'
@@ -283,6 +255,14 @@ function WeeklyRoutineRow({ routine, index, dayKey, isEditing, onToggle, onUpdat
               <option key={priority.id} value={priority.id}>{priority.label}</option>
             ))}
           </select>
+          <button
+            type="button"
+            onClick={onCommit}
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-[#0044cc] text-white hover:bg-[#002080]"
+            aria-label="수정 저장"
+          >
+            <Check size={16} />
+          </button>
         </div>
       )}
     </li>
@@ -299,10 +279,51 @@ function WeeklyRoutineBoard({
 }) {
   const [selectedDay, setSelectedDay] = useState(todayKey)
   const [editingKey, setEditingKey] = useState('')
+  const [editingDraft, setEditingDraft] = useState(null)
   const selectedMeta = WEEK_DAYS.find((day) => day.key === selectedDay)
   const selectedRoutines = weeklyRoutines[selectedDay] || []
   const todayMeta = WEEK_DAYS.find((day) => day.key === todayKey())
   const todayRoutines = weeklyRoutines[todayMeta.key] || []
+
+  useEffect(() => {
+    setEditingKey('')
+    setEditingDraft(null)
+  }, [selectedDay])
+
+  const normalizeRoutine = (routine) => ({
+    startTime: routine.startTime,
+    endTime: routine.endTime || routine.startTime,
+    title: routine.title?.trim() || '',
+    content: routine.content?.trim() || '',
+    priority: routine.priority || 'medium',
+  })
+
+  const commitEditingDraft = () => {
+    if (!editingKey || !editingDraft) return
+
+    const [, indexText] = editingKey.split('_')
+    const index = Number(indexText)
+    const current = selectedRoutines[index]
+    if (!current) return
+
+    const next = normalizeRoutine(editingDraft)
+    if (JSON.stringify(next) !== JSON.stringify(normalizeRoutine(current))) {
+      onUpdate(selectedDay, index, next)
+    }
+  }
+
+  const toggleEdit = (rowKey, routine) => {
+    if (editingKey === rowKey) {
+      commitEditingDraft()
+      setEditingKey('')
+      setEditingDraft(null)
+      return
+    }
+
+    commitEditingDraft()
+    setEditingKey(rowKey)
+    setEditingDraft(routine)
+  }
 
   return (
     <section className="overflow-hidden rounded-lg border border-[#aacce4] bg-white/90 shadow-sm">
@@ -359,12 +380,16 @@ function WeeklyRoutineBoard({
               <WeeklyRoutineRow
                 key={rowKey}
                 routine={routine}
-                index={index}
-                dayKey={selectedDay}
+                draft={editingKey === rowKey ? editingDraft || routine : routine}
                 isEditing={editingKey === rowKey}
-                onToggle={() => setEditingKey((current) => (current === rowKey ? '' : rowKey))}
-                onUpdate={onUpdate}
-                onRemove={onRemove}
+                onToggle={() => toggleEdit(rowKey, routine)}
+                onUpdateDraft={setEditingDraft}
+                onCommit={() => {
+                  commitEditingDraft()
+                  setEditingKey('')
+                  setEditingDraft(null)
+                }}
+                onRemove={() => onRemove(selectedDay, index)}
               />
             )
           })}
