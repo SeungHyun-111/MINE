@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { onValue, push, ref, remove, serverTimestamp, set } from 'firebase/database'
+import { onValue, push, ref, remove, serverTimestamp, set, update } from 'firebase/database'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -34,7 +34,14 @@ export function useRoutines() {
     return onValue(
       ref(db, routinesPath),
       (snapshot) => {
-        const items = objectToList(snapshot.val()).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
+        const items = objectToList(snapshot.val()).sort((a, b) => {
+          const aOrder = Number.isFinite(a.order) ? a.order : null
+          const bOrder = Number.isFinite(b.order) ? b.order : null
+          if (aOrder != null || bOrder != null) {
+            return (aOrder ?? Number.MAX_SAFE_INTEGER) - (bOrder ?? Number.MAX_SAFE_INTEGER)
+          }
+          return (a.createdAt || 0) - (b.createdAt || 0)
+        })
         setRoutines(items)
         setLoading(false)
       },
@@ -71,6 +78,7 @@ export function useRoutines() {
       text: text.trim(),
       type,
       createdAt: Date.now(),
+      order: Date.now(),
       createdAtServer: serverTimestamp(),
     })
     return routineRef.key
@@ -105,6 +113,21 @@ export function useRoutines() {
     await saveWeeklyRoutines({ ...weeklyRoutines, [day]: dayRoutines })
   }, [saveWeeklyRoutines, weeklyRoutines])
 
+  const reorderRoutines = useCallback(async (orderedRoutines) => {
+    if (!routinesPath) return
+
+    const updates = {}
+    orderedRoutines.forEach((routine, index) => {
+      updates[`${routinesPath}/${routine.id}/order`] = index
+    })
+
+    await update(ref(db), updates)
+  }, [routinesPath])
+
+  const reorderWeeklyRoutines = useCallback(async (day, orderedRoutines) => {
+    await saveWeeklyRoutines({ ...weeklyRoutines, [day]: orderedRoutines })
+  }, [saveWeeklyRoutines, weeklyRoutines])
+
   return {
     routines,
     weeklyRoutines,
@@ -112,8 +135,10 @@ export function useRoutines() {
     error,
     addRoutine,
     removeRoutine,
+    reorderRoutines,
     addWeeklyRoutine,
     updateWeeklyRoutine,
     removeWeeklyRoutine,
+    reorderWeeklyRoutines,
   }
 }

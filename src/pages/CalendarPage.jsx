@@ -19,6 +19,7 @@ export default function CalendarPage({ focusDate, focusKey }) {
     removeEvent,
     updateEventStatus,
     updateEventPriority,
+    reorderEvents,
   } = useCalendar()
   const [selectedDate, setSelectedDate] = useState(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -151,6 +152,7 @@ export default function CalendarPage({ focusDate, focusKey }) {
         onRemove={handleRemoveEvent}
         onStatusChange={handleStatusChange}
         onPriorityChange={handlePriorityChange}
+        onReorder={reorderEvents}
         onClose={() => setSelectedDate(null)}
         variant={variant}
       />

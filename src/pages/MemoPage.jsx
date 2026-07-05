@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, FileText, Plus, Trash2, X } from 'lucide-react'
 import { MEMO_PRIORITIES, MEMO_STAGES, useMemos } from '@/hooks/useMemos'
+import { useReorderableList } from '@/hooks/useReorderableList'
 
 function formatLogTime(value) {
   if (!value) return '-'
@@ -257,12 +258,16 @@ function MemoEditor({ memo, onUpdate, onRemove }) {
 }
 
 export default function MemoPage() {
-  const { memos, loading, error, addMemo, updateMemo, removeMemo } = useMemos()
+  const { memos, loading, error, addMemo, updateMemo, removeMemo, reorderMemos } = useMemos()
   const [selectedId, setSelectedId] = useState('')
   const selectedMemo = useMemo(
     () => memos.find((memo) => memo.id === selectedId) || null,
     [memos, selectedId]
   )
+  const { draggingId, dropTarget, getItemProps } = useReorderableList({
+    items: memos,
+    onReorder: reorderMemos,
+  })
 
   return (
     <div className="min-h-full bg-[#f0f5ff] p-4 md:p-6">
@@ -295,8 +300,29 @@ export default function MemoPage() {
               memos.map((memo) => {
                 const meta = stageMeta(memo.stage)
                 const isSelected = selectedMemo?.id === memo.id
+                const isDragging = draggingId === memo.id
+                const isDropTarget = dropTarget.id === memo.id
                 return (
-                  <div key={memo.id} className={isSelected ? 'bg-[#eef7f7]' : 'bg-white/90'}>
+                  <div
+                    key={memo.id}
+                    {...getItemProps(memo.id)}
+                    className={`relative cursor-grab touch-pan-y select-none transition-all duration-150 active:cursor-grabbing ${
+                      isSelected ? 'bg-[#eef7f7]' : 'bg-white/90'
+                    } ${isDragging ? 'z-20 scale-[1.015] rounded-lg bg-white opacity-95 shadow-[0_12px_30px_rgba(0,68,204,0.24)] ring-2 ring-[#0044cc]' : ''} ${
+                      isDropTarget ? 'bg-[#eef7ff]' : ''
+                    } ${isDropTarget && dropTarget.position === 'before' ? 'pt-10' : ''} ${
+                      isDropTarget && dropTarget.position === 'after' ? 'pb-10' : ''
+                    }`}
+                  >
+                    {isDropTarget && (
+                      <span
+                        className={`pointer-events-none absolute left-4 right-4 z-10 flex h-7 items-center justify-center rounded-md border border-[#78a9ff] bg-[#dbeaff] text-[11px] font-black text-[#0044cc] shadow-inner ${
+                          dropTarget.position === 'before' ? 'top-1.5' : 'bottom-1.5'
+                        }`}
+                      >
+                        여기에 놓기
+                      </span>
+                    )}
                     <button
                       type="button"
                       onClick={() => setSelectedId(isSelected ? '' : memo.id)}

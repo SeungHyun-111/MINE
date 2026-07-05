@@ -107,6 +107,13 @@ async function removeEventWithDateIndex(uid, eventId, event = null) {
 
 function sortEvents(items) {
   return [...items].sort((a, b) => {
+    const aOrder = Number.isFinite(a.order) ? a.order : null
+    const bOrder = Number.isFinite(b.order) ? b.order : null
+    if (aOrder != null || bOrder != null) {
+      const orderCompare = (aOrder ?? Number.MAX_SAFE_INTEGER) - (bOrder ?? Number.MAX_SAFE_INTEGER)
+      if (orderCompare !== 0) return orderCompare
+    }
+
     const aTime = a.start?.dateTime || a.start?.date || ''
     const bTime = b.start?.dateTime || b.start?.date || ''
     return aTime.localeCompare(bTime)
@@ -322,6 +329,7 @@ export function useCalendar() {
       const saved = {
         ...event,
         calendarId: LOCAL_CALENDAR.id,
+        order: Date.now(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       }
@@ -394,6 +402,21 @@ export function useCalendar() {
     })
   }
 
+  const reorderEvents = async (orderedEvents) => {
+    if (CALENDAR_BACKEND_ENABLED) {
+      throw new Error('嚥≪뮇六?筌?꼶????癒?퐣筌?????揶쎛?館鍮??덈뼄.')
+    }
+    if (!user) throw new Error('嚥≪뮄??紐꾩뵠 ?袁⑹뒄??몃빍??')
+
+    const updates = {}
+    orderedEvents.forEach((event, index) => {
+      updates[`users/${user.uid}/pages/calendar/events/${event.id}/order`] = index
+      updates[`users/${user.uid}/pages/calendar/events/${event.id}/updatedAt`] = serverTimestamp()
+    })
+
+    await update(ref(db), updates)
+  }
+
   const replaceRoutineEventsForDate = async (date, routines) => {
     if (CALENDAR_BACKEND_ENABLED) {
       throw new Error('濡쒖뻄 罹섎┛???먯꽌留??ъ슜 媛?ν빀?덈떎.')
@@ -461,6 +484,7 @@ export function useCalendar() {
     removeEvent,
     updateEventStatus,
     updateEventPriority,
+    reorderEvents,
     replaceRoutineEventsForDate,
     connectCalendar: startCalendarConnection,
     reload: load,

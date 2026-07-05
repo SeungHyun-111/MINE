@@ -62,7 +62,14 @@ export function useMemos() {
     return onValue(
       ref(db, memosPath),
       (snapshot) => {
-        const items = objectToList(snapshot.val()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+        const items = objectToList(snapshot.val()).sort((a, b) => {
+          const aOrder = Number.isFinite(a.order) ? a.order : null
+          const bOrder = Number.isFinite(b.order) ? b.order : null
+          if (aOrder != null || bOrder != null) {
+            return (aOrder ?? Number.MAX_SAFE_INTEGER) - (bOrder ?? Number.MAX_SAFE_INTEGER)
+          }
+          return (b.updatedAt || 0) - (a.updatedAt || 0)
+        })
         setMemos(items)
         setLoading(false)
       },
@@ -87,6 +94,7 @@ export function useMemos() {
       logs: [logEntry('create', '메모 생성')],
       createdAt: now,
       updatedAt: now,
+      order: now,
       createdAtServer: serverTimestamp(),
       updatedAtServer: serverTimestamp(),
     }
@@ -125,6 +133,18 @@ export function useMemos() {
     await remove(ref(db, `${memosPath}/${memoId}`))
   }, [memosPath])
 
+  const reorderMemos = useCallback(async (orderedMemos) => {
+    if (!memosPath) return
+
+    const updates = {}
+    orderedMemos.forEach((memo, index) => {
+      updates[`${memosPath}/${memo.id}/order`] = index
+      updates[`${memosPath}/${memo.id}/updatedAtServer`] = serverTimestamp()
+    })
+
+    await update(ref(db), updates)
+  }, [memosPath])
+
   return {
     memos,
     loading,
@@ -132,5 +152,6 @@ export function useMemos() {
     addMemo,
     updateMemo,
     removeMemo,
+    reorderMemos,
   }
 }

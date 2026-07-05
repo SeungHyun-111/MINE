@@ -2,6 +2,7 @@ import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { ChevronDown, Clock, Pencil, Plus, Trash2 } from 'lucide-react'
 import { addDateKeyDays, getDateTimeDateKey, getDateTimeTime } from '@/lib/dateTime'
+import { useReorderableList } from '@/hooks/useReorderableList'
 
 const EVENT_STATUSES = [
   { id: 'pending', label: '미완료' },
@@ -51,14 +52,19 @@ export default function DayEventList({
   onRemove,
   onStatusChange,
   onPriorityChange,
+  onReorder,
   onClose,
   variant = 'inline',
 }) {
-  if (!date) return null
-
-  const dateStr = format(date, 'yyyy-MM-dd')
-  const dayEvents = events.filter((event) => includesDate(event, dateStr))
+  const dateStr = date ? format(date, 'yyyy-MM-dd') : ''
+  const dayEvents = date ? events.filter((event) => includesDate(event, dateStr)) : []
   const isPanel = variant === 'panel'
+  const { draggingId, dropTarget, getItemProps } = useReorderableList({
+    items: dayEvents,
+    onReorder,
+  })
+
+  if (!date) return null
 
   return (
     <section
@@ -106,9 +112,28 @@ export default function DayEventList({
               const isAllDay = !!event.start?.date
               const isDone = event.status === 'done'
               const isHigh = event.priority === 'high'
+              const isDragging = draggingId === event.id
+              const isDropTarget = dropTarget.id === event.id
 
               return (
-                <li key={event.id} className="flex items-start gap-1.5 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+                <li
+                  key={event.id}
+                  {...getItemProps(event.id)}
+                  className={`relative flex cursor-grab touch-pan-y select-none items-start gap-1.5 px-3 py-2.5 transition-all duration-150 active:cursor-grabbing sm:gap-3 sm:px-4 sm:py-3 ${
+                    isDragging ? 'z-20 scale-[1.015] rounded-lg bg-white opacity-95 shadow-[0_12px_30px_rgba(0,68,204,0.24)] ring-2 ring-[#0044cc]' : ''
+                  } ${isDropTarget ? 'bg-[#eef7ff]' : ''} ${
+                    isDropTarget && dropTarget.position === 'before' ? 'pt-10' : ''
+                  } ${isDropTarget && dropTarget.position === 'after' ? 'pb-10' : ''}`}
+                >
+                  {isDropTarget && (
+                    <span
+                      className={`pointer-events-none absolute left-3 right-3 flex h-7 items-center justify-center rounded-md border border-[#78a9ff] bg-[#dbeaff] text-[11px] font-black text-[#0044cc] shadow-inner ${
+                        dropTarget.position === 'before' ? 'top-1.5' : 'bottom-1.5'
+                      }`}
+                    >
+                      여기에 놓기
+                    </span>
+                  )}
                   <div className="mt-0.5 flex w-14 shrink-0 items-center gap-1 text-[10px] text-[#5577bb] sm:w-20 sm:gap-1.5 sm:text-xs">
                     {!isAllDay && <Clock size={11} className="shrink-0 sm:size-3" />}
                     <span>{isAllDay ? '종일' : formatTime(event.start?.dateTime)}</span>

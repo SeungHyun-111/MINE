@@ -3,6 +3,7 @@ import { getDay } from 'date-fns'
 import { CalendarPlus, Check, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { useCalendar } from '@/hooks/useCalendar'
 import { useRoutines } from '@/hooks/useRoutines'
+import { useReorderableList } from '@/hooks/useReorderableList'
 import { formatCompleteTimeInput, formatPartialTimeInput, getDateTimeDateKey, getSeoulDateKey } from '@/lib/dateTime'
 
 const ROUTINE_TYPES = [
@@ -34,13 +35,18 @@ const ROUTINE_PRIORITIES = [
   { id: 'medium', label: '보통' },
   { id: 'low', label: '낮음' },
 ]
+const EMPTY_WEEKLY_ROUTINES = []
 
 function todayKey() {
   return WEEK_DAYS[getDay(new Date())].key
 }
 
-function RoutineColumn({ type, routines, onAdd, onRemove }) {
+function RoutineColumn({ type, routines, onAdd, onRemove, onReorder }) {
   const [text, setText] = useState('')
+  const { draggingId, dropTarget, getItemProps } = useReorderableList({
+    items: routines,
+    onReorder,
+  })
 
   const handleAdd = async (event) => {
     event.preventDefault()
@@ -76,8 +82,29 @@ function RoutineColumn({ type, routines, onAdd, onRemove }) {
         {routines.length === 0 ? (
           <li className="px-4 py-6 text-center text-sm font-bold text-[#7799cc]">일정 없음</li>
         ) : (
-          routines.map((routine) => (
-            <li key={routine.id} className="flex items-center gap-2 px-4 py-2.5">
+          routines.map((routine) => {
+            const isDragging = draggingId === routine.id
+            const isDropTarget = dropTarget.id === routine.id
+
+            return (
+            <li
+              key={routine.id}
+              {...getItemProps(routine.id)}
+              className={`relative flex cursor-grab touch-pan-y select-none items-center gap-2 px-4 py-2.5 transition-all duration-150 active:cursor-grabbing ${
+                isDragging ? 'z-20 scale-[1.015] rounded-lg bg-white opacity-95 shadow-[0_12px_30px_rgba(0,68,204,0.24)] ring-2 ring-[#0044cc]' : ''
+              } ${isDropTarget ? 'bg-[#eef7ff]' : ''} ${
+                isDropTarget && dropTarget.position === 'before' ? 'pt-10' : ''
+              } ${isDropTarget && dropTarget.position === 'after' ? 'pb-10' : ''}`}
+            >
+              {isDropTarget && (
+                <span
+                  className={`pointer-events-none absolute left-4 right-4 flex h-7 items-center justify-center rounded-md border border-[#78a9ff] bg-[#dbeaff] text-[11px] font-black text-[#0044cc] shadow-inner ${
+                    dropTarget.position === 'before' ? 'top-1.5' : 'bottom-1.5'
+                  }`}
+                >
+                  여기에 놓기
+                </span>
+              )}
               <span className="min-w-0 flex-1 text-sm font-medium text-[#1a3d8a]">{routine.text}</span>
               <button
                 type="button"
@@ -88,7 +115,8 @@ function RoutineColumn({ type, routines, onAdd, onRemove }) {
                 <Trash2 size={13} />
               </button>
             </li>
-          ))
+            )
+          })
         )}
       </ul>
     </div>
@@ -274,6 +302,7 @@ function WeeklyRoutineBoard({
   onAdd,
   onUpdate,
   onRemove,
+  onReorder,
   onPushToday,
   pushing,
 }) {
@@ -281,9 +310,17 @@ function WeeklyRoutineBoard({
   const [editingKey, setEditingKey] = useState('')
   const [editingDraft, setEditingDraft] = useState(null)
   const selectedMeta = WEEK_DAYS.find((day) => day.key === selectedDay)
-  const selectedRoutines = weeklyRoutines[selectedDay] || []
+  const selectedRoutines = weeklyRoutines[selectedDay] || EMPTY_WEEKLY_ROUTINES
+  const selectedRoutineItems = useMemo(
+    () => selectedRoutines.map((routine, index) => ({ ...routine, id: `${selectedDay}_${index}`, sourceIndex: index })),
+    [selectedDay, selectedRoutines],
+  )
   const todayMeta = WEEK_DAYS.find((day) => day.key === todayKey())
   const todayRoutines = weeklyRoutines[todayMeta.key] || []
+  const { draggingId, dropTarget, getItemProps } = useReorderableList({
+    items: selectedRoutineItems,
+    onReorder: (items) => onReorder(selectedDay, items.map(({ id: _id, sourceIndex: _sourceIndex, ...routine }) => routine)),
+  })
 
   useEffect(() => {
     setEditingKey('')
@@ -374,23 +411,43 @@ function WeeklyRoutineBoard({
         <p className="px-4 py-8 text-center text-sm font-bold text-[#7799cc]">등록된 루틴이 없습니다.</p>
       ) : (
         <ul className="divide-y divide-[#d5e8ff]">
-          {selectedRoutines.map((routine, index) => {
-            const rowKey = `${selectedDay}_${index}`
+          {selectedRoutineItems.map((routine, index) => {
+            const rowKey = routine.id
+            const isDragging = draggingId === rowKey
+            const isDropTarget = dropTarget.id === rowKey
             return (
-              <WeeklyRoutineRow
+              <div
                 key={rowKey}
-                routine={routine}
-                draft={editingKey === rowKey ? editingDraft || routine : routine}
-                isEditing={editingKey === rowKey}
-                onToggle={() => toggleEdit(rowKey, routine)}
-                onUpdateDraft={setEditingDraft}
-                onCommit={() => {
-                  commitEditingDraft()
-                  setEditingKey('')
-                  setEditingDraft(null)
-                }}
-                onRemove={() => onRemove(selectedDay, index)}
-              />
+                {...getItemProps(rowKey)}
+                className={`relative cursor-grab touch-pan-y select-none transition-all duration-150 active:cursor-grabbing ${
+                  isDragging ? 'z-20 scale-[1.015] rounded-lg bg-white opacity-95 shadow-[0_12px_30px_rgba(0,68,204,0.24)] ring-2 ring-[#0044cc]' : ''
+                } ${isDropTarget ? 'bg-[#eef7ff]' : ''} ${
+                  isDropTarget && dropTarget.position === 'before' ? 'pt-10' : ''
+                } ${isDropTarget && dropTarget.position === 'after' ? 'pb-10' : ''}`}
+              >
+                {isDropTarget && (
+                  <span
+                    className={`pointer-events-none absolute left-3 right-3 z-10 flex h-7 items-center justify-center rounded-md border border-[#78a9ff] bg-[#dbeaff] text-[11px] font-black text-[#0044cc] shadow-inner ${
+                      dropTarget.position === 'before' ? 'top-1.5' : 'bottom-1.5'
+                    }`}
+                  >
+                    여기에 놓기
+                  </span>
+                )}
+                <WeeklyRoutineRow
+                  routine={routine}
+                  draft={editingKey === rowKey ? editingDraft || routine : routine}
+                  isEditing={editingKey === rowKey}
+                  onToggle={() => toggleEdit(rowKey, routine)}
+                  onUpdateDraft={setEditingDraft}
+                  onCommit={() => {
+                    commitEditingDraft()
+                    setEditingKey('')
+                    setEditingDraft(null)
+                  }}
+                  onRemove={() => onRemove(selectedDay, index)}
+                />
+              </div>
             )
           })}
         </ul>
@@ -407,9 +464,11 @@ export default function RoutinePage() {
     error,
     addRoutine,
     removeRoutine,
+    reorderRoutines,
     addWeeklyRoutine,
     updateWeeklyRoutine,
     removeWeeklyRoutine,
+    reorderWeeklyRoutines,
   } = useRoutines()
   const { events, replaceRoutineEventsForDate } = useCalendar()
   const [pushError, setPushError] = useState(null)
@@ -468,6 +527,7 @@ export default function RoutinePage() {
             routines={routines.filter((r) => r.type === type.id)}
             onAdd={addRoutine}
             onRemove={removeRoutine}
+            onReorder={reorderRoutines}
           />
         ))}
       </div>
@@ -478,6 +538,7 @@ export default function RoutinePage() {
           onAdd={addWeeklyRoutine}
           onUpdate={updateWeeklyRoutine}
           onRemove={removeWeeklyRoutine}
+          onReorder={reorderWeeklyRoutines}
           onPushToday={handlePushToday}
           pushing={pushing}
         />
