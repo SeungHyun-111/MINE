@@ -22,6 +22,12 @@ function getEraBadge(era, eraIndex, userAge) {
   return { label: '지나온 길', color: '#7a7060' }
 }
 
+function formatNoteTime(value) {
+  const date = new Date(value)
+  if (!value || Number.isNaN(date.getTime())) return '날짜 없음'
+  return format(date, 'yyyy년 M월 d일 HH:mm', { locale: ko })
+}
+
 function BirthdateModal({ onSave }) {
   const [val, setVal] = useState('')
   return (
@@ -292,7 +298,13 @@ function StageDetailSheet({ stage, notes, onClose, onSaveNote, onEditNote, onDel
             ) : (
               <div className="flex flex-col gap-3">
                 {stageNotes.map(note => (
-                  <NoteItem key={note.id} note={note} itemId={stage.id} onEdit={onEditNote} onDelete={onDeleteNote} />
+                  <NoteItem
+                    key={note.id}
+                    note={note}
+                    itemId={stage.id}
+                    onEdit={onEditNote}
+                    onDelete={onDeleteNote}
+                  />
                 ))}
               </div>
             )}
@@ -352,9 +364,25 @@ function NoteItem({ note, itemId, onEdit, onDelete }) {
   return (
     <div className="rounded-xl p-4" style={{ background: C.paperDark, border: `1px solid ${C.gold}33` }}>
       <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: C.ink }}>{note.text}</p>
+      {(note.refinedText || note.replyText) && (
+        <div className="mt-3 space-y-2 rounded-lg px-3 py-2" style={{ background: `${C.paper}aa`, border: `1px solid ${C.gold}33` }}>
+          {note.refinedText && (
+            <div>
+              <p className="text-[11px] font-bold" style={{ color: C.gold }}>[誠意 · 성의]</p>
+              <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed" style={{ color: C.ink }}>{note.refinedText}</p>
+            </div>
+          )}
+          {note.replyText && (
+            <div>
+              <p className="text-[11px] font-bold" style={{ color: C.red }}>[答文 · 답문]</p>
+              <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed" style={{ color: C.ink }}>{note.replyText}</p>
+            </div>
+          )}
+        </div>
+      )}
       <div className="flex items-center justify-between mt-2">
         <p className="text-xs" style={{ color: `${C.ink}55` }}>
-          {format(new Date(note.createdAt), 'yyyy년 M월 d일 HH:mm', { locale: ko })}
+          {formatNoteTime(note.createdAt)}
         </p>
         <div className="flex gap-3">
           <button onClick={() => { setEditText(note.text); setEditing(true) }} style={{ color: `${C.ink}44` }}>
@@ -464,7 +492,13 @@ function DetailSheet({ item, notes, onClose, onSaveNote, onEditNote, onDeleteNot
               <p className="text-xs font-medium mb-3" style={{ color: `${C.ink}77` }}>쌓인 단상 {itemNotes.length}개</p>
               <div className="flex flex-col gap-3">
                 {itemNotes.map(note => (
-                  <NoteItem key={note.id} note={note} itemId={item.id} onEdit={onEditNote} onDelete={onDeleteNote} />
+                  <NoteItem
+                    key={note.id}
+                    note={note}
+                    itemId={item.id}
+                    onEdit={onEditNote}
+                    onDelete={onDeleteNote}
+                  />
                 ))}
               </div>
             </div>

@@ -23,7 +23,7 @@ export function useSasek() {
       const raw = snap.val() || {}
       const parsed = {}
       Object.entries(raw).forEach(([itemId, entries]) => {
-        parsed[itemId] = objectToList(entries).sort((a, b) => b.createdAt - a.createdAt)
+        parsed[itemId] = objectToList(entries).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
       })
       setNotes(parsed)
       setLoading(false)

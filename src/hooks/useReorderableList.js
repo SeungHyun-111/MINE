@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
-const INTERACTIVE_SELECTOR = 'input, textarea, select, option, a'
+const INTERACTIVE_SELECTOR = 'button, input, textarea, select, option, a, [role="button"]'
 const LONG_PRESS_MS = 260
+const MOUSE_DRAG_DISTANCE = 7
 
 function getDropTargetFromPoint(listId, sourceId, y) {
   const elements = [...document.querySelectorAll(`[data-reorder-list-id="${CSS.escape(listId)}"]`)]
@@ -88,21 +89,35 @@ export function useReorderableList({ items, onReorder }) {
         active: false,
         id,
         pointerId: event.pointerId,
+        pointerType,
+        startX: event.clientX,
+        startY: event.clientY,
       }
 
       event.currentTarget.setPointerCapture?.(event.pointerId)
 
       if (pointerType === 'touch' || pointerType === 'pen') {
         timerRef.current = window.setTimeout(() => startDrag(id), LONG_PRESS_MS)
-      } else {
-        startDrag(id)
       }
     },
     onPointerMove: (event) => {
       const drag = dragRef.current
       if (!drag || drag.id !== id) return
 
-      if (!drag.active) return
+      const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY)
+
+      if (!drag.active) {
+        if (drag.pointerType === 'touch' || drag.pointerType === 'pen') {
+          if (distance > MOUSE_DRAG_DISTANCE) {
+            resetDrag()
+          }
+          return
+        }
+
+        if (distance < MOUSE_DRAG_DISTANCE) return
+        startDrag(id)
+      }
+
       event.preventDefault()
 
       const nextTarget = getDropTargetFromPoint(listId, drag.id, event.clientY)
