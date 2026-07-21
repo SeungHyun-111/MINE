@@ -66,6 +66,51 @@ function parseGangseoDetail(htmlText) {
   return content?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
 }
 
+function parseShHtml(htmlText) {
+  const doc = new DOMParser().parseFromString(htmlText, 'text/html')
+  const rows = Array.from(doc.querySelectorAll('#listTb tbody tr'))
+
+  return rows
+    .map((tr) => {
+      const anchor = tr.querySelector('a[onclick*="getDetailView"]')
+      if (!anchor) return null
+
+      const seqMatch = anchor.getAttribute('onclick')?.match(/getDetailView\(['"]?(\d+)['"]?\)/)
+      if (!seqMatch) return null
+
+      const cells = Array.from(tr.querySelectorAll('td'))
+      const dateMatch = cells.find((cell) => /\d{4}-\d{2}-\d{2}/.test(cell.textContent ?? ''))
+        ?.textContent
+        ?.match(/\d{4}-\d{2}-\d{2}/)
+
+      return {
+        id: seqMatch[1],
+        title: anchor.textContent?.trim().replace(/\s+/g, ' ') ?? '',
+        href: `https://www.i-sh.co.kr/main/lay2/program/S1T294C295/www/brd/m_241/view.do?seq=${seqMatch[1]}&multi_itm_seqs=1,2,4,8,16,32,64,128,256,512,1024`,
+        date: dateMatch?.[0] ?? '',
+        dept: cells[2]?.textContent?.trim().replace(/\s+/g, ' ') ?? '',
+        content: '',
+      }
+    })
+    .filter(Boolean)
+}
+
+function parseShDetail(htmlText) {
+  const doc = new DOMParser().parseFromString(htmlText, 'text/html')
+  const content =
+    doc.querySelector('.viewTable') ??
+    doc.querySelector('.board-view') ??
+    doc.querySelector('.view-content') ??
+    doc.querySelector('.contents')
+
+  return content?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+}
+
+function shLocalUrl(rawUrl) {
+  const url = new URL(rawUrl)
+  return `/sh-news${url.pathname}${url.search}`
+}
+
 export const SOURCES = {
   seoul: {
     label: '서울시',
@@ -85,6 +130,18 @@ export const SOURCES = {
     maxPages: 5,
     parse: parseGangseoHtml,
     parseDetail: parseGangseoDetail,
+    useProxyFirst: true,
+  },
+  sh: {
+    label: 'SH공사',
+    buildUrl: (page) =>
+      `https://www.i-sh.co.kr/main/lay2/program/S1T294C295/www/brd/m_241/list.do?multi_itm_seqs=1,2,4,8,16,32,64,128,256,512,1024&page=${page}`,
+    detailUrl: (item) => item.href,
+    localUrl: shLocalUrl,
+    days: 7,
+    maxPages: 5,
+    parse: parseShHtml,
+    parseDetail: parseShDetail,
     useProxyFirst: true,
   },
 }

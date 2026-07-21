@@ -4,6 +4,7 @@ import { addDateKeyDays, getSeoulDateKey } from '@/lib/dateTime'
 const CACHE_TTL_MS = 30 * 60 * 1000
 const CACHE_PREFIX = 'mine:news:'
 const NEWS_PROXY_URL = 'https://news-proxy.weras1993.workers.dev/?url='
+const NETLIFY_NEWS_PROXY_URL = '/.netlify/functions/news-proxy?url='
 
 function cutoffDate(days) {
   return addDateKeyDays(getSeoulDateKey(), -days)
@@ -38,6 +39,14 @@ function proxiedUrl(rawUrl) {
   return `${NEWS_PROXY_URL}${encodeURIComponent(rawUrl)}`
 }
 
+function netlifyProxiedUrl(rawUrl) {
+  return `${NETLIFY_NEWS_PROXY_URL}${encodeURIComponent(rawUrl)}`
+}
+
+function isLocalhost() {
+  return ['localhost', '127.0.0.1'].includes(window.location.hostname)
+}
+
 function requestUrls(source, rawUrl) {
   const urls = [
     proxiedUrl(rawUrl),
@@ -45,6 +54,14 @@ function requestUrls(source, rawUrl) {
     `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`,
     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rawUrl)}`,
   ]
+
+  if (!isLocalhost()) {
+    urls.unshift(netlifyProxiedUrl(rawUrl))
+  }
+
+  if (isLocalhost() && source.localUrl) {
+    urls.unshift(source.localUrl(rawUrl))
+  }
 
   if (!source.useProxyFirst) {
     return [rawUrl, ...urls.filter((url) => url !== rawUrl)]

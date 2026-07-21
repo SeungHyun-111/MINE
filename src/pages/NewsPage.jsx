@@ -9,15 +9,17 @@ import { parseDateKey } from '@/lib/dateTime'
 import { getCachedNews, loadNews, loadNewsDetail } from '@/services/newsSync'
 import { SOURCES } from '@/services/newsSources'
 
-const SOURCE_KEYS = ['seoul', 'gangseo']
-const TAB_KEYS = ['seoul', 'gangseo', 'scraps']
+const SOURCE_KEYS = ['seoul', 'gangseo', 'sh']
+const TAB_KEYS = ['seoul', 'gangseo', 'sh', 'scraps']
 
 function itemKey(sourceKey, item) {
   return `${sourceKey}_${item.id}`.replace(/[.#$[\]/]/g, '_')
 }
 
 function itemLink(sourceKey, item) {
-  return sourceKey === 'gangseo' ? item.href ?? item.link : item.link ?? item.href
+  return sourceKey === 'gangseo' || sourceKey === 'sh'
+    ? item.href ?? item.link
+    : item.link ?? item.href
 }
 
 function dateLabel(date) {
@@ -141,11 +143,12 @@ export default function NewsPage({ initialTab, focusKey }) {
   const [items, setItems] = useState(() => ({
     seoul: getCachedNews('seoul'),
     gangseo: getCachedNews('gangseo'),
+    sh: getCachedNews('sh'),
   }))
   const [scraps, setScraps] = useState([])
-  const [loading, setLoading] = useState({ seoul: false, gangseo: false })
-  const [errors, setErrors] = useState({ seoul: null, gangseo: null, scraps: null })
-  const [loaded, setLoaded] = useState({ seoul: false, gangseo: false })
+  const [loading, setLoading] = useState({ seoul: false, gangseo: false, sh: false })
+  const [errors, setErrors] = useState({ seoul: null, gangseo: null, sh: null, scraps: null })
+  const [loaded, setLoaded] = useState({ seoul: false, gangseo: false, sh: false })
   const [expandedId, setExpandedId] = useState(null)
   const [detailLoading, setDetailLoading] = useState({})
 

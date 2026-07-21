@@ -67,6 +67,14 @@ export default defineConfig({
     },
   },
   server: {
+    proxy: {
+      '/sh-news': {
+        target: 'https://www.i-sh.co.kr',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (proxyPath) => proxyPath.replace(/^\/sh-news/, ''),
+      },
+    },
     watch: {
       ignored: ['**/*.tmp', '**/~*'],
     },
