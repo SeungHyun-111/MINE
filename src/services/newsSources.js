@@ -131,6 +131,7 @@ export const SOURCES = {
     parse: parseGangseoHtml,
     parseDetail: parseGangseoDetail,
     useProxyFirst: true,
+    useNetlifyProxy: true,
   },
   sh: {
     label: 'SH공사',
@@ -143,5 +144,6 @@ export const SOURCES = {
     parse: parseShHtml,
     parseDetail: parseShDetail,
     useProxyFirst: true,
+    useNetlifyProxy: true,
   },
 }

@@ -55,7 +55,7 @@ function requestUrls(source, rawUrl) {
     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rawUrl)}`,
   ]
 
-  if (!isLocalhost()) {
+  if (!isLocalhost() && source.useNetlifyProxy) {
     urls.unshift(netlifyProxiedUrl(rawUrl))
   }
 
