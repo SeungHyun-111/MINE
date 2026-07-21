@@ -25,6 +25,28 @@ function parseSeoulRss(xmlText) {
   }).filter(Boolean)
 }
 
+function parseSeoulHtml(htmlText) {
+  const doc = new DOMParser().parseFromString(htmlText, 'text/html')
+  const anchors = Array.from(doc.querySelectorAll('a[href*="news.seoul.go.kr/"][href*="/archives/"]'))
+
+  return anchors.map((anchor) => {
+    const link = anchor.href
+    const archiveMatch = link.match(/\/archives\/(\d+)/)
+    const title = anchor.querySelector('.subject')?.textContent?.trim().replace(/\s+/g, ' ') ?? ''
+    const date = anchor.querySelector('.date')?.textContent?.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? ''
+    const content = anchor.querySelector('.txt')?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+    if (!archiveMatch || !title) return null
+
+    return {
+      id: archiveMatch[1],
+      title,
+      link,
+      date,
+      content,
+    }
+  }).filter(Boolean)
+}
+
 function parseGangseoHtml(htmlText) {
   const doc = new DOMParser().parseFromString(htmlText, 'text/html')
   const rows = Array.from(doc.querySelectorAll('table.is-board tbody tr'))
@@ -115,11 +137,15 @@ export const SOURCES = {
   seoul: {
     label: '서울시',
     buildUrl: (page) =>
+      `https://www.seoul.go.kr/realmnews/in/list.do?pageIndex=${page}`,
+    fallbackBuildUrl: (page) =>
       `https://www.seoul.go.kr/realmnews/rss/realmNews.do?fetchStart=${page}`,
     days: 7,
     maxPages: 5,
-    parse: parseSeoulRss,
+    parse: parseSeoulHtml,
+    fallbackParse: parseSeoulRss,
     parseDetail: (item) => item.content ?? '',
+    useNetlifyProxy: true,
   },
   gangseo: {
     label: '강서구',

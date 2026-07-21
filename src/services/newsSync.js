@@ -86,18 +86,15 @@ async function fetchText(source, rawUrl) {
   throw lastError ?? new Error('뉴스 소스를 불러오지 못했습니다.')
 }
 
-async function fetchFreshNews(key) {
-  const source = SOURCES[key]
-  if (!source) throw new Error(`Unknown news source: ${key}`)
-
+async function fetchFreshNewsFrom(source, buildUrl, parse) {
   const cutoff = cutoffDate(source.days)
   const news = []
   const seen = new Set()
   let stopped = false
 
   for (let page = 1; page <= source.maxPages && !stopped; page += 1) {
-    const text = await fetchText(source, source.buildUrl(page))
-    const items = source.parse(text)
+    const text = await fetchText(source, buildUrl(page))
+    const items = parse(text)
 
     if (items.length === 0) break
 
@@ -116,6 +113,20 @@ async function fetchFreshNews(key) {
     const d = (b.date ?? '').localeCompare(a.date ?? '')
     return d !== 0 ? d : Number(b.id ?? 0) - Number(a.id ?? 0)
   })
+}
+
+async function fetchFreshNews(key) {
+  const source = SOURCES[key]
+  if (!source) throw new Error(`Unknown news source: ${key}`)
+
+  try {
+    const items = await fetchFreshNewsFrom(source, source.buildUrl, source.parse)
+    if (items.length > 0 || !source.fallbackBuildUrl || !source.fallbackParse) return items
+  } catch (error) {
+    if (!source.fallbackBuildUrl || !source.fallbackParse) throw error
+  }
+
+  return fetchFreshNewsFrom(source, source.fallbackBuildUrl, source.fallbackParse)
 }
 
 export function getCachedNews(key) {
