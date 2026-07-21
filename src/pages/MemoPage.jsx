@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, ChevronUp, FileText, Plus, Trash2, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, FileText, Plus, Trash2, X } from 'lucide-react'
 import { MEMO_PRIORITIES, MEMO_STAGES, useMemos } from '@/hooks/useMemos'
 import { useReorderableList } from '@/hooks/useReorderableList'
 
@@ -29,6 +29,39 @@ function stageMeta(stageId) {
 
 function stageValue(stageId) {
   return stageId === 'review' ? 'progress' : stageId || 'pending'
+}
+
+function matchesStageFilter(memo, filters) {
+  return filters.includes(stageValue(memo.stage))
+}
+
+function getSortValue(memo, sortKey) {
+  if (sortKey === 'createdAt') return memo.createdAt || 0
+  if (sortKey === 'stage') return stageValue(memo.stage)
+  if (sortKey === 'title') return memo.title || ''
+  if (sortKey === 'content') return memo.content || ''
+  return ''
+}
+
+function sortMemos(items, sortConfig) {
+  if (!sortConfig.key) return items
+
+  return [...items].sort((a, b) => {
+    const aValue = getSortValue(a, sortConfig.key)
+    const bValue = getSortValue(b, sortConfig.key)
+    const result = typeof aValue === 'number' && typeof bValue === 'number'
+      ? aValue - bValue
+      : String(aValue).localeCompare(String(bValue), 'ko-KR')
+
+    return sortConfig.direction === 'asc' ? result : -result
+  })
+}
+
+function stageFilterTone(stageId) {
+  if (stageId === 'pending') return 'border-[#b96300] bg-[#b96300] text-white shadow-sm'
+  if (stageId === 'progress') return 'border-[#0044cc] bg-[#0044cc] text-white shadow-sm'
+  if (stageId === 'done') return 'border-[#237245] bg-[#237245] text-white shadow-sm'
+  return 'border-[#0044cc] bg-[#0044cc] text-white shadow-sm'
 }
 
 function priorityMeta(priorityId) {
@@ -260,6 +293,16 @@ function MemoEditor({ memo, onUpdate, onRemove }) {
 export default function MemoPage() {
   const { memos, loading, error, addMemo, updateMemo, removeMemo, reorderMemos } = useMemos()
   const [selectedId, setSelectedId] = useState('')
+  const [stageFilters, setStageFilters] = useState(['pending', 'progress'])
+  const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' })
+  const filteredMemos = useMemo(
+    () => memos.filter((memo) => matchesStageFilter(memo, stageFilters)),
+    [memos, stageFilters]
+  )
+  const visibleMemos = useMemo(
+    () => sortMemos(filteredMemos, sortConfig),
+    [filteredMemos, sortConfig]
+  )
   const selectedMemo = useMemo(
     () => memos.find((memo) => memo.id === selectedId) || null,
     [memos, selectedId]
@@ -268,6 +311,22 @@ export default function MemoPage() {
     items: memos,
     onReorder: reorderMemos,
   })
+
+  const toggleStageFilter = (stageId) => {
+    setStageFilters((current) => (
+      current.includes(stageId)
+        ? current.filter((id) => id !== stageId)
+        : [...current, stageId]
+    ))
+  }
+
+  const toggleSort = (key) => {
+    setSortConfig((current) => (
+      current.key === key
+        ? { key, direction: current.direction === 'asc' ? 'desc' : 'asc' }
+        : { key, direction: 'asc' }
+    ))
+  }
 
   return (
     <div className="min-h-full bg-[#f0f5ff] p-4 md:p-6">
@@ -290,14 +349,60 @@ export default function MemoPage() {
         <MemoForm onSubmit={addMemo} />
 
         <section className="overflow-hidden rounded-lg border border-[#aacce4] bg-white/90 shadow-sm">
-          <div className="border-b border-[#bbd5f5] bg-[#cce0ff] px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#bbd5f5] bg-[#cce0ff] px-4 py-3">
+            <div className="order-2 flex flex-wrap items-center gap-1.5" aria-label="메모 상태 필터">
+              {MEMO_STAGES.map((stage) => {
+                const isActive = stageFilters.includes(stage.id)
+                return (
+                  <button
+                    key={stage.id}
+                    type="button"
+                    onClick={() => toggleStageFilter(stage.id)}
+                    aria-pressed={isActive}
+                    className={`inline-flex min-w-[64px] items-center justify-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-black transition ${
+                      isActive
+                        ? stageFilterTone(stage.id)
+                        : 'border-[#b8c5d8] bg-[#f7f9fc] text-[#7a8ba5] opacity-70 hover:border-[#8aa4cc] hover:bg-white hover:opacity-100'
+                    }`}
+                  >
+                    {isActive && <Check size={12} strokeWidth={3} />}
+                    {stage.label}
+                  </button>
+                )
+              })}
+            </div>
             <h2 className="text-base font-bold text-[#0044cc]">메모 목록</h2>
+          </div>
+          <div className="overflow-x-auto border-b border-[#bbd5f5] bg-[#edf5ff] px-4 py-2">
+            <div className="grid min-w-[720px] grid-cols-[92px_112px_minmax(160px,0.8fr)_minmax(260px,1.2fr)] items-center gap-3 text-[11px] font-black text-[#446aa8]">
+              {[
+                { key: 'createdAt', label: '작성일' },
+                { key: 'stage', label: '상태' },
+                { key: 'title', label: '제목' },
+                { key: 'content', label: '내용' },
+              ].map((header) => (
+                <button
+                  key={header.key}
+                  type="button"
+                  onClick={() => toggleSort(header.key)}
+                  className="inline-flex items-center gap-1 text-left hover:text-[#0044cc]"
+                  aria-sort={sortConfig.key === header.key ? (sortConfig.direction === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  <span>{header.label}</span>
+                  {sortConfig.key === header.key && (
+                    sortConfig.direction === 'asc' ? <ChevronUp size={13} /> : <ChevronDown size={13} />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="divide-y divide-[#d5e8ff]">
             {memos.length === 0 ? (
               <p className="px-4 py-6 text-sm font-bold text-[#7799cc]">등록된 메모가 없습니다.</p>
+            ) : visibleMemos.length === 0 ? (
+              <p className="px-4 py-6 text-sm font-bold text-[#7799cc]">선택한 상태의 메모가 없습니다.</p>
             ) : (
-              memos.map((memo) => {
+              visibleMemos.map((memo) => {
                 const meta = stageMeta(memo.stage)
                 const isSelected = selectedMemo?.id === memo.id
                 const isDragging = draggingId === memo.id
