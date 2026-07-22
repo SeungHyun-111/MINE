@@ -559,12 +559,7 @@ function NewsScrapsSummary({ className = '', onOpenNewsPage }) {
                 <span className="shrink-0 rounded-full bg-[#d5e8ff] px-2 py-0.5 text-[9px] font-black text-[#0044cc]">
                   소식
                 </span>
-                <span className="news-title-flow min-w-0 flex-1 text-[11px] font-bold text-[#3355aa]" aria-label={item.title}>
-                  <span className="news-title-flow-track">
-                    <span>{item.title}</span>
-                    <span aria-hidden="true">{item.title}</span>
-                  </span>
-                </span>
+                <span className="truncate text-[11px] font-bold text-[#3355aa]">{item.title}</span>
               </div>
             ))}
           </div>

@@ -180,10 +180,10 @@ body {
 }
 
 .news-title-flow {
-  display: block;
   max-width: 100%;
   overflow: hidden;
-  color: inherit;
+  color: #0044cc;
+  font-weight: 500;
   mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent);
 }
 
@@ -193,7 +193,7 @@ body {
   min-width: 100%;
   gap: 36px;
   white-space: nowrap;
-  animation: news-title-flow-x 16s linear infinite;
+  animation: news-title-flow-x-right 8s linear infinite;
   will-change: transform;
 }
 
@@ -233,7 +233,7 @@ body {
   }
 }
 
-@keyframes news-title-flow-x {
+@keyframes news-title-flow-x-right {
   from {
     transform: translateX(calc(-50% - 18px));
   }
