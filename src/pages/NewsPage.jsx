@@ -103,7 +103,13 @@ function NewsRow({
               <span className="text-[10px] text-[#5577bb]">{item.sourceLabel}</span>
             )}
           </div>
-          <p className="truncate font-medium text-[#0044cc]">{item.title}</p>
+          <p className="hidden md:block truncate font-medium text-[#0044cc]">{item.title}</p>
+          <div className="news-title-flow md:hidden" aria-label={item.title}>
+            <span className="news-title-flow-track">
+              <span>{item.title}</span>
+              <span aria-hidden="true">{item.title}</span>
+            </span>
+          </div>
         </div>
 
         <span className="text-xs text-[#5577bb] text-right whitespace-nowrap">
