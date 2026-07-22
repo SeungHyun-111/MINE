@@ -235,10 +235,10 @@ body {
 
 @keyframes news-title-flow-x {
   from {
-    transform: translateX(0);
+    transform: translateX(calc(-50% - 18px));
   }
 
   to {
-    transform: translateX(calc(-50% - 18px));
+    transform: translateX(0);
   }
 }
