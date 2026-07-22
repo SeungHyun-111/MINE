@@ -52,7 +52,6 @@ function parseGangseoHtml(htmlText) {
   const rows = Array.from(doc.querySelectorAll('table.is-board tbody tr'))
 
   return rows
-    .filter((tr) => !tr.querySelector('img[alt="공지"]'))
     .map((tr) => {
       const anchor = tr.querySelector('a[href*="/gs040101/"]')
       if (!anchor) return null
@@ -66,7 +65,7 @@ function parseGangseoHtml(htmlText) {
 
       return {
         id: idMatch[1],
-        title: anchor.textContent?.trim().replace(/\s+/g, ' ') ?? '',
+        title: anchor.textContent?.trim().replace(/\s*신규 게시물\s*$/g, '').replace(/\s+/g, ' ') ?? '',
         href: new URL(href, 'https://www.gangseo.seoul.kr').toString(),
         date: dateMatch?.[0] ?? '',
         dept: cells[2]?.textContent?.trim() ?? '',

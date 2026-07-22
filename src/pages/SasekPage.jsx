@@ -524,6 +524,10 @@ export default function SasekPage() {
   // 사용자의 생각에 응답하는 짧은 철학적 답문을 함께 붙여라.
   // 제목 표기는 [原文 · 원문], [誠意 · 성의], [答文 · 답문]처럼 한자 옆에 한글 풀이를 함께 적어라.
   // 답문은 단순 인용이 아니라 사상가의 문제의식과 개념을 빌린 해석이어야 한다.
+  // "사색페이지 업데이트"는 UI/배포 수정이 아니라 RTDB 메모 정리 작업을 뜻한다.
+  // users/{uid}/pages/sasek/notes/{stageId}/{noteId}의 원문 text와 createdAt은 반드시 보존하고,
+  // 각 노트에 refinedText(다듬은말), replyText(답문), hasReply, replyUpdatedAt을 붙여 갱신한다.
+  // Firebase database:update는 중첩 객체를 노트 단위로 덮어쓸 수 있으므로 text/createdAt을 포함한 완전한 노트 객체로 업데이트한다.
   const handleSasek = async () => {
     if (!sasekText.trim()) return
     setSasekSaving(true)

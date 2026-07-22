@@ -8,6 +8,7 @@ const WeatherPage = lazy(() => import('@/pages/WeatherPage'))
 const MemoPage = lazy(() => import('@/pages/MemoPage'))
 const EuphonyPage = lazy(() => import('@/pages/EuphonyPage'))
 const RoutinePage = lazy(() => import('@/pages/RoutinePage'))
+const ExercisePage = lazy(() => import('@/pages/ExercisePageProposal'))
 const NewsPage = lazy(() => import('@/pages/NewsPage'))
 const GamePage = lazy(() => import('@/pages/GamePage'))
 const SasekPage = lazy(() => import('@/pages/SasekPage'))
@@ -43,6 +44,7 @@ export default function HomePage() {
       case 'weather': return <WeatherPage />
       case 'memo': return <MemoPage />
       case 'routine': return <RoutinePage />
+      case 'exercise': return <ExercisePage />
       case 'euphony': return <EuphonyPage />
       case 'news': return <NewsPage initialTab={newsFocus?.tab} focusKey={newsFocus?.requestedAt} />
       case 'game': return <GamePage />
