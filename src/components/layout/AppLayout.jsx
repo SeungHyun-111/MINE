@@ -1,5 +1,5 @@
 ﻿import { memo } from 'react'
-import { Banknote, CalendarDays, CloudSun, Dumbbell, Gamepad2, Grid2X2, ListTodo, LogOut, Music2, Newspaper, Repeat, StickyNote } from 'lucide-react'
+import { CalendarDays, CloudSun, Dumbbell, Gamepad2, Grid2X2, ListTodo, LogOut, Music2, Newspaper, Repeat, StickyNote } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 const NAV_ITEMS = [
@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { icon: StickyNote, label: '메모', key: 'memo' },
   { icon: Repeat, label: '정기일정', key: 'routine' },
   { icon: Dumbbell, label: '운동', key: 'exercise' },
-  { icon: Banknote, label: '급여', key: 'payroll' },
+  // { icon: Banknote, label: '급여', key: 'payroll' },
   { icon: Music2, label: 'Euphony', key: 'euphony' },
   { icon: Newspaper, label: '뉴스', key: 'news' },
   { icon: Gamepad2, label: '게임', key: 'game' },

@@ -1,5 +1,6 @@
-﻿import { useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, Dumbbell, Plus, Search, Star, Target, Trash2, X } from 'lucide-react'
+import { useExerciseState } from '@/hooks/useExerciseState'
 import muscleWikiData from '../data/musclewikiExercises.json'
 
 const MUSCLE_IMAGE = '/exercise-muscle-map.png'
@@ -1094,6 +1095,7 @@ function MuscleFigure({ activeId, routineTargetIds = [], highlightedId, onSelect
 }
 
 export default function ExercisePageProposal() {
+  const exerciseStore = useExerciseState(ROUTINES)
   const [activeId, setActiveId] = useState('chest')
   const [showRoutine, setShowRoutine] = useState(false)
   const [showAllRecommendations, setShowAllRecommendations] = useState(false)
@@ -1115,6 +1117,59 @@ export default function ExercisePageProposal() {
   const [dragOverId, setDragOverId] = useState(null)
   const [selectedExerciseId, setSelectedExerciseId] = useState(null)
   const [extraMuscleIds, setExtraMuscleIds] = useState([])
+
+  useEffect(() => {
+    if (!exerciseStore.connected || exerciseStore.loading) return
+    if (!exerciseStore.routinesMeta || !exerciseStore.routineItemsByDay) {
+      exerciseStore.seedDefaults()
+      return
+    }
+
+    setFavoriteExercises(exerciseStore.favorites)
+    setRoutinesMeta(exerciseStore.routinesMeta)
+    setRoutineItemsByDay(exerciseStore.routineItemsByDay)
+
+    if (!exerciseStore.routinesMeta[activeRoutineId]) {
+      const [firstRoutineId] = Object.keys(exerciseStore.routinesMeta)
+      if (firstRoutineId) {
+        setActiveRoutineId(firstRoutineId)
+        setRoutineDraft((draft) => ({ ...draft, routineId: firstRoutineId }))
+      }
+    }
+  }, [
+    activeRoutineId,
+    exerciseStore.connected,
+    exerciseStore.favorites,
+    exerciseStore.loading,
+    exerciseStore.routineItemsByDay,
+    exerciseStore.routinesMeta,
+    exerciseStore.seedDefaults,
+  ])
+
+  const saveFavoritesState = (updater) => {
+    setFavoriteExercises((current) => {
+      const next = typeof updater === 'function' ? updater(current) : updater
+      exerciseStore.saveFavorites(next)
+      return next
+    })
+  }
+
+  const saveRoutinesMetaState = (updater) => {
+    setRoutinesMeta((current) => {
+      const next = typeof updater === 'function' ? updater(current) : updater
+      exerciseStore.saveRoutinesMeta(next)
+      return next
+    })
+  }
+
+  const saveRoutineItemsState = (updater) => {
+    setRoutineItemsByDay((current) => {
+      const next = typeof updater === 'function' ? updater(current) : updater
+      exerciseStore.saveRoutineItemsByDay(next)
+      return next
+    })
+  }
+
   const active = useMemo(() => MUSCLES[activeId], [activeId])
   const activeRoutine = routinesMeta[activeRoutineId]
   const routineItems = routineItemsByDay[activeRoutineId] ?? []
@@ -1135,7 +1190,7 @@ export default function ExercisePageProposal() {
 
   const toggleFavoriteExercise = (exercise) => {
     const key = getExerciseKey(exercise)
-    setFavoriteExercises((favorites) => (
+    saveFavoritesState((favorites) => (
       favorites.some((item) => getExerciseKey(item) === key)
         ? favorites.filter((item) => getExerciseKey(item) !== key)
         : [...favorites, exercise]
@@ -1166,7 +1221,7 @@ export default function ExercisePageProposal() {
       note: routineDraftExercise.difficulty ? `${DIFFICULTY_LABELS[routineDraftExercise.difficulty] ?? routineDraftExercise.difficulty} 추천 운동` : '추천 운동',
     }
 
-    setRoutineItemsByDay((routines) => ({
+    saveRoutineItemsState((routines) => ({
       ...routines,
       [routineId]: [...(routines[routineId] ?? []), nextItem],
     }))
@@ -1283,7 +1338,7 @@ export default function ExercisePageProposal() {
   }
 
   const updateRoutineItem = (itemId, field, value) => {
-    setRoutineItemsByDay((routines) => ({
+    saveRoutineItemsState((routines) => ({
       ...routines,
       [activeRoutineId]: routines[activeRoutineId].map((item) => (
         item.id === itemId ? { ...item, [field]: value } : item
@@ -1294,7 +1349,7 @@ export default function ExercisePageProposal() {
   const moveRoutineItem = (targetId) => {
     if (!draggingId || draggingId === targetId) return
 
-    setRoutineItemsByDay((routines) => {
+    saveRoutineItemsState((routines) => {
       const currentItems = routines[activeRoutineId]
       const fromIndex = currentItems.findIndex((item) => item.id === draggingId)
       const toIndex = currentItems.findIndex((item) => item.id === targetId)
@@ -1308,7 +1363,7 @@ export default function ExercisePageProposal() {
   }
 
   const moveRoutineItemByStep = (itemId, direction) => {
-    setRoutineItemsByDay((routines) => {
+    saveRoutineItemsState((routines) => {
       const currentItems = routines[activeRoutineId] ?? []
       const fromIndex = currentItems.findIndex((item) => item.id === itemId)
       const toIndex = fromIndex + direction
@@ -1322,7 +1377,7 @@ export default function ExercisePageProposal() {
   }
 
   const deleteRoutineItem = (itemId) => {
-    setRoutineItemsByDay((routines) => ({
+    saveRoutineItemsState((routines) => ({
       ...routines,
       [activeRoutineId]: (routines[activeRoutineId] ?? []).filter((item) => item.id !== itemId),
     }))
@@ -1340,8 +1395,8 @@ export default function ExercisePageProposal() {
       items: [],
     }
 
-    setRoutinesMeta((routines) => ({ ...routines, [id]: nextRoutine }))
-    setRoutineItemsByDay((routines) => ({ ...routines, [id]: [] }))
+    saveRoutinesMetaState((routines) => ({ ...routines, [id]: nextRoutine }))
+    saveRoutineItemsState((routines) => ({ ...routines, [id]: [] }))
     setActiveRoutineId(id)
     setRoutineDraft((draft) => ({ ...draft, routineId: id }))
     setSelectedExerciseId(null)
@@ -1358,12 +1413,12 @@ export default function ExercisePageProposal() {
     if (currentItems.length > 0 && !window.confirm('현재 루틴과 안의 운동을 삭제할까요?')) return
 
     const nextActiveId = routineIds.find((id) => id !== activeRoutineId)
-    setRoutinesMeta((routines) => {
+    saveRoutinesMetaState((routines) => {
       const next = { ...routines }
       delete next[activeRoutineId]
       return next
     })
-    setRoutineItemsByDay((routines) => {
+    saveRoutineItemsState((routines) => {
       const next = { ...routines }
       delete next[activeRoutineId]
       return next
@@ -1736,4 +1791,5 @@ export default function ExercisePageProposal() {
     </section>
   )
 }
+
 

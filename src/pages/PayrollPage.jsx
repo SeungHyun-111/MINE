@@ -1,37 +1,17 @@
 import { useMemo, useState } from 'react'
 import { Banknote, ChartNoAxesColumnIncreasing, ChevronDown, Home, ReceiptText, TrendingUp } from 'lucide-react'
-
-const PAYROLL_ENTRIES = [
-  { date: '2021-01-25', type: '월급', basePay: 2943011, overtimePay: 0, grossPay: 3183334, taxAmount: 315910, netPay: 2867424, note: '' },
-  { date: '2021-02-25', type: '월급', basePay: 3258334, overtimePay: 0, grossPay: 3508334, taxAmount: 703210, netPay: 2805124, note: '' },
-  { date: '2021-07-25', type: '월급', basePay: 3258334, overtimePay: 216932, grossPay: 4175266, taxAmount: 1156430, netPay: 3018836, note: '' },
-  { date: '2021-11-25', type: '월급', basePay: 3258334, overtimePay: 36156, grossPay: 5032162, taxAmount: 949590, netPay: 4086572, note: '특별 상여 약 150만 포함 추정' },
-  { date: '2021-12-25', type: '월급', basePay: 3258334, overtimePay: 48207, grossPay: 3556541, taxAmount: 708980, netPay: 2847561, note: '' },
-  { date: '2022-01-25', type: '월급', basePay: 3518973, overtimePay: 289242, grossPay: 4058215, taxAmount: 793723, netPay: 3264492, note: '' },
-  { date: '2022-01-27', type: '상여', basePay: null, overtimePay: null, grossPay: 11851800, taxAmount: 2050350, netPay: 9801450, note: '2021년 성과급' },
-  { date: '2022-02-25', type: '월급', basePay: 3518973, overtimePay: 207792, grossPay: 3976765, taxAmount: null, netPay: 4357142, note: '연말정산 환급 포함 추정' },
-  { date: '2022-11-25', type: '월급', basePay: 3727307, overtimePay: 298701, grossPay: 7359342, taxAmount: 1490243, netPay: 5869099, note: '포상/격려금 포함 추정' },
-  { date: '2023-02-14', type: '상여', basePay: null, overtimePay: null, grossPay: 11006000, taxAmount: 1915040, netPay: 9090960, note: '2022년 성과급' },
-  { date: '2023-11-23', type: '월급', basePay: 3879497, overtimePay: 28562, grossPay: 5856119, taxAmount: 1234896, netPay: 4621223, note: '격려금/포상 포함 추정' },
-  { date: '2024-01-25', type: '월급', basePay: 4240647, overtimePay: 131760, grossPay: 4772407, taxAmount: 944573, netPay: 3777834, note: '' },
-  { date: '2024-01-31', type: '상여', basePay: null, overtimePay: null, grossPay: 4290000, taxAmount: 46460, netPay: 3543540, note: '상여' },
-  { date: '2024-02-23', type: '월급', basePay: 4240647, overtimePay: 680468, grossPay: 6021430, taxAmount: null, netPay: 6748577, note: '연말정산 환급 포함 추정' },
-  { date: '2024-03-25', type: '월급', basePay: 4240647, overtimePay: 1141018, grossPay: 5731665, taxAmount: 1114633, netPay: 4617032, note: '초과근무 정산 추정' },
-  { date: '2024-11-25', type: '월급', basePay: 4340647, overtimePay: 627879, grossPay: 7818526, taxAmount: 2166553, netPay: 5651973, note: '포상/격려금 포함' },
-  { date: '2025-01-24', type: '월급', basePay: 4822179, overtimePay: 0, grossPay: 5172179, taxAmount: 1543402, netPay: 3628777, note: '생활안전자금 대출 차감 시작 추정' },
-  { date: '2025-01-24', type: '상여', basePay: null, overtimePay: null, grossPay: 9090000, taxAmount: 1581660, netPay: 7508340, note: '상여' },
-  { date: '2025-02-25', type: '월급', basePay: 4822179, overtimePay: 0, grossPay: 5275629, taxAmount: -1554175, netPay: 5716524, note: '연말정산/대출 차감 관련' },
-  { date: '2025-06-25', type: '월급', basePay: 4822179, overtimePay: 0, grossPay: 5292328, taxAmount: 1572247, netPay: 3720081, note: '초과근무 3.2H, 약 12만' },
-  { date: '2025-07-15', type: '포상', basePay: 375000, overtimePay: null, grossPay: 375000, taxAmount: null, netPay: 375000, note: 'CEO 포상 추정' },
-]
+import { COMPENSATION_RECORDS, EVALUATION_RECORDS } from '@/data/compensationRecords'
+import { PAYROLL_ENTRIES } from '@/data/payrollEntries'
 
 const ANNUAL_INCOME = [
+  { year: 2019, amount: 36064200, age: 26, note: '공영홈쇼핑 만근 원천' },
+  { year: 2020, amount: 39937910, age: 27, note: '공영홈쇼핑 만근 원천' },
   { year: 2021, amount: 47491132, age: 28, note: 'SK스토아 급여 포함' },
-  { year: 2022, amount: 61923545, age: 29, note: '상여/연봉 조정 포함 추정' },
-  { year: 2023, amount: 61432422, age: 30, note: '평가 반영/조정 추정' },
-  { year: 2024, amount: 66436068, age: 31, note: '포상/상여 포함' },
-  { year: 2025, amount: 72595223, age: 32, note: '목표/상여 포함' },
-  { year: 2026, amount: 59644424, age: 33, note: '급여 포함 추정' },
+  { year: 2022, amount: 61923545, age: 29, note: '상여 및 정산 포함' },
+  { year: 2023, amount: 61432422, age: 30, note: '급여 변동 반영' },
+  { year: 2024, amount: 66436068, age: 31, note: '상여 및 포상 포함' },
+  { year: 2025, amount: 72595223, age: 32, note: '목표 및 상여 포함' },
+  { year: 2026, amount: 59644424, age: 33, note: '현재 자료 기준' },
 ]
 
 const LONG_TERM = [
@@ -51,7 +31,10 @@ const LONG_TERM = [
 const TYPE_STYLES = {
   월급: 'bg-sky-50 text-sky-700 ring-sky-100',
   상여: 'bg-amber-50 text-amber-700 ring-amber-100',
-  포상: 'bg-rose-50 text-rose-700 ring-rose-100',
+  포상: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+  알바: 'bg-violet-50 text-violet-700 ring-violet-100',
+  정산: 'bg-rose-50 text-rose-700 ring-rose-100',
+  기타: 'bg-slate-100 text-slate-600 ring-slate-200',
 }
 
 const money = (value) => (
@@ -63,6 +46,10 @@ const compactMoney = (value) => {
   if (value >= 100000000) return `${(value / 100000000).toFixed(1)}억`
   return `${Math.round(value / 10000).toLocaleString('ko-KR')}만`
 }
+
+const percent = (value) => (
+  value === null || value === undefined ? '-' : `${Number(value).toFixed(1)}%`
+)
 
 const getYear = (date) => Number(date.slice(0, 4))
 
@@ -83,13 +70,13 @@ function StatCard({ icon: Icon, label, value, helper }) {
   )
 }
 
-export default function PayrollPage() {
+function PayrollPage() {
   const [year, setYear] = useState('all')
   const [type, setType] = useState('all')
-  const [growthRate, setGrowthRate] = useState(6)
-  const [annualBonus, setAnnualBonus] = useState(10000000)
 
   const years = useMemo(() => [...new Set(PAYROLL_ENTRIES.map((entry) => getYear(entry.date)))], [])
+  const types = useMemo(() => [...new Set(PAYROLL_ENTRIES.map((entry) => entry.type))], [])
+
   const filteredEntries = useMemo(() => (
     PAYROLL_ENTRIES
       .filter((entry) => year === 'all' || getYear(entry.date) === Number(year))
@@ -102,201 +89,254 @@ export default function PayrollPage() {
     const tax = filteredEntries.reduce((sum, entry) => sum + (entry.taxAmount ?? 0), 0)
     const net = filteredEntries.reduce((sum, entry) => sum + (entry.netPay ?? 0), 0)
     const salaryMonths = filteredEntries.filter((entry) => entry.type === '월급').length || 1
+    const overtime = filteredEntries.reduce((sum, entry) => sum + (entry.overtimePay ?? 0), 0)
+
     return {
       gross,
       tax,
       net,
+      overtime,
       avgNet: net / salaryMonths,
-      taxRate: gross ? (tax / gross) * 100 : 0,
     }
   }, [filteredEntries])
 
-  const monthlyBars = useMemo(() => {
-    const values = filteredEntries.slice().reverse()
-    const max = Math.max(...values.map((entry) => entry.netPay), 1)
-    return values.map((entry) => ({ ...entry, pct: (entry.netPay / max) * 100 }))
+  const chartRows = useMemo(() => {
+    const rows = filteredEntries.slice().reverse()
+    const maxNet = Math.max(...rows.map((entry) => entry.netPay ?? 0), 1)
+    return rows.map((entry) => ({ ...entry, height: Math.max(((entry.netPay ?? 0) / maxNet) * 100, 6) }))
   }, [filteredEntries])
 
-  const nextSimulation = useMemo(() => {
-    const currentBase = 72595223
-    const target = 70000000
-    const rows = Array.from({ length: 8 }, (_, index) => {
-      const yearValue = 2025 + index
-      const income = currentBase * ((1 + growthRate / 100) ** index) + annualBonus
-      return { year: yearValue, income, reached: income >= target }
-    })
-    return rows
-  }, [annualBonus, growthRate])
-
-  const firstTargetYear = nextSimulation.find((row) => row.reached)?.year
+  const annualMax = Math.max(...ANNUAL_INCOME.map((entry) => entry.amount), 1)
+  const longTermMax = Math.max(...LONG_TERM.map((entry) => entry.target), 1)
 
   return (
-    <section className="min-h-full bg-[#f6f8fa] px-4 py-4 text-slate-900">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4">
-        <header className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-sm font-black text-[#0044cc]">급여</p>
-            <h1 className="mt-1 text-2xl font-black text-slate-950">급여·연봉 대시보드</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-              월별 세전/세후 입금, 상여·포상 이벤트, 원천 7천 목표와 주택 구입 타이밍을 함께 보는 개인 재무 화면입니다.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <select
-              value={year}
-              onChange={(event) => setYear(event.target.value)}
-              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold outline-none focus:border-[#0044cc]"
-            >
-              <option value="all">전체 연도</option>
-              {years.map((item) => <option key={item} value={item}>{item}년</option>)}
-            </select>
-            <select
-              value={type}
-              onChange={(event) => setType(event.target.value)}
-              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold outline-none focus:border-[#0044cc]"
-            >
-              <option value="all">전체 구분</option>
-              <option value="월급">월급</option>
-              <option value="상여">상여</option>
-              <option value="포상">포상</option>
-            </select>
-          </div>
-        </header>
+    <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#e9f2ff] px-3 py-1 text-xs font-black text-[#0044cc]">
+                <ReceiptText size={14} />
+                월급여 목록
+              </div>
+              <h1 className="mt-3 text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
+                급여 흐름 대시보드
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
+                첨부한 월급여 원장 74건 전체를 기준으로 세전, 세액, 세후 입금액과 연도별 흐름을 정리합니다.
+              </p>
+            </div>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard icon={Banknote} label="세후 입금 합계" value={money(summary.net)} helper={`${filteredEntries.length}개 기록 기준`} />
-          <StatCard icon={ReceiptText} label="세전 합계" value={money(summary.gross)} helper={`공제율 ${summary.taxRate.toFixed(1)}%`} />
-          <StatCard icon={ChartNoAxesColumnIncreasing} label="월 평균 실수령" value={money(summary.avgNet)} helper="월급성 기록 수 기준" />
-          <StatCard icon={Home} label="원천 7천 도달" value={firstTargetYear ? `${firstTargetYear}년` : '미도달'} helper="성장률/상여 입력 기준" />
-        </div>
+            <div className="grid grid-cols-2 gap-3 sm:flex">
+              <label className="text-xs font-black text-slate-500">
+                연도
+                <span className="mt-1 flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-900">
+                  <select className="w-full bg-transparent outline-none" value={year} onChange={(event) => setYear(event.target.value)}>
+                    <option value="all">전체 연도</option>
+                    {years.map((item) => <option key={item} value={item}>{item}</option>)}
+                  </select>
+                  <ChevronDown size={16} />
+                </span>
+              </label>
+              <label className="text-xs font-black text-slate-500">
+                구분
+                <span className="mt-1 flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-900">
+                  <select className="w-full bg-transparent outline-none" value={type} onChange={(event) => setType(event.target.value)}>
+                    <option value="all">전체 구분</option>
+                    {types.map((item) => <option key={item} value={item}>{item}</option>)}
+                  </select>
+                  <ChevronDown size={16} />
+                </span>
+              </label>
+            </div>
+          </div>
+        </section>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
-          <div className="flex flex-col gap-4">
-            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-black text-slate-950">월별 실수령 흐름</h2>
-                  <p className="mt-1 text-xs font-bold text-slate-500">세후 입금액 기준</p>
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard icon={Banknote} label="세후 입금 합계" value={money(summary.net)} helper={`${filteredEntries.length}건 기준`} />
+          <StatCard icon={TrendingUp} label="세전 합계" value={money(summary.gross)} helper={`세액 ${money(summary.tax)}`} />
+          <StatCard icon={ChartNoAxesColumnIncreasing} label="월 평균 실수령" value={money(summary.avgNet)} helper="월급 기록 수 기준" />
+          <StatCard icon={Home} label="초과근무 합계" value={money(summary.overtime)} helper="금액이 있는 행만 합산" />
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-black">월별 입금 흐름</h2>
+              <span className="text-xs font-black text-slate-500">{filteredEntries.length}건</span>
+            </div>
+            <div className="mt-5 flex h-64 items-end gap-1 overflow-x-auto border-b border-slate-200 pb-2">
+              {chartRows.map((entry, index) => (
+                <div key={`${entry.date}-${entry.type}-${index}`} className="flex min-w-8 flex-1 flex-col items-center justify-end gap-2">
+                  <div
+                    className="w-full rounded-t bg-[#0044cc]"
+                    style={{ height: `${entry.height}%` }}
+                    title={`${entry.date} ${entry.type} ${money(entry.netPay)}`}
+                  />
+                  <span className="whitespace-nowrap text-[10px] font-black text-slate-400">{entry.date.slice(2, 7)}</span>
                 </div>
-                <ChevronDown className="text-slate-300" size={18} />
-              </div>
-              <div className="mt-5 flex h-64 items-end gap-2 overflow-x-auto pb-2">
-                {monthlyBars.map((entry) => (
-                  <div key={`${entry.date}-${entry.type}-${entry.netPay}`} className="flex min-w-14 flex-1 flex-col items-center gap-2">
-                    <div className="flex h-48 w-full items-end rounded-md bg-slate-100">
-                      <div
-                        className={`w-full rounded-md ${entry.type === '상여' ? 'bg-amber-400' : entry.type === '포상' ? 'bg-rose-400' : 'bg-[#0044cc]'}`}
-                        style={{ height: `${Math.max(entry.pct, 5)}%` }}
-                        title={`${entry.date} ${money(entry.netPay)}`}
-                      />
-                    </div>
-                    <span className="text-[10px] font-black text-slate-500">{entry.date.slice(2, 7)}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
+              ))}
+            </div>
+          </div>
 
-            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-base font-black text-slate-950">급여 타임라인</h2>
-                <span className="text-xs font-black text-slate-500">{filteredEntries.length}건</span>
+          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-black">연봉 기록</h2>
+            <div className="mt-5 space-y-3">
+              {ANNUAL_INCOME.map((entry) => (
+                <div key={entry.year}>
+                  <div className="mb-1 flex items-center justify-between text-sm font-black">
+                    <span>{entry.year}</span>
+                    <span>{compactMoney(entry.amount)}</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full bg-[#00a884]" style={{ width: `${(entry.amount / annualMax) * 100}%` }} />
+                  </div>
+                  <p className="mt-1 text-xs font-bold text-slate-500">만 {entry.age}세 · {entry.note}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-black">연봉 및 조정 상세</h2>
+              <span className="text-xs font-black text-slate-500">{COMPENSATION_RECORDS.length}건</span>
+            </div>
+            <div className="mt-4 overflow-hidden rounded-lg border border-slate-200">
+              <div className="overflow-auto">
+                <table className="w-full min-w-[920px] text-left text-sm">
+                  <thead className="bg-slate-50 text-xs font-black text-slate-500">
+                    <tr>
+                      <th className="px-3 py-3">연도</th>
+                      <th className="px-3 py-3">구분</th>
+                      <th className="px-3 py-3">회사</th>
+                      <th className="px-3 py-3 text-right">예상 연봉</th>
+                      <th className="px-3 py-3 text-right">원천/실제</th>
+                      <th className="px-3 py-3 text-right">증감률</th>
+                      <th className="px-3 py-3 text-right">기본</th>
+                      <th className="px-3 py-3 text-right">기여</th>
+                      <th className="px-3 py-3 text-right">기여 차이</th>
+                      <th className="px-3 py-3">비고</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {COMPENSATION_RECORDS.map((entry, index) => (
+                      <tr key={`${entry.year}-${entry.month ?? 'annual'}-${index}`} className="bg-white">
+                        <td className="whitespace-nowrap px-3 py-3 font-black text-slate-900">{entry.year}</td>
+                        <td className="px-3 py-3 font-bold text-slate-600">{entry.month ? `${entry.month}월 조정` : '연간'}</td>
+                        <td className="px-3 py-3 font-bold text-slate-600">{entry.company}</td>
+                        <td className="px-3 py-3 text-right font-semibold text-slate-700">{money(entry.expectedAnnual)}</td>
+                        <td className="px-3 py-3 text-right font-black text-[#0044cc]">{money(entry.actualAnnual)}</td>
+                        <td className="px-3 py-3 text-right font-semibold text-slate-700">{percent(entry.growthRate)}</td>
+                        <td className="px-3 py-3 text-right font-semibold text-slate-700">{money(entry.baseAmount)}</td>
+                        <td className="px-3 py-3 text-right font-semibold text-slate-700">{money(entry.contributionAmount)}</td>
+                        <td className="px-3 py-3 text-right font-semibold text-slate-700">{money(entry.contributionGap)}</td>
+                        <td className="px-3 py-3 text-xs font-bold text-slate-500">{entry.note}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="mt-4 flex flex-col gap-2">
-                {filteredEntries.map((entry) => (
-                  <article key={`${entry.date}-${entry.type}-${entry.netPay}`} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-black ring-1 ${TYPE_STYLES[entry.type] ?? 'bg-slate-100 text-slate-600 ring-slate-200'}`}>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-black">평가 점수</h2>
+              <span className="text-xs font-black text-slate-500">{EVALUATION_RECORDS.length}건</span>
+            </div>
+            <div className="mt-4 space-y-3">
+              {EVALUATION_RECORDS.map((entry) => (
+                <article key={entry.year} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-black text-slate-950">{entry.year}년 평가</h3>
+                    <span className="rounded-full bg-white px-2.5 py-1 text-xs font-black text-[#0044cc] ring-1 ring-slate-200">
+                      결과 {percent(entry.resultRate)}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                    <div className="rounded-md bg-white p-2"><p className="font-black text-slate-500">전체</p><p className="mt-1 font-black text-slate-900">{entry.overall ?? '-'}</p></div>
+                    <div className="rounded-md bg-white p-2"><p className="font-black text-slate-500">팀</p><p className="mt-1 font-black text-slate-900">{entry.team ?? '-'}</p></div>
+                    <div className="rounded-md bg-white p-2"><p className="font-black text-slate-500">팀장</p><p className="mt-1 font-black text-slate-900">{entry.leader ?? '-'}</p></div>
+                    <div className="rounded-md bg-white p-2"><p className="font-black text-slate-500">동료</p><p className="mt-1 font-black text-slate-900">{entry.peer ?? '-'}</p></div>
+                    <div className="rounded-md bg-white p-2"><p className="font-black text-slate-500">개인기여도</p><p className="mt-1 font-black text-slate-900">{entry.contribution ?? '-'}</p></div>
+                    <div className="rounded-md bg-white p-2"><p className="font-black text-slate-500">개인</p><p className="mt-1 font-black text-slate-900">{percent(entry.personalPetition)}</p></div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-black">급여 상세</h2>
+              <span className="text-xs font-black text-slate-500">일자순 최신 먼저</span>
+            </div>
+            <div className="mt-4 overflow-hidden rounded-lg border border-slate-200">
+              <div className="max-h-[560px] overflow-auto">
+                <table className="w-full min-w-[760px] text-left text-sm">
+                  <thead className="sticky top-0 bg-slate-50 text-xs font-black text-slate-500">
+                    <tr>
+                      <th className="px-3 py-3">일자</th>
+                      <th className="px-3 py-3">구분</th>
+                      <th className="px-3 py-3 text-right">기본급</th>
+                      <th className="px-3 py-3 text-right">초과근무</th>
+                      <th className="px-3 py-3 text-right">세전</th>
+                      <th className="px-3 py-3 text-right">세액</th>
+                      <th className="px-3 py-3 text-right">세후 입금</th>
+                      <th className="px-3 py-3">비고</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredEntries.map((entry, index) => (
+                      <tr key={`${entry.date}-${entry.type}-${index}`} className="bg-white">
+                        <td className="whitespace-nowrap px-3 py-3 font-black text-slate-900">{entry.date}</td>
+                        <td className="px-3 py-3">
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-black ring-1 ${TYPE_STYLES[entry.type] ?? TYPE_STYLES.기타}`}>
                             {entry.type}
                           </span>
-                          <span className="text-xs font-bold text-slate-500">{entry.date}</span>
-                        </div>
-                        <h3 className="mt-2 text-lg font-black text-slate-950">{money(entry.netPay)}</h3>
-                      </div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-right text-xs font-bold text-slate-500">
-                        <span>세전</span><span className="text-slate-800">{money(entry.grossPay)}</span>
-                        <span>세액</span><span className="text-slate-800">{money(entry.taxAmount)}</span>
-                        <span>기본급</span><span className="text-slate-800">{money(entry.basePay)}</span>
-                        <span>초과</span><span className="text-slate-800">{money(entry.overtimePay)}</span>
-                      </div>
-                    </div>
-                    {entry.note && <p className="mt-3 rounded-md bg-white px-3 py-2 text-xs font-bold text-slate-500">{entry.note}</p>}
-                  </article>
-                ))}
+                        </td>
+                        <td className="px-3 py-3 text-right font-semibold text-slate-700">{money(entry.basePay)}</td>
+                        <td className="px-3 py-3 text-right font-semibold text-slate-700">{money(entry.overtimePay)}</td>
+                        <td className="px-3 py-3 text-right font-semibold text-slate-700">{money(entry.grossPay)}</td>
+                        <td className="px-3 py-3 text-right font-semibold text-slate-700">{money(entry.taxAmount)}</td>
+                        <td className="px-3 py-3 text-right font-black text-[#0044cc]">{money(entry.netPay)}</td>
+                        <td className="max-w-56 px-3 py-3 text-xs font-bold text-slate-500">{entry.note || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </section>
+            </div>
           </div>
 
-          <aside className="flex flex-col gap-4">
-            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-base font-black text-slate-950">연간 원천/연봉 흐름</h2>
-              <div className="mt-4 flex flex-col gap-3">
-                {ANNUAL_INCOME.map((row, index) => {
-                  const prev = ANNUAL_INCOME[index - 1]?.amount
-                  const growth = prev ? ((row.amount - prev) / prev) * 100 : null
-                  return (
-                    <div key={row.year} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-black text-slate-950">{row.year}년</span>
-                        <span className="text-sm font-black text-[#0044cc]">{compactMoney(row.amount)}</span>
-                      </div>
-                      <div className="mt-2 flex items-center justify-between text-xs font-bold text-slate-500">
-                        <span>만 {row.age}세</span>
-                        <span>{growth === null ? '기준' : `${growth.toFixed(1)}%`}</span>
-                      </div>
-                      <p className="mt-2 text-xs font-semibold text-slate-500">{row.note}</p>
-                    </div>
-                  )
-                })}
-              </div>
-            </section>
-
-            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-2">
-                <TrendingUp size={18} className="text-[#0044cc]" />
-                <h2 className="text-base font-black text-slate-950">원천 7천 시뮬레이터</h2>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <label className="text-[11px] font-black text-slate-500">
-                  연 상승률
-                  <input
-                    type="number"
-                    value={growthRate}
-                    onChange={(event) => setGrowthRate(Number(event.target.value))}
-                    className="mt-1 h-9 w-full rounded-md border border-slate-200 px-2 text-sm font-bold outline-none focus:border-[#0044cc]"
-                  />
-                </label>
-                <label className="text-[11px] font-black text-slate-500">
-                  예상 상여
-                  <input
-                    type="number"
-                    value={annualBonus}
-                    onChange={(event) => setAnnualBonus(Number(event.target.value))}
-                    className="mt-1 h-9 w-full rounded-md border border-slate-200 px-2 text-sm font-bold outline-none focus:border-[#0044cc]"
-                  />
-                </label>
-              </div>
-              <div className="mt-4 flex flex-col gap-2">
-                {nextSimulation.map((row) => (
-                  <div key={row.year} className={`flex items-center justify-between rounded-md px-3 py-2 text-sm font-black ${row.reached ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-600'}`}>
-                    <span>{row.year}년</span>
-                    <span>{compactMoney(row.income)}</span>
+          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-black">장기 목표선</h2>
+            <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+              붙여준 자료의 장기 연봉 목표값을 같이 놓고, 현재 기록과 비교할 수 있게 정리했습니다.
+            </p>
+            <div className="mt-5 space-y-3">
+              {LONG_TERM.map((entry) => (
+                <div key={entry.year} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                  <div className="flex items-center justify-between text-sm font-black">
+                    <span>{entry.year}</span>
+                    <span>{compactMoney(entry.target)}</span>
                   </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="rounded-lg border border-red-100 bg-red-50 p-5 shadow-sm">
-              <p className="text-xs font-black text-red-500">목표 메모</p>
-              <h2 className="mt-1 text-lg font-black text-red-700">원천 7천 넘기 전에는 집 사야함</h2>
-              <p className="mt-2 text-sm font-bold leading-6 text-red-600">
-                목표 연도, 대출 차감, 상여 포함/제외를 분리해서 계산하면 실제 주택 구입 타이밍 판단에 더 유용합니다.
-              </p>
-            </section>
-          </aside>
-        </div>
-      </div>
-    </section>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
+                    <div className="h-full rounded-full bg-[#0044cc]" style={{ width: `${(entry.target / longTermMax) * 100}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
   )
 }
+
+export default PayrollPage
