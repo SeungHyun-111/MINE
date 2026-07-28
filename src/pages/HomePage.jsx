@@ -13,6 +13,7 @@ const ExercisePage = lazy(() => import('@/pages/ExercisePageProposal'))
 const NewsPage = lazy(() => import('@/pages/NewsPage'))
 const GamePage = lazy(() => import('@/pages/GamePage'))
 const SasekPage = lazy(() => import('@/pages/SasekPage'))
+const DevEnvironmentPage = lazy(() => import('@/pages/DevEnvironmentPage'))
 
 function PageFallback() {
   return (
@@ -51,6 +52,7 @@ export default function HomePage() {
       case 'news': return <NewsPage initialTab={newsFocus?.tab} focusKey={newsFocus?.requestedAt} />
       case 'game': return <GamePage />
       case 'sasek': return <SasekPage />
+      case 'dev-environment': return <DevEnvironmentPage />
       default: return <SummaryPage onOpenCalendarDate={openCalendarDate} onOpenPage={setPage} onOpenNewsPage={openNewsPage} />
 
     }
