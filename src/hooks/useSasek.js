@@ -3,8 +3,25 @@ import { onValue, push, ref, remove, set, update } from 'firebase/database'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/hooks/useAuth'
 
+const SASEK_REPLY_FIELDS = new Set(['refinedText', 'replyText', 'hasReply', 'replyUpdatedAt'])
+
 function objectToList(val) {
   return Object.entries(val || {}).map(([id, item]) => ({ id, ...item }))
+}
+
+function assertSasekNoteTarget(itemId, noteId) {
+  if (!itemId || !noteId || itemId.includes('/') || noteId.includes('/')) {
+    throw new Error('Sasek notes must be updated at notes/{stageId}/{noteId}, never at a parent path.')
+  }
+}
+
+function pickSafeReplyUpdates(updates) {
+  const picked = {}
+  Object.entries(updates || {}).forEach(([key, value]) => {
+    if (!SASEK_REPLY_FIELDS.has(key)) return
+    picked[key] = value
+  })
+  return picked
 }
 
 export function useSasek() {
@@ -45,11 +62,24 @@ export function useSasek() {
 
   const editNote = useCallback(async (itemId, noteId, newText) => {
     if (!notesPath || !newText.trim()) return
+    assertSasekNoteTarget(itemId, noteId)
     await update(ref(db, `${notesPath}/${itemId}/${noteId}`), { text: newText.trim() })
+  }, [notesPath])
+
+  const updateNoteReply = useCallback(async (itemId, noteId, replyUpdates) => {
+    if (!notesPath) return
+    assertSasekNoteTarget(itemId, noteId)
+    const safeUpdates = pickSafeReplyUpdates(replyUpdates)
+    if (Object.keys(safeUpdates).length === 0) return
+
+    // Never update notes/{stageId} or notes directly. Parent-level RTDB updates
+    // can replace sibling notes, so AI/refinement work must touch one note only.
+    await update(ref(db, `${notesPath}/${itemId}/${noteId}`), safeUpdates)
   }, [notesPath])
 
   const deleteNote = useCallback(async (itemId, noteId) => {
     if (!notesPath) return
+    assertSasekNoteTarget(itemId, noteId)
     await remove(ref(db, `${notesPath}/${itemId}/${noteId}`))
   }, [notesPath])
 
@@ -70,5 +100,5 @@ export function useSasek() {
     return age
   }, [birthdate])
 
-  return { notes, loading, userAge, birthdate, addNote, editNote, deleteNote, saveBirthdate }
+  return { notes, loading, userAge, birthdate, addNote, editNote, updateNoteReply, deleteNote, saveBirthdate }
 }

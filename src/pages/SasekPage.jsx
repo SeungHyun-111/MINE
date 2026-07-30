@@ -204,16 +204,22 @@ function StageTimeline({ stages, notes, onSelect }) {
 function StageDetailSheet({ stage, notes, onClose, onSaveNote, onEditNote, onDeleteNote }) {
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
+  const [isComposerOpen, setIsComposerOpen] = useState(false)
   const textareaRef = useRef(null)
   const stageNotes = notes[stage.id] || []
 
-  useEffect(() => { textareaRef.current?.focus() }, [stage.id])
+  useEffect(() => {
+    if (!isComposerOpen) return
+    textareaRef.current?.focus()
+    textareaRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [isComposerOpen])
 
   const handleSave = async () => {
     if (!text.trim()) return
     setSaving(true)
     await onSaveNote(stage.id, text)
     setText('')
+    setIsComposerOpen(false)
     setSaving(false)
   }
 
@@ -271,19 +277,28 @@ function StageDetailSheet({ stage, notes, onClose, onSaveNote, onEditNote, onDel
             <p className="text-xs mb-2" style={{ color: `${C.ink}55` }}>
               我記 · <span style={{ color: `${C.ink}44` }}>내가 적어둔 것</span>
             </p>
+            {!isComposerOpen && (
+              <button
+                onClick={() => setIsComposerOpen(true)}
+                className="w-full py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-85"
+                style={{ background: C.ink, color: C.paper }}
+              >
+                기록 추가
+              </button>
+            )}
             <textarea
               ref={textareaRef}
               value={text}
               onChange={e => setText(e.target.value)}
               rows={3}
               placeholder="이 단계를 위해 새겨둘 한 마디를 적어보세요"
-              className="w-full resize-none rounded-xl px-4 py-3 text-sm leading-relaxed outline-none"
+              className={`${isComposerOpen ? 'block' : 'hidden'} w-full resize-none rounded-xl px-4 py-3 text-sm leading-relaxed outline-none`}
               style={{ background: C.paperDark, border: `1.5px solid ${C.gold}55`, color: C.ink }}
             />
             <button
               onClick={handleSave}
               disabled={!text.trim() || saving}
-              className="mt-2 w-full py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-40"
+              className={`${isComposerOpen ? 'block' : 'hidden'} mt-2 w-full py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-40`}
               style={{ background: C.ink, color: C.paper }}
             >
               {saving ? '저장 중...' : '새겨두기'}
@@ -400,18 +415,22 @@ function NoteItem({ note, itemId, onEdit, onDelete }) {
 function DetailSheet({ item, notes, onClose, onSaveNote, onEditNote, onDeleteNote }) {
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
+  const [isComposerOpen, setIsComposerOpen] = useState(false)
   const textareaRef = useRef(null)
   const itemNotes = notes[item.id] || []
 
   useEffect(() => {
+    if (!isComposerOpen) return
     textareaRef.current?.focus()
-  }, [item.id])
+    textareaRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [isComposerOpen])
 
   const handleSave = async () => {
     if (!text.trim()) return
     setSaving(true)
     await onSaveNote(item.id, text)
     setText('')
+    setIsComposerOpen(false)
     setSaving(false)
   }
 
@@ -464,13 +483,22 @@ function DetailSheet({ item, notes, onClose, onSaveNote, onEditNote, onDeleteNot
               <span>我記</span>
               <span className="text-xs font-normal" style={{ color: `${C.ink}66` }}>나의 단상을 적어두세요</span>
             </p>
+            {!isComposerOpen && (
+              <button
+                onClick={() => setIsComposerOpen(true)}
+                className="w-full py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-85"
+                style={{ background: C.red, color: C.paper }}
+              >
+                기록 추가
+              </button>
+            )}
             <textarea
               ref={textareaRef}
               value={text}
               onChange={e => setText(e.target.value)}
               rows={4}
               placeholder="오늘의 생각을 기록하세요..."
-              className="w-full resize-none rounded-xl px-4 py-3 text-sm leading-relaxed outline-none"
+              className={`${isComposerOpen ? 'block' : 'hidden'} w-full resize-none rounded-xl px-4 py-3 text-sm leading-relaxed outline-none`}
               style={{
                 background: C.paperDark,
                 border: `1.5px solid ${C.gold}55`,
@@ -480,7 +508,7 @@ function DetailSheet({ item, notes, onClose, onSaveNote, onEditNote, onDeleteNot
             <button
               onClick={handleSave}
               disabled={!text.trim() || saving}
-              className="mt-2 w-full py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-40"
+              className={`${isComposerOpen ? 'block' : 'hidden'} mt-2 w-full py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-40`}
               style={{ background: C.red, color: C.paper }}
             >
               {saving ? '저장 중...' : '단상 저장'}
