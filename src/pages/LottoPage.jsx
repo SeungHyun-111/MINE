@@ -394,12 +394,23 @@ function PerformanceBadge({ performance }) {
 function DrawHistoryList({ draws }) {
   const [open, setOpen] = useState(false)
   const [page, setPage] = useState(1)
-  const allDraws = useMemo(
-    () => [...draws].reverse(),
+  const [ganjiFilter, setGanjiFilter] = useState('all')
+  const ganjiOptions = useMemo(
+    () => [...new Set(draws.map(draw => draw.dayGanji).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko')),
     [draws]
+  )
+  const allDraws = useMemo(
+    () => [...draws]
+      .filter(draw => ganjiFilter === 'all' || draw.dayGanji === ganjiFilter)
+      .reverse(),
+    [draws, ganjiFilter]
   )
   const pageCount = Math.ceil(allDraws.length / DRAW_PAGE_SIZE)
   const visibleDraws = allDraws.slice((page - 1) * DRAW_PAGE_SIZE, page * DRAW_PAGE_SIZE)
+
+  useEffect(() => {
+    setPage(1)
+  }, [ganjiFilter])
 
   return (
     <section className="rounded-lg border border-[#d5e8ff] bg-white shadow-sm">
@@ -422,10 +433,25 @@ function DrawHistoryList({ draws }) {
 
       {open && (
         <div className="border-t border-[#e3efff] p-4">
-          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs font-black text-[#5577bb]">
-              {((page - 1) * DRAW_PAGE_SIZE) + 1}~{Math.min(page * DRAW_PAGE_SIZE, allDraws.length)}번째 표시
-            </p>
+          <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <p className="text-xs font-black text-[#5577bb]">
+                {allDraws.length ? ((page - 1) * DRAW_PAGE_SIZE) + 1 : 0}~{Math.min(page * DRAW_PAGE_SIZE, allDraws.length)}번째 표시
+              </p>
+              <label className="flex items-center gap-2 text-xs font-black text-[#5577bb]">
+                일진
+                <select
+                  value={ganjiFilter}
+                  onChange={event => setGanjiFilter(event.target.value)}
+                  className="rounded-md border border-[#bbd0ee] bg-white px-3 py-2 text-xs font-black text-[#0044cc] outline-none focus:ring-2 focus:ring-[#9fc4ff]"
+                >
+                  <option value="all">전체</option>
+                  {ganjiOptions.map(ganji => (
+                    <option key={ganji} value={ganji}>{ganji}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -435,11 +461,11 @@ function DrawHistoryList({ draws }) {
               >
                 이전
               </button>
-              <span className="text-xs font-black text-[#12376f]">{page} / {pageCount}</span>
+              <span className="text-xs font-black text-[#12376f]">{page} / {Math.max(pageCount, 1)}</span>
               <button
                 type="button"
                 onClick={() => setPage(current => Math.min(pageCount, current + 1))}
-                disabled={page === pageCount}
+                disabled={page === pageCount || pageCount === 0}
                 className="rounded-md border border-[#bbd0ee] px-3 py-2 text-xs font-black text-[#0044cc] disabled:opacity-40"
               >
                 다음
@@ -456,7 +482,7 @@ function DrawHistoryList({ draws }) {
                 <div>
                   <p className="text-sm font-black text-[#12376f]">{draw.drawNo}회</p>
                   <p className="mt-1 text-xs font-bold text-[#6b86b8]">{draw.drawDate}</p>
-                  <p className="mt-1 text-xs font-black text-[#0044cc]">{getSourceLabel(draw.source)}</p>
+                  <p className="mt-1 text-xs font-black text-[#0044cc]">{draw.dayGanji}일 · {getSourceLabel(draw.source)}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {draw.numbers.map(number => <NumberBall key={number} value={number} />)}
@@ -585,8 +611,8 @@ function DataTab({ draws, loading, error }) {
     <div className="flex flex-col gap-4">
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="통합 데이터" value={`${draws.length}회`} caption="JSON 기준 1회부터 1234회까지" />
-        <StatCard title="최신 회차" value={`${latest.drawNo}회`} caption={`${latest.drawDate} · ${getSourceLabel(latest.source)}`} />
-        <StatCard title="CSV 최신 회차" value={`${csvLatest.drawNo}회`} caption={csvLatest.drawDate} />
+        <StatCard title="최신 회차" value={`${latest.drawNo}회`} caption={`${latest.drawDate} · ${latest.dayGanji}일 · ${getSourceLabel(latest.source)}`} />
+        <StatCard title="CSV 최신 회차" value={`${csvLatest.drawNo}회`} caption={`${csvLatest.drawDate} · ${csvLatest.dayGanji}일`} />
         <StatCard title="CSV 최신 1등" value={`${csvLatest.firstWinnerCount}명`} caption={`${csvLatest.firstPrizeAmount.toLocaleString()}원`} />
       </section>
 
