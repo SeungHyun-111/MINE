@@ -18,6 +18,13 @@ const JEONGMI_RESULT = {
   bonus: 20,
 }
 
+const GAPIN_RESULT = {
+  drawNo: 1236,
+  drawDate: '2026-08-08',
+  numbers: [12, 18, 21, 29, 34, 38],
+  bonus: 10,
+}
+
 const ANALYSES = [
   {
     id: 'gyeongja',
@@ -262,10 +269,15 @@ const ANALYSES = [
     id: 'gapin',
     title: '갑인일 지역 수동 분석',
     subtitle: '1236회 · 2026-08-08 · 갑인일 토요일',
-    summary: '갑인일 20회 표본, 1끝·5끝, 11~20 강세, 연속번호, 정미일 패착 보정, 지역 기운을 결합한 4개 수동 조합',
+    summary: '갑인일 20회 표본, 1끝·5끝, 11~20 강세, 연속번호, 정미일 패착 보정, 지역 기운을 결합한 10개 추천 조합',
+    result: GAPIN_RESULT,
     performance: {
-      total: 4,
-      pending: true,
+      total: 10,
+      items: [
+        { label: '2개 적중', count: 2 },
+        { label: '1개 적중', count: 5 },
+        { label: '낙첨', count: 3 },
+      ],
     },
     energy: {
       title: '갑인일 기운',
@@ -301,7 +313,20 @@ const ANALYSES = [
         text: '영등포는 철길·금융·유동성, 부산은 바다·항구·큰 물길, 천안은 교차점·중심 이동, 변산은 산과 바다·해넘이의 닫힘과 열림으로 본다. 같은 갑인일 데이터라도 지역마다 중심축과 방어수를 다르게 둔다.',
       },
     ],
-    resultReview: [],
+    resultReview: [
+      {
+        title: '실제 결과 분석',
+        text: '1236회 실제 당첨번호는 12, 18, 21, 29, 34, 38이고 보너스는 10이었다. 추천 조합 10개 중 2개 적중 조합이 2개, 1개 적중 조합이 5개, 본번호 미적중 조합이 3개로 기록된다.',
+      },
+      {
+        title: '맞았던 흐름',
+        text: '갑인일 핵심축으로 봤던 18은 여러 조합에서 살아남았고, 부산·온라인 균형형 쪽의 34도 실제 당첨번호에 들어왔다. 천안 수동은 18·21, 온라인 CODE D는 18·34로 각각 2개를 맞췄다.',
+      },
+      {
+        title: '빗나간 지점',
+        text: '7·16·31을 강하게 본 중심축은 실제 결과에서 빠졌고, 12·29·38 쪽의 중후반 분산을 충분히 열지 못했다. CODE E의 10은 보너스에는 걸렸지만 본번호 적중으로 보지는 않는다.',
+      },
+    ],
     picks: [
       {
         name: '영등포 수동 · 주력',
@@ -356,6 +381,82 @@ const ANALYSES = [
         name: 'GPT추천(온라인구매) CODE E · 변칙형',
         numbers: [10, 17, 18, 28, 35, 45],
         note: '18을 중심에 두고 28·35·45로 중후반 변칙을 열며, 10·17을 붙여 0끝과 7끝의 보조 리듬을 살린 변칙형',
+      },
+    ],
+  },
+  {
+    id: 'sinyu',
+    title: '신유일 · 광복절 토요일 분석',
+    subtitle: '1237회 · 2026-08-15 · 신유일 토요일 · 광복절',
+    summary: '신유일 20회 표본과 광복절 토요일 과거 회차를 결합하고, 사용자 원형 분석 3개를 함께 기록',
+    performance: {
+      total: 7,
+      pending: true,
+    },
+    energy: {
+      title: '신유일 + 광복절 기운',
+      text: '신유일 표본에서는 33이 가장 강하고, 7·13·16·22가 뒤를 받친다. 끝수는 3끝, 7끝, 5끝이 강하며, 광복절 토요일 과거 회차에서는 3·8·42와 중후반 방어 흐름이 반복적으로 보였다.',
+    },
+    aiOpinion: [
+      {
+        title: '신유일 표본',
+        text: '이전 신유일 토요일 20회 표본에서 33은 7회 출현으로 가장 강했다. 7·13·16·22는 각 5회, 3·12·17·27·37은 각 4회로 뒤를 받쳤다.',
+      },
+      {
+        title: '광복절 토요일 보정',
+        text: '로또 시행 이후 광복절이 토요일이었던 회차는 2009년, 2015년, 2020년이 있었고, 3·8·42가 눈에 띄게 반복됐다. 특히 42는 고구간 방어수로 열어둘 가치가 있다.',
+      },
+      {
+        title: '패착 보정',
+        text: '최근 3회 분석의 패착은 중심축을 너무 강하게 고정한 점이었다. 이번에는 33을 가장 강하게 보되, 모든 판단을 33 하나에 몰지 않고 신유일 핵심수와 광복절 반복수를 나눠 담는다.',
+      },
+    ],
+    resultReview: [],
+    picks: [
+      {
+        name: '신유일 주력',
+        numbers: [7, 13, 16, 22, 33, 42],
+        note: '신유일 표본 최강수 33과 상위권 7·13·16·22를 중심으로 두고, 광복절 토요일 고구간 반복수 42를 방어수로 붙인 주력 조합',
+        featured: true,
+        purchased: true,
+      },
+      {
+        name: '온라인 구매용 · 광복절 보정',
+        numbers: [3, 8, 18, 24, 33, 42],
+        note: '광복절 토요일 과거값을 가장 직접적으로 반영한 조합. 반복수 3·8·42에 신유일 최강수 33, 그리고 2009년 광복절 흐름의 18·24를 함께 배치',
+        featured: true,
+      },
+      {
+        name: '사용자 추천 1 · 가장 신유일스러운 조합',
+        numbers: [7, 13, 16, 22, 33, 37],
+        note: '빈도, 끝수, 구간, 직전 동일 일진을 겹친 정석형. 33 단독 1위, 7·13·16·22 공동 최상위권, 37은 4회 출현과 강한 7끝을 반영',
+        featured: true,
+        purchased: true,
+      },
+      {
+        name: '사용자 추천 2 · 3끝·7끝 강화형',
+        numbers: [3, 13, 17, 27, 33, 43],
+        note: '신유일에서 가장 강한 3끝과 7끝을 정면으로 가져간 조합. 3·13·33·43의 3끝, 17·27의 7끝을 묶은 신유일 원형 강화형',
+        featured: true,
+        purchased: true,
+      },
+      {
+        name: '사용자 추천 3 · 연속수·날짜형',
+        numbers: [7, 12, 13, 15, 33, 37],
+        note: '12-13 반복 연속쌍, 8월 15일 날짜수 15, 최다 출현 33, 강한 7끝 7·37을 결합한 조합. 11~20 구간을 12·13·15로 의도적으로 강조',
+        featured: true,
+        purchased: true,
+      },
+      {
+        name: '에너지맵 추천 1 · 조건 중첩형',
+        numbers: [3, 7, 13, 16, 17, 33],
+        note: '3끝·7끝, 11~20 구간, 반복 연속쌍, 직전 신유일, 8월 15일 날짜 가중이 겹치는 숫자를 우선한 에너지맵 압축 조합',
+        purchased: true,
+      },
+      {
+        name: '에너지맵 추천 2 · 초중반 몰빵형',
+        numbers: [3, 7, 13, 15, 16, 17],
+        note: '단순 빈도보다 여러 신유일 조건이 동시에 겹치는 숫자를 우선한 조합. 30번대·40번대 방어수 없이 초중반 흐름에 집중',
       },
     ],
   },
@@ -416,6 +517,57 @@ const METHOD_GROUPS = [
       'C 갑인일은 목(木)의 상승·확장 기운이 강하므로, B주차에서 40번대 방어수를 완전히 닫지 않는 보정 근거로 사용한다.',
       '여기서 보는 것은 당첨번호의 반복 패턴이 아니라 A·B·C 주차 사이의 기운 흐름이다.',
       '최종 추천은 B주차 자체의 데이터 점수를 중심에 두되, A주차의 남은 기운과 C주차로 넘어가는 기운을 보정 의견으로 붙인다.',
+    ],
+  },
+]
+
+const RETROSPECTIVE_GROUPS = [
+  {
+    title: '3회차 성과 요약',
+    items: [
+      '작성일: 2026-08-12',
+      '경자일 1234회는 7게임 중 4개 적중 조합 3개가 나왔다. 강한 축을 잡는 데는 성공했지만 31·43 방어수를 충분히 열지 못했다.',
+      '정미일 1235회는 14게임 중 3개 적중 1개, 2개 적중 4개였다. 26을 과하게 고정한 것이 가장 큰 패착이었다.',
+      '갑인일 1236회는 10게임 중 2개 적중 2개, 1개 적중 5개였다. 18·34 흐름은 잡았지만 12·29·38 분산을 놓쳤다.',
+      '전체 31게임 기준 3개 이상 적중은 4게임, 2개 이상 적중은 10게임이다. 2개까지는 자주 닿지만 3개 이상으로 올리는 장치가 부족했다.',
+    ],
+  },
+  {
+    title: '반복된 패착',
+    items: [
+      '한 숫자를 중심축으로 강하게 고정하면 실제 결과가 그 축을 비껴갈 때 전체 조합이 같이 무너졌다.',
+      '직전 회차에서 살아남은 숫자를 너무 직접적으로 복사했다. 역할은 참고하되 번호 자체는 분산 후보로 바꿔야 한다.',
+      '고빈도 번호를 많이 넣은 조합은 설명은 좋아졌지만 실제 당첨의 이탈값을 받는 힘이 약했다.',
+      '30번대와 40번대 방어를 열어두는 판단은 맞았지만, 구체 후보가 31·40·43·45 쪽에 몰려 34·38 같은 중간 방어수를 놓쳤다.',
+    ],
+  },
+  {
+    title: '맞았던 판단',
+    items: [
+      '경자일은 1·15·19·35 축을 잡아 4개 적중 조합을 만들었다. 일진 표본과 끝수 흐름을 같이 본 방식은 유효했다.',
+      '정미일은 11·15·39·43의 잔향과 보너스 20을 일부 조합에서 포착했다. 직전 흐름을 완전히 버리지 않은 점은 맞았다.',
+      '갑인일은 18을 핵심 후보로 본 판단과 34를 포함한 균형형 조합이 실제 결과와 맞았다.',
+      '지역별 조합처럼 서로 다른 역할을 부여한 방식은 단일 데이터 몰빵보다 실패가 덜 컸다.',
+    ],
+  },
+  {
+    title: '성공률을 높이는 새 규칙',
+    items: [
+      '중심축은 한 회차에 최대 2개까지만 고정한다. 나머지는 보조축 2개, 방어수 2개로 강제 분산한다.',
+      '직전 회차 번호는 그대로 복사하지 말고 역할만 분류한다. 초반 연속, 10번대 허리, 30번대 방어, 40번대 방어처럼 역할 후보군으로 바꾼다.',
+      '모든 추천 묶음 안에 저빈도·중빈도·고빈도 번호가 최소 1개씩 들어가게 한다. 고빈도 4개 이상 조합은 최대 1장만 허용한다.',
+      '최근 패착 번호의 대체 후보를 반드시 둔다. 31을 놓쳤다면 다음에는 30·34·38, 43을 놓쳤다면 40·41·44·45처럼 같은 구간 후보를 나눠 담는다.',
+      '최종 10게임을 만들 때 1~10, 11~20, 21~30, 31~40, 41~45 중 한 구간이 전체 포트폴리오에서 비지 않게 점검한다.',
+    ],
+  },
+  {
+    title: '다음 추천 포트폴리오 기준',
+    items: [
+      '주력 2장: 데이터 점수와 일진 점수가 동시에 높은 번호를 중심으로 구성한다.',
+      '균형 4장: 중심축은 1개만 두고 구간·끝수·홀짝을 우선한다.',
+      '방어 3장: 최근 3회에서 놓친 역할 후보를 넣되, 같은 숫자를 반복하지 않는다.',
+      '변칙 1장: 설명이 약해도 포트폴리오 전체에서 비어 있는 구간과 끝수를 메우는 용도로 둔다.',
+      '목표는 1등 예측보다 2개 적중을 3개 적중으로 끌어올리는 것이다. 따라서 “맞는 숫자 하나 더”를 위해 중복 중심축을 줄인다.',
     ],
   },
 ]
@@ -740,7 +892,7 @@ function DataTab({ draws, loading, error }) {
   return (
     <div className="flex flex-col gap-4">
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="통합 데이터" value={`${draws.length}회`} caption="JSON 기준 1회부터 1234회까지" />
+        <StatCard title="통합 데이터" value={`${draws.length}회`} caption={`JSON 기준 1회부터 ${latest.drawNo}회까지`} />
         <StatCard title="최신 회차" value={`${latest.drawNo}회`} caption={`${latest.drawDate} · ${latest.dayGanji}일 · ${getSourceLabel(latest.source)}`} />
         <StatCard title="CSV 최신 회차" value={`${csvLatest.drawNo}회`} caption={`${csvLatest.drawDate} · ${csvLatest.dayGanji}일`} />
         <StatCard title="CSV 최신 1등" value={`${csvLatest.firstWinnerCount}명`} caption={`${csvLatest.firstPrizeAmount.toLocaleString()}원`} />
@@ -838,6 +990,11 @@ function AnalysisPanel({ analysis, open, onToggle }) {
                         주력
                       </span>
                     )}
+                    {pick.purchased && (
+                      <span className="rounded-full bg-[#fff4d8] px-2 py-0.5 text-[11px] font-black text-[#8a5a00]">
+                        구매
+                      </span>
+                    )}
                     {pick.result && (
                       <span className="rounded-full bg-[#e9f8ef] px-2 py-0.5 text-[11px] font-black text-[#137343]">
                         결과
@@ -881,6 +1038,36 @@ function MethodsTab() {
       </div>
       <div className="grid gap-3 p-4 lg:grid-cols-2">
         {METHOD_GROUPS.map(group => (
+          <article key={group.title} className="rounded-lg border border-[#d5e8ff] bg-[#f8fbff] p-4">
+            <h3 className="text-sm font-black text-[#12376f]">{group.title}</h3>
+            <ul className="mt-3 flex flex-col gap-2">
+              {group.items.map(item => (
+                <li key={item} className="text-sm font-medium leading-relaxed text-[#40689f]">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function RetrospectiveTab() {
+  return (
+    <section className="rounded-lg border border-[#d5e8ff] bg-white shadow-sm">
+      <div className="border-b border-[#e3efff] px-4 py-4">
+        <div className="flex items-center gap-2">
+          <FlaskConical size={18} className="text-[#0044cc]" />
+          <h2 className="text-lg font-black text-[#0044cc]">패착 분석 · 2026-08-12</h2>
+        </div>
+        <p className="mt-1 text-xs font-bold text-[#5577bb]">
+          경자일 1234회, 정미일 1235회, 갑인일 1236회 추천 결과를 비교한 개선안
+        </p>
+      </div>
+      <div className="grid gap-3 p-4 lg:grid-cols-2">
+        {RETROSPECTIVE_GROUPS.map(group => (
           <article key={group.title} className="rounded-lg border border-[#d5e8ff] bg-[#f8fbff] p-4">
             <h3 className="text-sm font-black text-[#12376f]">{group.title}</h3>
             <ul className="mt-3 flex flex-col gap-2">
@@ -943,6 +1130,7 @@ export default function LottoPage() {
           {[
             ['picks', '추천번호'],
             ['methods', '분석기술'],
+            ['retrospective', '패착분석'],
             ['data', '당첨데이터'],
           ].map(([id, label]) => (
             <button
@@ -970,6 +1158,7 @@ export default function LottoPage() {
           </div>
         )}
         {tab === 'methods' && <MethodsTab />}
+        {tab === 'retrospective' && <RetrospectiveTab />}
         {tab === 'data' && <DataTab draws={draws} loading={loading} error={error} />}
       </div>
     </div>

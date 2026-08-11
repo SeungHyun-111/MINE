@@ -22215,6 +22215,42 @@
       "source": "manual",
       "dayStemBranch": "경자일",
       "dayGanji": "경자"
+    },
+    {
+      "drawNo": 1235,
+      "drawDate": "2026-08-01",
+      "numbers": [
+        6,
+        7,
+        11,
+        15,
+        39,
+        43
+      ],
+      "bonus": 20,
+      "source": "manual",
+      "firstWinnerCount": 9,
+      "firstPrizeAmount": 3090960000,
+      "dayStemBranch": "정미일",
+      "dayGanji": "정미"
+    },
+    {
+      "drawNo": 1236,
+      "drawDate": "2026-08-08",
+      "numbers": [
+        12,
+        18,
+        21,
+        29,
+        34,
+        38
+      ],
+      "bonus": 10,
+      "source": "manual",
+      "firstWinnerCount": 11,
+      "firstPrizeAmount": 2441919375,
+      "dayStemBranch": "갑인일",
+      "dayGanji": "갑인"
     }
   ],
   "ganji": {
