@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "updatedAt": "2026-07-31T02:14:15.156Z",
+  "updatedAt": "2026-08-17T23:41:27.159Z",
   "sources": {
     "csv": "dhlottery_lotto645_1_1233.csv",
     "manual": "manual"
@@ -22251,6 +22251,24 @@
       "firstPrizeAmount": 2441919375,
       "dayStemBranch": "갑인일",
       "dayGanji": "갑인"
+    },
+    {
+      "drawNo": 1237,
+      "drawDate": "2026-08-15",
+      "numbers": [
+        10,
+        20,
+        23,
+        34,
+        37,
+        40
+      ],
+      "bonus": 36,
+      "source": "manual",
+      "firstWinnerCount": 23,
+      "firstPrizeAmount": 1214932680,
+      "dayStemBranch": "신유일",
+      "dayGanji": "신유"
     }
   ],
   "ganji": {
