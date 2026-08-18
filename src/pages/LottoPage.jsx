@@ -2,9 +2,27 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, Database, Download, FlaskConical, Ticket } from 'lucide-react'
 
 const LOTTO_DATA_URL = '/data/lotto-draws.json'
-const LOTTO_CSV_URL = '/data/dhlottery_lotto645_1_1233.csv'
-const LOTTO_CSV_FILENAME = 'dhlottery_lotto645_1_1233.csv'
 const DRAW_PAGE_SIZE = 100
+
+const CSV_COLUMNS = [
+  'draw_no',
+  'draw_date',
+  'num1',
+  'num2',
+  'num3',
+  'num4',
+  'num5',
+  'num6',
+  'bonus',
+  'first_winner_count',
+  'first_prize_amount',
+  'first_total_amount',
+  'second_winner_count',
+  'second_prize_amount',
+  'third_winner_count',
+  'third_prize_amount',
+  'total_sales_amount',
+]
 
 const GYEONGJA_RESULT = {
   drawNo: 1234,
@@ -605,6 +623,48 @@ function topEntries(map, limit) {
     .slice(0, limit)
 }
 
+function csvCell(value) {
+  if (value === undefined || value === null) return '""'
+  return `"${String(value).replaceAll('"', '""')}"`
+}
+
+function buildLottoCsv(draws) {
+  const rows = draws.map(draw => [
+    draw.drawNo,
+    draw.drawDate,
+    ...draw.numbers,
+    draw.bonus,
+    draw.firstWinnerCount,
+    draw.firstPrizeAmount,
+    draw.firstTotalAmount,
+    draw.secondWinnerCount,
+    draw.secondPrizeAmount,
+    draw.thirdWinnerCount,
+    draw.thirdPrizeAmount,
+    draw.totalSalesAmount,
+  ])
+
+  return [
+    CSV_COLUMNS.map(csvCell).join(','),
+    ...rows.map(row => row.map(csvCell).join(',')),
+  ].join('\r\n')
+}
+
+function downloadLottoCsv(draws) {
+  const latestDrawNo = draws.at(-1)?.drawNo ?? 0
+  const csv = buildLottoCsv(draws)
+  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.download = `dhlottery_lotto645_1_${latestDrawNo}.csv`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
 function buildStats(draws) {
   const numberCounts = Object.fromEntries(Array.from({ length: 45 }, (_, index) => [index + 1, 0]))
   const endingCounts = Object.fromEntries(Array.from({ length: 10 }, (_, index) => [index, 0]))
@@ -930,14 +990,14 @@ function DataTab({ draws, loading, error }) {
             <Database size={18} className="text-[#0044cc]" />
             <h2 className="text-lg font-black text-[#0044cc]">통합 JSON 전체 데이터 요약</h2>
           </div>
-          <a
-            href={LOTTO_CSV_URL}
-            download={LOTTO_CSV_FILENAME}
+          <button
+            type="button"
+            onClick={() => downloadLottoCsv(draws)}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#0044cc] px-4 text-sm font-black text-white transition-colors hover:bg-[#12376f]"
           >
             <Download size={16} />
             CSV 다운로드
-          </a>
+          </button>
         </div>
         <div className="grid gap-4 p-4 xl:grid-cols-3">
           <article className="rounded-lg border border-[#d5e8ff] bg-[#f8fbff] p-4">
