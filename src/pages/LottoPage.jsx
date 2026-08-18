@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, Database, FlaskConical, Ticket } from 'lucide-react'
+import { ChevronDown, Database, Download, FlaskConical, Ticket } from 'lucide-react'
 
 const LOTTO_DATA_URL = '/data/lotto-draws.json'
+const LOTTO_CSV_URL = '/data/dhlottery_lotto645_1_1233.csv'
+const LOTTO_CSV_FILENAME = 'dhlottery_lotto645_1_1233.csv'
 const DRAW_PAGE_SIZE = 100
 
 const GYEONGJA_RESULT = {
@@ -923,9 +925,19 @@ function DataTab({ draws, loading, error }) {
       </section>
 
       <section className="rounded-lg border border-[#d5e8ff] bg-white shadow-sm">
-        <div className="flex items-center gap-2 border-b border-[#e3efff] px-4 py-4">
-          <Database size={18} className="text-[#0044cc]" />
-          <h2 className="text-lg font-black text-[#0044cc]">통합 JSON 전체 데이터 요약</h2>
+        <div className="flex flex-col gap-3 border-b border-[#e3efff] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <Database size={18} className="text-[#0044cc]" />
+            <h2 className="text-lg font-black text-[#0044cc]">통합 JSON 전체 데이터 요약</h2>
+          </div>
+          <a
+            href={LOTTO_CSV_URL}
+            download={LOTTO_CSV_FILENAME}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#0044cc] px-4 text-sm font-black text-white transition-colors hover:bg-[#12376f]"
+          >
+            <Download size={16} />
+            CSV 다운로드
+          </a>
         </div>
         <div className="grid gap-4 p-4 xl:grid-cols-3">
           <article className="rounded-lg border border-[#d5e8ff] bg-[#f8fbff] p-4">
