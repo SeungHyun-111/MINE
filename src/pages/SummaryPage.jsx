@@ -9,9 +9,11 @@ import { ko } from 'date-fns/locale'
 import { onValue, ref } from 'firebase/database'
 import { CheckCircle2, CloudSun, Newspaper, Repeat } from 'lucide-react'
 import LiquidMemoBoard from '@/components/LiquidMemoBoard'
+import OriginkitScrambleText from '@/components/OriginkitScrambleText'
 import { useAuth } from '@/hooks/useAuth'
 import { useCalendar } from '@/hooks/useCalendar'
 import { useEuphony } from '@/hooks/useEuphony'
+import { useSobriety } from '@/hooks/useSobriety'
 import { useTodos } from '@/hooks/useTodos'
 import { useWeather } from '@/hooks/useWeather'
 import { useRoutines } from '@/hooks/useRoutines'
@@ -85,6 +87,44 @@ function todoGanttEndDate(todo, todayString, rangeEndString) {
     return rangeEndString >= todayString ? todayString : rangeEndString
   }
   return end
+}
+
+function diffInDays(startKey, endKey) {
+  const start = parseDateKey(startKey)
+  const end = parseDateKey(endKey)
+  if (!start || !end) return 0
+  return Math.round((end - start) / 86400000)
+}
+
+function sobrietyStats(checkins, todayKey) {
+  const checkedDates = Object.values(checkins)
+    .filter((item) => item.checked)
+    .map((item) => item.date)
+    .sort()
+
+  let longest = 0
+  let run = 0
+  let previous = null
+
+  checkedDates.forEach((date) => {
+    run = previous && diffInDays(previous, date) === 1 ? run + 1 : 1
+    longest = Math.max(longest, run)
+    previous = date
+  })
+
+  let current = 0
+  let cursor = todayKey
+  while (checkins[cursor]?.checked) {
+    current += 1
+    cursor = addDateKeyDays(cursor, -1)
+  }
+
+  const monthPrefix = todayKey.slice(0, 7)
+  const month = checkedDates.filter((date) => date.startsWith(monthPrefix)).length
+  const latest = checkedDates.at(-1) || ''
+  const startDate = checkedDates[0] || ''
+
+  return { current, longest, month, total: checkedDates.length, latest, startDate }
 }
 
 function useNewsScraps() {
@@ -351,6 +391,88 @@ function CompactWeatherSummary({ onOpenWeather }) {
           <p className="mt-1 truncate">↑ {sunriseSunset.sunrise || '-'}</p>
           <p className="mt-1 truncate">↓ {sunriseSunset.sunset || '-'}</p>
         </div>
+      </div>
+    </button>
+  )
+}
+
+function SobrietyKpiSummary({ onOpenPage }) {
+  const { checkins, loading } = useSobriety()
+  const todayKey = format(new Date(), 'yyyy-MM-dd')
+  const stats = useMemo(() => sobrietyStats(checkins, todayKey), [checkins, todayKey])
+  const messages = useMemo(() => {
+    if (loading) return ['RTDB 동기화 중']
+    if (!stats.total) return ['오늘부터 금주 시작', '첫 체크를 남겨보자']
+    return [
+      `${stats.startDate} 시작`,
+      `현재 ${stats.current}일째 금주 중`,
+      `이번 달 ${stats.month}일 체크`,
+      `최장 기록 ${stats.longest}일`,
+    ]
+  }, [loading, stats])
+  const [messageIndex, setMessageIndex] = useState(0)
+
+  useEffect(() => {
+    setMessageIndex(0)
+  }, [messages])
+
+  useEffect(() => {
+    if (messages.length <= 1) return undefined
+    const timer = window.setInterval(() => {
+      setMessageIndex((index) => (index + 1) % messages.length)
+    }, 2600)
+    return () => clearInterval(timer)
+  }, [messages])
+
+  return (
+    <button
+      type="button"
+      onClick={() => onOpenPage?.('sobriety')}
+      className="relative col-span-full min-h-[162px] overflow-hidden rounded-lg border border-[#aecdc7] bg-[#10231f] px-4 py-4 text-left shadow-sm transition active:scale-[0.99]"
+    >
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(42,157,143,0.28),rgba(255,255,255,0.04)_42%,rgba(238,108,77,0.18))]" />
+      <div className="absolute inset-x-0 bottom-0 h-px bg-[#64d6c4]" />
+
+      <div className="relative flex min-h-[130px] flex-col justify-between">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-black text-[#8de0d2]">금주 기록</p>
+          <span className="rounded-md border border-white/15 bg-white/10 px-2 py-1 text-[11px] font-black text-white">
+            {stats.total ? `${stats.total} checks` : 'ready'}
+          </span>
+        </div>
+
+        <div className="py-4">
+          <OriginkitScrambleText
+            key={messages[messageIndex]}
+            words={messages[messageIndex]}
+            tag="h2"
+            color="#ffffff"
+            className="break-keep text-[28px] font-black leading-tight md:text-[38px]"
+            font={{
+              fontWeight: 900,
+              lineHeight: '1.12em',
+              letterSpacing: '0',
+              textAlign: 'left',
+            }}
+            enterAnimation={{
+              scrambleIntensity: 92,
+              flickerIntensity: 65,
+              flickerColor: '#64d6c4',
+              ease: { duration: 1.25 },
+            }}
+            hoverAnimation={{
+              type: 'diffusion',
+              radius: 3,
+              flickerColor: '#ee6c4d',
+              glitchChars: 'SOBER0123456789',
+              waveEase: { duration: 0.75 },
+            }}
+          />
+        </div>
+
+        <p className="truncate text-xs font-bold text-[#b5d8d1]">
+          {stats.latest ? `최근 체크 ${stats.latest}` : '달력에서 오늘 기록을 남기면 여기에 이어집니다'}
+        </p>
       </div>
     </button>
   )
@@ -690,6 +812,7 @@ export default function SummaryPage({ onOpenCalendarDate, onOpenPage, onOpenNews
         <CompactWeatherSummary onOpenWeather={openWeatherPage} />
 
         <div className="grid grid-cols-2 gap-3">
+          <SobrietyKpiSummary onOpenPage={onOpenPage} />
           <EuphonySummary onOpenPage={onOpenPage} />
           <RoutineSummary onOpenPage={onOpenPage} />
           <PetWidget onOpenPage={onOpenPage} />
