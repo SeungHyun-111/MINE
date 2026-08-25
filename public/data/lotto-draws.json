@@ -22269,6 +22269,25 @@
       "firstPrizeAmount": 1214932680,
       "dayStemBranch": "신유일",
       "dayGanji": "신유"
+    },
+    {
+      "drawNo": 1238,
+      "drawDate": "2026-08-22",
+      "numbers": [
+        2,
+        13,
+        18,
+        32,
+        38,
+        42
+      ],
+      "bonus": 22,
+      "source": "manual",
+      "firstWinnerCount": 23,
+      "firstPrizeAmount": 1197258718,
+      "firstTotalAmount": 27536950514,
+      "dayStemBranch": "무진일",
+      "dayGanji": "무진"
     }
   ],
   "ganji": {
