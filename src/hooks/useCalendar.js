@@ -4,6 +4,7 @@ import { get, onValue, push, ref, serverTimestamp, update } from 'firebase/datab
 import { useAuth } from '@/hooks/useAuth'
 import { db } from '@/lib/firebase'
 import { getDateTimeDateKey } from '@/lib/dateTime'
+import { sortCalendarEvents } from '@/lib/calendarSort'
 import {
   connectCalendar,
   createEvent,
@@ -105,21 +106,6 @@ async function removeEventWithDateIndex(uid, eventId, event = null) {
   await update(ref(db), updates)
 }
 
-function sortEvents(items) {
-  return [...items].sort((a, b) => {
-    const aOrder = Number.isFinite(a.order) ? a.order : null
-    const bOrder = Number.isFinite(b.order) ? b.order : null
-    if (aOrder != null || bOrder != null) {
-      const orderCompare = (aOrder ?? Number.MAX_SAFE_INTEGER) - (bOrder ?? Number.MAX_SAFE_INTEGER)
-      if (orderCompare !== 0) return orderCompare
-    }
-
-    const aTime = a.start?.dateTime || a.start?.date || ''
-    const bTime = b.start?.dateTime || b.start?.date || ''
-    return aTime.localeCompare(bTime)
-  })
-}
-
 export function useCalendar() {
   const { user } = useAuth()
   const [events, setEvents] = useState([])
@@ -192,7 +178,7 @@ export function useCalendar() {
 
     const publish = () => {
       if (disposed) return
-      setEvents(sortEvents([...eventsById.values()]))
+      setEvents(sortCalendarEvents([...eventsById.values()]))
       setLoading(false)
     }
 

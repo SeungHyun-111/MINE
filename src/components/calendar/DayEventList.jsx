@@ -1,7 +1,9 @@
+import { useMemo } from 'react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { ChevronDown, Clock, Pencil, Plus, Trash2 } from 'lucide-react'
 import { addDateKeyDays, getDateTimeDateKey, getDateTimeTime } from '@/lib/dateTime'
+import { sortCalendarEvents } from '@/lib/calendarSort'
 import { useReorderableList } from '@/hooks/useReorderableList'
 
 const EVENT_STATUSES = [
@@ -57,7 +59,10 @@ export default function DayEventList({
   variant = 'inline',
 }) {
   const dateStr = date ? format(date, 'yyyy-MM-dd') : ''
-  const dayEvents = date ? events.filter((event) => includesDate(event, dateStr)) : []
+  const dayEvents = useMemo(
+    () => (date ? sortCalendarEvents(events.filter((event) => includesDate(event, dateStr))) : []),
+    [date, dateStr, events],
+  )
   const isPanel = variant === 'panel'
   const { draggingId, dropTarget, getItemProps } = useReorderableList({
     items: dayEvents,

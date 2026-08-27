@@ -15,6 +15,7 @@ import {
 import { ko } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { addDateKeyDays, getDateTimeDateKey, getDateTimeTime } from '@/lib/dateTime'
+import { sortCalendarEvents } from '@/lib/calendarSort'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 const WEEK_ALL_DAY_LANE_HEIGHT = 18
@@ -198,6 +199,11 @@ function createDayEventBuckets(events, dayStrings) {
     if (!isAllDayOrMultiDay(event) && visibleDates.has(range.start)) {
       timedByDate.get(range.start)?.push(event)
     }
+  })
+
+  dayStrings.forEach((date) => {
+    timedByDate.set(date, sortCalendarEvents(timedByDate.get(date) || []))
+    singleAllDayByDate.set(date, sortCalendarEvents(singleAllDayByDate.get(date) || []))
   })
 
   return { timedByDate, singleAllDayByDate }
