@@ -378,6 +378,28 @@ const getRoutineTargetIds = (items) => (
 
 const getExerciseKey = (exercise) => exercise.url ?? exercise.name
 
+const getAllMuscleWikiExercises = () => {
+  const seen = new Set()
+  const exercises = []
+
+  Object.entries(muscleWikiData.byMuscle).forEach(([muscleId, entry]) => {
+    ;(entry.exercises ?? []).forEach((exercise) => {
+      const key = getExerciseKey(exercise)
+      if (seen.has(key)) return
+      seen.add(key)
+      exercises.push({
+        ...exercise,
+        muscleId,
+        muscleLabel: MUSCLES[muscleId]?.label ?? entry.label ?? muscleId,
+      })
+    })
+  })
+
+  return exercises
+}
+
+const ALL_MUSCLEWIKI_EXERCISES = getAllMuscleWikiExercises()
+
 const EXERCISE_WORD_READINGS = {
   '30': '30도',
   '1': '1',
@@ -1099,6 +1121,7 @@ export default function ExercisePageProposal() {
   const [activeId, setActiveId] = useState('chest')
   const [showRoutine, setShowRoutine] = useState(false)
   const [showAllRecommendations, setShowAllRecommendations] = useState(false)
+  const [exerciseSearchQuery, setExerciseSearchQuery] = useState('')
   const [favoriteExercises, setFavoriteExercises] = useState([])
   const [routinesMeta, setRoutinesMeta] = useState(() => ROUTINES)
   const [routineDraftExercise, setRoutineDraftExercise] = useState(null)
@@ -1117,9 +1140,10 @@ export default function ExercisePageProposal() {
   const [dragOverId, setDragOverId] = useState(null)
   const [selectedExerciseId, setSelectedExerciseId] = useState(null)
   const [extraMuscleIds, setExtraMuscleIds] = useState([])
+  const [routineSaveStatus, setRoutineSaveStatus] = useState('idle')
 
   useEffect(() => {
-    if (!exerciseStore.connected || exerciseStore.loading) return
+    if (exerciseStore.loading || !exerciseStore.initialized) return
     if (!exerciseStore.routinesMeta || !exerciseStore.routineItemsByDay) {
       exerciseStore.seedDefaults()
       return
@@ -1138,8 +1162,8 @@ export default function ExercisePageProposal() {
     }
   }, [
     activeRoutineId,
-    exerciseStore.connected,
     exerciseStore.favorites,
+    exerciseStore.initialized,
     exerciseStore.loading,
     exerciseStore.routineItemsByDay,
     exerciseStore.routinesMeta,
@@ -1185,7 +1209,20 @@ export default function ExercisePageProposal() {
   const selectedExerciseTargetId = selectedExercise ? getExerciseTargetId(selectedExercise.name) : null
   const muscleWikiEntry = muscleWikiData.byMuscle[activeId]
   const muscleWikiExercises = muscleWikiEntry?.exercises ?? active.exercises.map((name) => ({ name, difficulty: null, url: null }))
-  const visibleMuscleWikiExercises = showAllRecommendations ? muscleWikiExercises : muscleWikiExercises.slice(0, 5)
+  const hasExerciseSearchQuery = exerciseSearchQuery.trim().length > 0
+  const filteredMuscleWikiExercises = useMemo(() => {
+    const query = exerciseSearchQuery.trim().toLowerCase()
+    if (!query) return muscleWikiExercises
+
+    return ALL_MUSCLEWIKI_EXERCISES.filter((exercise) => {
+      const exerciseName = formatExerciseName(exercise.name).toLowerCase()
+      const difficulty = (DIFFICULTY_LABELS[exercise.difficulty] ?? exercise.difficulty ?? '').toLowerCase()
+      const url = (exercise.url ?? '').toLowerCase()
+      const muscleLabel = (exercise.muscleLabel ?? '').toLowerCase()
+      return exerciseName.includes(query) || difficulty.includes(query) || url.includes(query) || muscleLabel.includes(query)
+    })
+  }, [exerciseSearchQuery, muscleWikiExercises])
+  const visibleMuscleWikiExercises = showAllRecommendations ? filteredMuscleWikiExercises : filteredMuscleWikiExercises.slice(0, 5)
   const favoriteKeySet = useMemo(() => new Set(favoriteExercises.map(getExerciseKey)), [favoriteExercises])
 
   const toggleFavoriteExercise = (exercise) => {
@@ -1198,6 +1235,9 @@ export default function ExercisePageProposal() {
   }
 
   const openRoutineDraft = (exercise) => {
+    if (exercise.muscleId && MUSCLES[exercise.muscleId]) {
+      setActiveId(exercise.muscleId)
+    }
     setRoutineDraftExercise(exercise)
     setRoutineDraft((draft) => ({
       ...draft,
@@ -1346,6 +1386,17 @@ export default function ExercisePageProposal() {
     }))
   }
 
+  const updateActiveRoutineMeta = (field, value) => {
+    setRoutineSaveStatus('idle')
+    setRoutinesMeta((routines) => ({
+      ...routines,
+      [activeRoutineId]: {
+        ...routines[activeRoutineId],
+        [field]: value,
+      },
+    }))
+  }
+
   const moveRoutineItem = (targetId) => {
     if (!draggingId || draggingId === targetId) return
 
@@ -1395,14 +1446,33 @@ export default function ExercisePageProposal() {
       items: [],
     }
 
-    saveRoutinesMetaState((routines) => ({ ...routines, [id]: nextRoutine }))
-    saveRoutineItemsState((routines) => ({ ...routines, [id]: [] }))
+    setRoutinesMeta((routines) => ({ ...routines, [id]: nextRoutine }))
+    setRoutineItemsByDay((routines) => ({ ...routines, [id]: [] }))
+    setRoutineSaveStatus('saving')
+    exerciseStore.saveRoutine(id, nextRoutine, [])
+      .then(() => setRoutineSaveStatus('saved'))
+      .catch((error) => {
+        console.error(error)
+        setRoutineSaveStatus('error')
+      })
     setActiveRoutineId(id)
     setRoutineDraft((draft) => ({ ...draft, routineId: id }))
     setSelectedExerciseId(null)
     setEditingId(null)
     setDraggingId(null)
     setDragOverId(null)
+  }
+
+  const saveActiveRoutine = () => {
+    if (!activeRoutine) return
+
+    setRoutineSaveStatus('saving')
+    exerciseStore.saveRoutine(activeRoutineId, activeRoutine, routineItems)
+      .then(() => setRoutineSaveStatus('saved'))
+      .catch((error) => {
+        console.error(error)
+        setRoutineSaveStatus('error')
+      })
   }
 
   const deleteActiveRoutine = () => {
@@ -1413,16 +1483,17 @@ export default function ExercisePageProposal() {
     if (currentItems.length > 0 && !window.confirm('현재 루틴과 안의 운동을 삭제할까요?')) return
 
     const nextActiveId = routineIds.find((id) => id !== activeRoutineId)
-    saveRoutinesMetaState((routines) => {
+    setRoutinesMeta((routines) => {
       const next = { ...routines }
       delete next[activeRoutineId]
       return next
     })
-    saveRoutineItemsState((routines) => {
+    setRoutineItemsByDay((routines) => {
       const next = { ...routines }
       delete next[activeRoutineId]
       return next
     })
+    exerciseStore.removeRoutine(activeRoutineId)
     setActiveRoutineId(nextActiveId)
     setRoutineDraft((draft) => ({ ...draft, routineId: nextActiveId }))
     setSelectedExerciseId(null)
@@ -1438,6 +1509,8 @@ export default function ExercisePageProposal() {
           <div className="relative w-full sm:w-72">
             <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
             <input
+              value={exerciseSearchQuery}
+              onChange={(event) => setExerciseSearchQuery(event.target.value)}
               className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-[#134e4a]"
               placeholder="운동명 검색"
             />
@@ -1511,7 +1584,24 @@ export default function ExercisePageProposal() {
                       </button>
                     ))}
                   </div>
-                  <div className="mt-2 flex justify-end gap-2">
+                  <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
+                    {routineSaveStatus !== 'idle' && (
+                      <span className={`mr-auto text-xs font-black ${
+                        routineSaveStatus === 'error' ? 'text-red-500' : 'text-slate-400'
+                      }`}>
+                        {routineSaveStatus === 'saving' ? '저장 중'
+                          : routineSaveStatus === 'saved' ? '저장됨'
+                            : '저장 실패'}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={saveActiveRoutine}
+                      disabled={!activeRoutine || routineSaveStatus === 'saving'}
+                      className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      저장
+                    </button>
                     <button
                       type="button"
                       onClick={createRoutine}
@@ -1531,12 +1621,31 @@ export default function ExercisePageProposal() {
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-black text-[#ef4444]">{activeRoutine.day}</p>
-                    <h3 className="mt-1 text-lg font-black text-slate-950">{activeRoutine.title}</h3>
-                  </div>
-                  <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-600">{activeRoutine.tag}</span>
+                <div className="grid gap-2 sm:grid-cols-[84px_minmax(0,1fr)_96px]">
+                  <label className="text-[11px] font-black text-slate-500">
+                    DAY
+                    <input
+                      value={activeRoutine.day}
+                      onChange={(event) => updateActiveRoutineMeta('day', event.target.value)}
+                      className="mt-1 h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-[#ef4444] outline-none focus:border-[#134e4a]"
+                    />
+                  </label>
+                  <label className="text-[11px] font-black text-slate-500">
+                    루틴 이름
+                    <input
+                      value={activeRoutine.title}
+                      onChange={(event) => updateActiveRoutineMeta('title', event.target.value)}
+                      className="mt-1 h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-black text-slate-950 outline-none focus:border-[#134e4a]"
+                    />
+                  </label>
+                  <label className="text-[11px] font-black text-slate-500">
+                    태그
+                    <input
+                      value={activeRoutine.tag}
+                      onChange={(event) => updateActiveRoutineMeta('tag', event.target.value)}
+                      className="mt-1 h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-black text-red-600 outline-none focus:border-[#134e4a]"
+                    />
+                  </label>
                 </div>
                 <div className="mt-4 flex flex-col gap-2">
                   {routineItems.map((item, index) => {
@@ -1705,10 +1814,15 @@ export default function ExercisePageProposal() {
 
             <div className="rounded-lg border border-white/80 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-black text-slate-950">추천 운동</h3>
-                <span className="text-xs font-black text-slate-500">{muscleWikiExercises.length}개</span>
+                <h3 className="text-sm font-black text-slate-950">{hasExerciseSearchQuery ? '검색 결과' : '추천 운동'}</h3>
+                <span className="text-xs font-black text-slate-500">{filteredMuscleWikiExercises.length}개</span>
               </div>
               <div className="mt-4 flex flex-col gap-3">
+                {filteredMuscleWikiExercises.length === 0 && (
+                  <p className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm font-bold text-slate-400">
+                    검색된 운동이 없습니다.
+                  </p>
+                )}
                 {visibleMuscleWikiExercises.map((exercise, index) => {
                   const exerciseName = formatExerciseName(exercise.name)
                   const favorited = favoriteKeySet.has(getExerciseKey(exercise))
@@ -1736,6 +1850,7 @@ export default function ExercisePageProposal() {
                         <span className="min-w-0">
                           <span className="block text-sm font-black text-slate-900">{exerciseName}</span>
                           <span className="mt-1 block text-xs font-semibold text-slate-500">
+                            {hasExerciseSearchQuery && exercise.muscleLabel ? `${exercise.muscleLabel} · ` : ''}
                             {DIFFICULTY_LABELS[exercise.difficulty] ?? exercise.difficulty ?? 'MuscleWiki'} · {index + 1}
                           </span>
                         </span>
