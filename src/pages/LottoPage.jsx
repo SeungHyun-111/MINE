@@ -59,6 +59,20 @@ const MUJIN_RESULT = {
   bonus: 22,
 }
 
+const EULHAE_RESULT = {
+  drawNo: 1239,
+  drawDate: '2026-08-29',
+  numbers: [11, 13, 22, 32, 33, 36],
+  bonus: 8,
+}
+
+const IMO_RESULT = {
+  drawNo: 1240,
+  drawDate: '2026-09-05',
+  numbers: [11, 13, 19, 20, 31, 44],
+  bonus: 27,
+}
+
 const ANALYSES = [
   {
     id: 'gyeongja',
@@ -606,11 +620,17 @@ const ANALYSES = [
     id: 'eulhae',
     title: '을해일 분석',
     subtitle: '1239회 · 2026-08-29 · 을해일 토요일',
-    summary: '을해일 과거 20회 최상위 빈도, 최근 HOT 흐름, 잠복 복귀수, 8월 29일 날짜수를 나눈 6개 조합',
+    summary: '을해일 과거 20회 최상위 빈도, 최근 HOT 흐름, 잠복 복귀수, 8월 29일 날짜수와 이름 기운을 나눈 7개 조합',
     performance: {
-      total: 6,
-      pending: true,
+      total: 7,
+      items: [
+        { label: '2개 적중', count: 1 },
+        { label: '1개 적중', count: 1 },
+        { label: '보너스', count: 1 },
+        { label: '낙첨', count: 4 },
+      ],
     },
+    result: EULHAE_RESULT,
     energy: {
       title: '을해일 기운',
       text: '을해일 표본에서는 1이 6회로 단독 1위이고, 4·6·16·37·40·42가 5회 출현한 최상위권으로 잡힌다. 다만 이번에는 지난 1238회에서 13·18·42를 잡았던 교차 논리를 이어가되, 현재 HOT 숫자와 장기 미출현 복귀수를 분리해서 조합별 성격을 다르게 둔다.',
@@ -633,7 +653,28 @@ const ANALYSES = [
         text: 'CODE E는 8월 29일 날짜 놀이를 한 장만 남긴 조합이다. 8, 29, 37, 21의 날짜수에 을해일 강수 16·43을 붙였고, 특히 37은 날짜 계산과 을해일 5회 출현이 겹치는 핵심으로 본다.',
       },
     ],
-    resultReview: [],
+    resultReview: [
+      {
+        title: '실제 결과 분석',
+        text: '1239회 실제 당첨번호는 11, 13, 22, 32, 33, 36이고 보너스는 8이었다. CODE C가 본번호 13·22로 2개 적중, CODE D가 33으로 1개 적중, CODE E는 보너스 8을 포함했다. CODE A·B·F는 본번호를 맞히지 못했다.',
+      },
+      {
+        title: '가장 가까웠던 조합',
+        text: 'CODE C가 13·22 두 숫자를 맞췄고, 을해일 최상위만 고집하지 않고 최근 흐름의 13·22를 받은 판단이 가장 가까웠다. 다만 40·42 고구간 방어가 32·33·36으로 내려오면서 3개 이상 적중으로 이어지지는 못했다.',
+      },
+      {
+        title: '살아 있었던 판단',
+        text: '22는 CODE C에 들어갔고, 33은 잠복 복귀형 CODE D에서 살아났다. 보너스 8은 날짜수 조합 CODE E에 들어가 있었다. 즉 날짜수와 잠복 복귀수 자체는 완전히 틀린 방향이 아니었지만, 본번호 중심축과 결합되는 강도가 약했다.',
+      },
+      {
+        title: '가장 큰 패착',
+        text: '을해일 최상위권인 1·6·16·37·40·42에 너무 힘을 실었고, 실제 결과의 핵심이 된 11·32·33·36 중 32·36을 충분히 열지 못했다. 특히 30번대는 37·40·43·45 쪽으로 높게 열어뒀는데, 실제는 32·33·36의 중간 30번대 묶음이었다.',
+      },
+      {
+        title: '다음 회차 보정',
+        text: '다음 분석에서는 일진 최상위 번호를 그대로 압축하는 CODE A류의 비중을 낮추고, 최근 흐름·잠복 복귀·중간 30번대 완충수를 더 크게 잡는다. 30번대는 37 이상 고구간 방어만 보지 말고 32·33·36 같은 중간 연결수를 별도 슬롯으로 둬야 한다.',
+      },
+    ],
     picks: [
       {
         name: 'CODE A · 을해일 정통형',
@@ -670,6 +711,219 @@ const ANALYSES = [
         name: 'CODE F · 역발상 조합',
         numbers: [3, 10, 14, 25, 35, 40],
         note: '8/29 을해일 과거 20회에서 반복 출현한 번호 중에서 최근 주력 후보와 덜 겹치게 뽑은 역발상 조합. 10·14·25·40은 을해일 4~5회 출현 강세수이고, 3·35를 섞어서 주력 조합과 분산.',
+      },
+      {
+        name: '나진용 × 을해일 조합',
+        numbers: [9, 16, 25, 30, 37, 42],
+        note: '나진용 이름 기운과 을해일 흐름을 겹쳐 본 별도 조합. 9·16·25·30·37·42로 구성했고, 을해일 상위권 16·37·42와 25·30 보정 흐름을 함께 둔 기록용 조합.',
+      },
+    ],
+  },
+  {
+    id: 'imo',
+    title: '임오일 분석',
+    subtitle: '1240회 · 2026-09-05 · 임오일 토요일',
+    summary: '실제 CSV 1~1238회와 1239회 결과를 반영해 임오일, 최근 흐름, 장기 흐름, 미출현 간격을 나눠 구성한 8개 조합',
+    performance: {
+      total: 8,
+      items: [
+        { label: '3개 적중', count: 1 },
+        { label: '2개 적중', count: 2 },
+        { label: '1개 적중', count: 1 },
+        { label: '보너스', count: 1 },
+        { label: '낙첨', count: 3 },
+      ],
+    },
+    result: IMO_RESULT,
+    energy: {
+      title: '임오일 기운',
+      text: '과거 토요일+임오일은 40·100·160회부터 1180회까지 총 20회로 잡았다. 임오일 빈출 최상단은 11이 6회 단독 1위, 7·19·22·24·41이 각 5회, 10·18·21·23·26·34·38·42·43이 각 4회다. 이번에는 최상위 몇 개를 모든 게임에 고정하지 않고 임오일, 최근 흐름, 장기 흐름, 미출현 간격을 분리해 조합별 역할을 다르게 둔다.',
+    },
+    aiOpinion: [
+      {
+        title: 'A 주력 판단',
+        text: 'A는 11·18·24·28·38·41이다. 11은 임오일 20회 중 6회로 단독 최다이고, 24·41은 각 5회, 18·38도 각 4회라 6개 중 5개가 임오일 강세권이다. 여기에 18은 최근 20회 6회, 38은 최근 50회 9회, 28은 최근 흐름과 9회 미출현 복귀 신호를 같이 받는다.',
+      },
+      {
+        title: 'B 교차 판단',
+        text: 'B는 7·19·22·31·34·42다. 7·19·22는 임오일 각 5회, 34·42는 각 4회이고, 34·42는 최근 흐름도 받쳐준다. 31은 임오일 2회지만 최근 50회 9회라 임오일만 보면 버리기 쉬운 외부 HOT축으로 넣었다. 지난 무진일 CODE B에 가까운 일진×HOT 교차형이다.',
+      },
+      {
+        title: 'C 충돌 판단',
+        text: 'C는 10·15·23·27·38·43이다. 10·23·38·43은 임오일 각 4회이고, 15는 최근 50회 11회로 장기 HOT 최상위권이다. 27은 최근 50회 10회인데 15회 연속 미출현이라 HOT와 장기 미출현 복귀 신호를 한 장에서 충돌시킨 숫자다.',
+      },
+      {
+        title: 'D 복귀 판단',
+        text: 'D는 9·18·26·30·41·45다. 41은 임오일 5회, 18·26은 각 4회이고, 41·26·45·30은 모두 최근 쉬고 있는 숫자다. 다만 잠복수만 모은 것이 아니라 최근 20회 6회인 18을 중심에 세워 현재 흐름을 하나 남긴 복귀형이다.',
+      },
+      {
+        title: 'E 현재 흐름 판단',
+        text: 'E는 13·19·24·28·34·42다. 19·24는 임오일 각 5회, 34·42는 각 4회이고, 13은 임오일에서는 약하지만 최근 20회 6회·최근 50회 8회로 매우 강하다. 1239회에서 11·32·36을 후보군에서 날렸던 문제를 보완하려고 만든 공격적인 최근 흐름형이다.',
+      },
+      {
+        title: 'F 번호대 구조 판단',
+        text: 'F는 11·19·24·31·38·41이다. 1~9를 버리고 10번대 11·19, 30번대 31·38을 두 개씩 세운다. 24는 임오일 5회라 20번대 하나만 가져가도 질이 높고, 41은 임오일 5회와 장기 미출현 축을 동시에 가진다. 대화 중 새로 잡은 0-2-1-2-1형을 제대로 구현한 조합이다.',
+      },
+      {
+        title: 'G 새 구조 판단',
+        text: 'G는 7·18·22·28·34·38이다. 40번대를 완전히 버린 1-1-2-2-0 구조이고, 22·28과 34·38을 각각 복수로 둔다. 7은 임오일 5회라 한 자리 숫자를 하나 살릴 때 자연스럽고, 18은 임오일 4회와 최근 20회 6회를 동시에 가진다. 번호대 패턴에 숫자를 끼워 넣은 게 아니라 살아남은 후보를 구조화한 조합이다.',
+      },
+      {
+        title: 'H 중간 구간 판단',
+        text: 'H는 10·18·23·26·34·43이다. 1~9를 비우고 10번대 10·18, 20번대 23·26을 복수로 둔 0-2-2-1-1 구조다. 10·18·23·26·34·43 모두 임오일 4회권 후보라 구간을 채우려고 약한 숫자를 가져온 조합이 아니다.',
+      },
+    ],
+    resultReview: [
+      {
+        title: '실제 결과 분석',
+        text: '1240회 실제 당첨번호는 11, 13, 19, 20, 31, 44이고 보너스는 27이었다. F가 11·19·31 세 숫자를 맞춰 가장 가까웠고, B는 19·31, E는 13·19로 각각 2개 적중했다. A는 11 하나를 맞췄고, C는 본번호는 없지만 보너스 27을 포함했다. D·G·H는 본번호 적중이 없었다.',
+      },
+      {
+        title: '살아 있었던 판단',
+        text: '11은 임오일 단독 1위 축이라는 판단이 맞았고, 19도 임오일 5회권 강수로 실제 결과에 들어왔다. 31은 B와 F에서 외부 HOT축으로 살려둔 숫자인데 실제 본번호에 들어오며 임오일만 보고 버리면 안 된다는 판단을 증명했다.',
+      },
+      {
+        title: '가장 맞았던 구조',
+        text: '가장 좋은 구조는 F의 0-2-1-2-1형이었다. 1~9를 비우고 10번대와 30번대를 복수로 세운 판단이 실제 결과의 11·13·19·20·31·44 중 10번대 과밀과 30번대 31을 받았다. 다만 20과 44를 열지 못해 3개 적중에서 멈췄다.',
+      },
+      {
+        title: '놓친 번호 해석',
+        text: '20은 임오일 최상위군은 아니지만 실제 결과에서 10번대 과밀을 20번대 초입으로 이어주는 연결수였다. 44는 41·42·43 쪽으로 열어둔 고구간 방어가 한 칸 더 바깥으로 튄 숫자다. 다음에는 40번대 방어수를 41~43에만 묶지 않고 44까지 한 슬롯 열어둬야 한다.',
+      },
+      {
+        title: '다음 회차 보정',
+        text: '1241회에는 일진 최상위와 최근 HOT을 분리하되, F처럼 번호대 구조가 살아 있는 조합을 최소 한 장은 유지한다. 동시에 실제 결과에서 13·20·44처럼 후보 밖 연결수가 들어온 만큼, 중간 연결수와 바깥 고구간 이탈수를 별도 보정 슬롯으로 둔다.',
+      },
+    ],
+    picks: [
+      {
+        name: 'CODE A · 주력',
+        numbers: [11, 18, 24, 28, 38, 41],
+        note: '이번 주 1순위. 11은 임오일 6회 단독 최다, 24·41은 각 5회, 18·38은 각 4회다. 28은 최근 흐름과 9회 미출현 복귀 신호를 잇는 HOT·복귀 연결수.',
+        featured: true,
+        purchased: true,
+      },
+      {
+        name: 'CODE B · 일진×HOT 교차형',
+        numbers: [7, 19, 22, 31, 34, 42],
+        note: '7·19·22는 임오일 각 5회, 34·42는 각 4회다. 31은 임오일은 약하지만 최근 50회 9회라 외부 HOT축으로 넣은 조합.',
+        purchased: true,
+      },
+      {
+        name: 'CODE C · 장기 HOT 복귀형',
+        numbers: [10, 15, 23, 27, 38, 43],
+        note: '10·23·38·43은 임오일 4회권, 15는 최근 50회 11회, 27은 최근 50회 10회인데 15회째 쉬고 있는 장기 미출현 HOT 후보.',
+        purchased: true,
+      },
+      {
+        name: 'CODE D · 복귀형',
+        numbers: [9, 18, 26, 30, 41, 45],
+        note: '41은 임오일 5회, 18·26은 각 4회. 41·26·45·30의 미출현 복귀 신호에 최근 20회 6회인 18을 중심축으로 세운 조합.',
+        purchased: true,
+      },
+      {
+        name: 'CODE E · 최근 흐름형',
+        numbers: [13, 19, 24, 28, 34, 42],
+        note: '19·24는 임오일 각 5회, 34·42는 각 4회. 13과 28은 임오일보다 최근 흐름이 강해 후보군에서 배제하지 않은 공격형.',
+        purchased: true,
+      },
+      {
+        name: 'CODE F · 0-2-1-2-1형',
+        numbers: [11, 19, 24, 31, 38, 41],
+        note: '1~9를 버리고 10번대 11·19, 30번대 31·38을 복수로 세운 새 구조. 24는 임오일 5회, 41은 임오일 5회와 장기 미출현 축을 같이 가진다.',
+      },
+      {
+        name: 'CODE G · 1-1-2-2-0형',
+        numbers: [7, 18, 22, 28, 34, 38],
+        note: '40번대를 완전히 버리고 20번대 22·28, 30번대 34·38을 복수로 둔 구조. 여섯 숫자가 먼저 후보로 살아남고 그 뒤 번호대 구조로 조립된 조합.',
+      },
+      {
+        name: 'CODE H · 0-2-2-1-1형',
+        numbers: [10, 18, 23, 26, 34, 43],
+        note: '1~9를 비우고 10번대 10·18, 20번대 23·26을 복수로 둔다. 여섯 숫자 모두 임오일 4회권 후보라 구간을 채우기 위해 약한 수를 넣지 않은 조합.',
+      },
+    ],
+  },
+  {
+    id: 'gichuk',
+    title: '기축일 분석',
+    subtitle: '1241회 · 2026-09-12 · 기축일 토요일',
+    summary: '기축일 상위 빈도, 최근 10·20·50회 HOT 흐름, 장기 미출현 복귀수, 번호대 구조를 나눠 구성한 7개 조합',
+    performance: {
+      total: 7,
+      pending: true,
+    },
+    energy: {
+      title: '기축일 기운',
+      text: '기축일에서는 14·20이 6회 공동 1위이고, 18은 5회로 강한 축에 선다. 이번에는 기축일 정통 빈도만 따르지 않고 최근 흐름이 강한 13·31·38, 미출현 복귀 신호가 있는 3·24·45를 조합별로 나눠 넣는다.',
+    },
+    aiOpinion: [
+      {
+        title: 'A 주력 판단',
+        text: 'A는 12·18·20·31·38·42다. 20은 기축일 공동 1위 6회이면서 최근 10회 3회·최근 50회 8회로 장기 일진과 현재 흐름이 동시에 강하다. 18은 기축일 5회와 최근 20회 6회가 겹치는 좋은 교차 신호이고, 12도 기축일 4회와 최근 10회 2회를 가진다. 31·38은 질 좋은 30번대 복수 후보이고, 전체 구조는 0-2-1-2-1로 한 자리 구간을 비운다.',
+      },
+      {
+        title: 'B 정통형 판단',
+        text: 'B는 6·14·24·32·37·40이다. 14는 기축일 6회 공동 1위이고, 6·24·32·37·40은 모두 기축일 4회라 여섯 숫자가 전부 기축일 상위권에 들어간다. 최근에는 빈 구간이 많은 편이지만 이 조합은 1-1-1-2-1로 다섯 구간을 모두 살린 정통형 보험이다.',
+      },
+      {
+        title: 'C HOT 교차 판단',
+        text: 'C는 4·13·18·20·36·38이다. 40번대를 아예 버린 1-2-1-2-0 구조이고, 최근 강한 10번대 13·18을 함께 둔다. 특히 13은 기축일에서는 2회뿐이지만 최근 10회 4회·최근 20회 7회라 독립 신호가 매우 강하다. 20으로 기축일 1위 중심을 잡고, 36·38은 기축일 4회이면서 최근 50회 흐름도 강한 30번대 복수 후보다.',
+      },
+      {
+        title: 'D 복귀 판단',
+        text: 'D는 11·14·24·31·35·45다. 14는 기축일 6회 중심축이고, 24·35·45는 모두 기축일 4회다. 45는 현재 16회 미출현이지만 기축일에서 4회 나온 근거가 있어 단순 장기미출현보다 명분이 있다. 31은 최근 10회 3회·최근 20회 4회·최근 50회 10회라 현재 30번대 흐름 대표로 넣었다.',
+      },
+      {
+        title: 'E 변칙형 판단',
+        text: 'E는 3·13·20·32·38·43이다. 3은 기축일 5회이면서 현재 10회 미출현이라 기축일 강세와 잠복이 겹친다. 13은 기축일은 약하지만 최근 20회 7회로 강하고, 20은 기축일 6회 1위와 최근 10회 3회를 동시에 받는다. 32·38은 기축일 4회권이고, 43은 40번대를 하나만 쓸 때 일진 근거가 있는 마무리 숫자다.',
+      },
+      {
+        title: 'F 중앙 몰림 판단',
+        text: 'F는 13·14·18·20·32·38이다. 구조는 0-3-1-2-0으로, 최근 10회에서 10번대 복수출현이 8/10회였던 흐름을 강하게 반영한다. 14는 기축일 6회 공동 1위, 18은 기축일 5회와 최근 20회 6회, 13은 최근 10회 4회·최근 20회 7회의 HOT 숫자라 10번대 세 자리를 억지로 채운 것이 아니다. 20은 기축일 6회 공동 1위이고, 32·38은 기축일 4회권 30번대 복수 후보다. 양끝 1~9와 40번대를 모두 버리고 중앙 구간에 몰아본 추가 조합이다.',
+      },
+      {
+        title: '기시감 변형 판단',
+        text: '기시감 조합은 7·13·17·20·32·38이다. 기존 CODE E와 CODE F의 공통 핵심축인 13·20·32·38을 그대로 유지하고, F의 14·18 대신 7·17을 넣어 감각적으로 걸리는 변형을 별도 기록한다. 13·20·32·38 네 숫자가 이미 기축일+HOT 흐름에서 반복 확인된 축이라 완전히 새 조합이라기보다 핵심축 변주로 본다.',
+      },
+    ],
+    resultReview: [],
+    picks: [
+      {
+        name: 'CODE A · 주력',
+        numbers: [12, 18, 20, 31, 38, 42],
+        note: '이번 주 주력. 20은 기축일 공동 1위 6회와 최근 흐름이 동시에 강하고, 18은 기축일 5회와 최근 20회 6회가 겹친다. 31·38을 30번대 복수로 세운 0-2-1-2-1 구조.',
+        featured: true,
+      },
+      {
+        name: 'CODE B · 기축일 정통형',
+        numbers: [6, 14, 24, 32, 37, 40],
+        note: '14는 기축일 6회 공동 1위. 6·24·32·37·40도 전부 기축일 4회라 여섯 숫자 모두 기축일 상위권이고, 다섯 구간을 모두 살린 정통형 보험 조합.',
+      },
+      {
+        name: 'CODE C · 40번대 제외 HOT형',
+        numbers: [4, 13, 18, 20, 36, 38],
+        note: '40번대를 버린 1-2-1-2-0 구조. 13은 기축일 2회지만 최근 10회 4회·최근 20회 7회로 강하고, 20은 기축일 6회 1위라 중심을 잡는다.',
+      },
+      {
+        name: 'CODE D · 잠복/복귀형',
+        numbers: [11, 14, 24, 31, 35, 45],
+        note: '14를 기축일 중심축으로 두고 24·35·45의 기축일 4회권을 섞었다. 45는 16회 미출현 복귀수, 31은 최근 50회 10회의 현재 30번대 대표 후보.',
+      },
+      {
+        name: 'CODE E · 기축일+HOT 변칙형',
+        numbers: [3, 13, 20, 32, 38, 43],
+        note: '3은 기축일 5회와 10회 미출현이 겹치고, 13은 최근 20회 7회의 HOT 축이다. 20·32·38·43은 기축일 근거를 가진 혼합 변칙형.',
+      },
+      {
+        name: 'CODE F · 0-3-1-2-0형',
+        numbers: [13, 14, 18, 20, 32, 38],
+        note: '10번대를 13·14·18 세 개로 강하게 쓰는 중앙 몰림 조합. 14는 기축일 6회 공동 1위, 18은 기축일 5회와 최근 20회 6회, 13은 최근 HOT 축이다. 20과 32·38로 중앙 구간을 마무리하고 양끝은 모두 제외.',
+      },
+      {
+        name: '기시감 숫자',
+        numbers: [7, 13, 17, 20, 32, 38],
+        note: '기존 CODE E/F와 13·20·32·38 네 숫자가 겹치는 변형 조합. F의 14·18을 7·17로 바꿔 양끝 감각을 살린 기시감 기록용 게임.',
       },
     ],
   },
@@ -868,6 +1122,67 @@ function getHitNumbers(pick, result) {
   return pick.numbers.filter(number => result.numbers.includes(number))
 }
 
+const LOTTO_GAME_PRICE = 1000
+
+function getPrizeInfo(pick, result) {
+  if (!result) return { rank: null, prize: 0 }
+
+  const hitCount = getHitNumbers(pick, result).length
+  const hasBonus = pick.numbers.includes(result.bonus)
+
+  if (hitCount === 6) return { rank: '1\uB4F1', prize: 0 }
+  if (hitCount === 5 && hasBonus) return { rank: '2\uB4F1', prize: 0 }
+  if (hitCount === 5) return { rank: '3\uB4F1', prize: 0 }
+  if (hitCount === 4) return { rank: '4\uB4F1', prize: 50000 }
+  if (hitCount === 3) return { rank: '5\uB4F1', prize: 5000 }
+
+  return { rank: null, prize: 0 }
+}
+
+function getPickResultLabel(pick, result) {
+  const { rank } = getPrizeInfo(pick, result)
+  if (rank) return rank
+
+  const hitCount = getHitNumbers(pick, result).length
+  if (hitCount > 0) return `${hitCount}\uAC1C \uC801\uC911`
+
+  return ''
+}
+
+function formatWon(value) {
+  return `${value.toLocaleString()}\uC6D0`
+}
+
+function getLottoKpis(analyses) {
+  const purchasedPicks = analyses.flatMap(analysis =>
+    analysis.picks
+      .filter(pick => !pick.result)
+      .map(pick => ({ analysis, pick }))
+  )
+  const settledPicks = purchasedPicks.filter(({ analysis }) => analysis.result)
+  const wonPicks = settledPicks
+    .map(({ analysis, pick }) => getPrizeInfo(pick, analysis.result))
+    .filter(result => result.rank)
+
+  const purchaseAmount = purchasedPicks.length * LOTTO_GAME_PRICE
+  const prizeAmount = settledPicks.reduce(
+    (total, { analysis, pick }) => total + getPrizeInfo(pick, analysis.result).prize,
+    0
+  )
+  const profit = prizeAmount - purchaseAmount
+  const returnRate = purchaseAmount > 0 ? Math.round((prizeAmount / purchaseAmount) * 100) : 0
+
+  return {
+    purchasedCount: purchasedPicks.length,
+    settledCount: settledPicks.length,
+    wonCount: wonPicks.length,
+    purchaseAmount,
+    prizeAmount,
+    profit,
+    returnRate,
+  }
+}
+
 function NumberBall({ value, muted = false, hit = false, bonus = false }) {
   const tone =
     muted ? 'bg-[#d8e2f0] text-[#6b86b8]' :
@@ -893,6 +1208,36 @@ function StatCard({ title, value, caption }) {
       <p className="mt-2 text-2xl font-black text-[#12376f]">{value}</p>
       <p className="mt-1 text-xs font-medium text-[#6b86b8]">{caption}</p>
     </div>
+  )
+}
+
+function LottoKpiCards({ kpis }) {
+  const profitTone = kpis.profit >= 0 ? 'text-[#137343]' : 'text-[#d61f1f]'
+  const profitLabel = `${kpis.profit >= 0 ? '+' : '-'}${formatWon(Math.abs(kpis.profit))}`
+
+  return (
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <StatCard
+        title={'\uAD6C\uB9E4\uAE08\uC561'}
+        value={formatWon(kpis.purchaseAmount)}
+        caption={`${kpis.purchasedCount}\uAC8C\uC784 \uAD6C\uB9E4 · \uAC8C\uC784\uB2F9 ${formatWon(LOTTO_GAME_PRICE)}`}
+      />
+      <StatCard
+        title={'\uB2F9\uCCA8\uAE08'}
+        value={formatWon(kpis.prizeAmount)}
+        caption={`${kpis.settledCount}\uAC8C\uC784 \uACB0\uACFC \uD655\uC815 · ${kpis.wonCount}\uAC8C\uC784 \uB2F9\uCCA8`}
+      />
+      <div className="rounded-lg border border-[#d5e8ff] bg-white p-4 shadow-sm">
+        <p className="text-xs font-black text-[#5577bb]">{'\uC190\uC775'}</p>
+        <p className={`mt-2 text-2xl font-black ${profitTone}`}>{profitLabel}</p>
+        <p className="mt-1 text-xs font-medium text-[#6b86b8]">{'\uB2F9\uCCA8\uAE08 - \uAD6C\uB9E4\uAE08\uC561'}</p>
+      </div>
+      <StatCard
+        title={'\uD68C\uC218\uC728'}
+        value={`${kpis.returnRate}%`}
+        caption={'\uD655\uC815 \uACB0\uACFC \uAE30\uC900'}
+      />
+    </section>
   )
 }
 
@@ -1240,6 +1585,7 @@ function AnalysisPanel({ analysis, open, onToggle }) {
           <div className="grid gap-3 lg:grid-cols-2">
             {analysis.picks.map((pick) => {
               const hits = analysis.result ? getHitNumbers(pick, analysis.result) : []
+              const resultLabel = analysis.result ? getPickResultLabel(pick, analysis.result) : ''
 
               return (
                 <article key={pick.name} className="rounded-lg border border-[#d5e8ff] bg-white p-4">
@@ -1255,7 +1601,7 @@ function AnalysisPanel({ analysis, open, onToggle }) {
                         주력
                       </span>
                     )}
-                    {pick.purchased && (
+                    {!pick.result && (
                       <span className="rounded-full bg-[#fff4d8] px-2 py-0.5 text-[11px] font-black text-[#8a5a00]">
                         구매
                       </span>
@@ -1265,9 +1611,9 @@ function AnalysisPanel({ analysis, open, onToggle }) {
                         결과
                       </span>
                     )}
-                    {hits.length > 0 && !pick.result && (
+                    {resultLabel && !pick.result && (
                       <span className="rounded-full bg-[#e8f2ff] px-2 py-0.5 text-[11px] font-black text-[#0044cc]">
-                        {hits.length}개 적중
+                        {resultLabel}
                       </span>
                     )}
                   </div>
@@ -1355,6 +1701,7 @@ export default function LottoPage() {
   const [draws, setDraws] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const lottoKpis = useMemo(() => getLottoKpis(ANALYSES), [])
 
   useEffect(() => {
     let alive = true
@@ -1412,6 +1759,7 @@ export default function LottoPage() {
 
         {tab === 'picks' && (
           <div className="flex flex-col gap-3">
+            <LottoKpiCards kpis={lottoKpis} />
             {ANALYSES.map((analysis) => (
               <AnalysisPanel
                 key={analysis.id}

@@ -22288,6 +22288,44 @@
       "firstTotalAmount": 27536950514,
       "dayStemBranch": "무진일",
       "dayGanji": "무진"
+    },
+    {
+      "drawNo": 1239,
+      "drawDate": "2026-08-29",
+      "numbers": [
+        11,
+        13,
+        22,
+        32,
+        33,
+        36
+      ],
+      "bonus": 8,
+      "source": "manual",
+      "firstWinnerCount": 13,
+      "firstPrizeAmount": 2214789375,
+      "firstTotalAmount": 28792261875,
+      "dayStemBranch": "을해일",
+      "dayGanji": "을해"
+    },
+    {
+      "drawNo": 1240,
+      "drawDate": "2026-09-05",
+      "numbers": [
+        11,
+        13,
+        19,
+        20,
+        31,
+        44
+      ],
+      "bonus": 27,
+      "source": "manual",
+      "firstWinnerCount": 16,
+      "firstPrizeAmount": 1791817758,
+      "firstTotalAmount": 28669084128,
+      "dayStemBranch": "임오일",
+      "dayGanji": "임오"
     }
   ],
   "ganji": {
