@@ -231,62 +231,6 @@ const HOTSPOTS = [
   { id: 'calf_back', label: '후면 비복근', cx: 851, cy: 1036, rx: 28, ry: 76 },
 ]
 
-const ROUTINES = {
-  day1: {
-    day: 'DAY 1',
-    title: 'PUSH 5×5 체크리스트',
-    tag: 'PUSH',
-    items: [
-      { id: 'bench-press', name: '벤치프레스', reps: '5', sets: '5', weight: '80' },
-      { id: 'leg-extension', name: '레그 익스텐션', reps: '5', sets: '5', weight: '66' },
-      { id: 'side-lateral', name: '덤벨 사이드 레터럴', reps: '10', sets: '5', weight: '10+10' },
-      { id: 'incline-press', name: '덤벨 인클라인 프레스', reps: '5', sets: '5', weight: '30+30' },
-      { id: 'leg-curl', name: '레그 컬', reps: '5', sets: '5', weight: '55' },
-      { id: 'push-press', name: '푸쉬프레스', reps: '5', sets: '5', weight: '40' },
-      { id: 'machine-shoulder', name: '머신 숄더프레스', reps: '5', sets: '5', weight: '60' },
-      { id: 'cable-fly', name: '케이블 플라이', reps: '5', sets: '5', weight: '35' },
-      { id: 'machine-situp', name: '머신 싯업', reps: '5', sets: '5', weight: '50' },
-      { id: 'dips', name: '딥스', reps: '7', sets: '5', weight: '' },
-      { id: 'upper-cable-fly', name: '케이블 어퍼 플라이', reps: '5', sets: '5', weight: '25' },
-    ],
-  },
-  day2: {
-    day: 'DAY 2',
-    title: 'PULL 5×5 체크리스트',
-    tag: 'PULL',
-    items: [
-      { id: 'pullup-machine', name: '풀업', reps: '5', sets: '5', weight: '기구' },
-      { id: 'pull-leg-extension', name: '레그 익스텐션', reps: '5', sets: '5', weight: '66' },
-      { id: 'reverse-pecdeck', name: '머신 리버스 팩덱', reps: '5', sets: '5', weight: '50' },
-      { id: 'barbell-bent-row', name: '바벨 벤트 로우', reps: '7', sets: '5', weight: '70' },
-      { id: 'pull-machine-situp', name: '머신 싯업', reps: '10', sets: '5', weight: '40', note: '50키로' },
-      { id: 'front-lat-pulldown', name: '프론트 랫풀다운', reps: '5', sets: '5', weight: '37' },
-      { id: 'pull-leg-curl', name: '레그 컬', reps: '5', sets: '5', weight: '55' },
-      { id: 'ezbar-curl', name: '이지바 컬', reps: '7', sets: '5', weight: '30', note: '언더그립임' },
-      { id: 'chest-supported-row', name: '체스트 서포티드 로우', reps: '5', sets: '5', weight: '70' },
-      { id: 'behind-neck-lat-pulldown', name: '비하인드넥 랫풀다운', reps: '5', sets: '5', weight: '32' },
-      { id: 'arm-curl-machine', name: '암컬 머신', reps: '5', sets: '5', weight: '25' },
-    ],
-  },
-  day3: {
-    day: 'DAY 3',
-    title: 'LOWER + MIX 5×5 체크리스트',
-    tag: 'LOWER + MIX',
-    items: [
-      { id: 'squat', name: '스쿼트', reps: '5', sets: '5', weight: '110' },
-      { id: 'cable-side-lateral', name: '케이블 사이드 레터럴', reps: '7', sets: '5', weight: '25' },
-      { id: 'leg-press', name: '레그프레스', reps: '5', sets: '5', weight: '240' },
-      { id: 'chinup', name: '친업', reps: '5', sets: '5', weight: '' },
-      { id: 'lower-leg-curl', name: '레그 컬', reps: '5', sets: '5', weight: '55', note: '첫 두세트 말고는 힙터치안됨' },
-      { id: 'dumbbell-front-raise', name: '덤벨 프론트 레이즈', reps: '', sets: '', weight: '16' },
-      { id: 'lower-leg-extension', name: '레그 익스텐션', reps: '5', sets: '5', weight: '66' },
-      { id: 'lower-machine-situp', name: '머신 싯업', reps: '', sets: '', weight: '50', note: '함' },
-      { id: 'machine-pecdeck-fly', name: '머신 팩덱 플라이', reps: '', sets: '', weight: '80' },
-      { id: 'lower-cable-fly', name: '케이블 플라이', reps: '5', sets: '5', weight: '35' },
-    ],
-  },
-}
-
 const EXERCISE_TARGETS = {
   넥플렉션: 'sternocleidomastoid',
   '가벼운목스트레칭': 'sternocleidomastoid',
@@ -303,17 +247,22 @@ const EXERCISE_TARGETS = {
   덤벨인클라인프레스: 'chest',
   케이블플라이: 'chest',
   케이블어퍼플라이: 'chest',
+  케이블로우투하이플라이: 'chest',
   머신팩덱플라이: 'chest',
   숄더프레스: 'deltoid_front',
   머신숄더프레스: 'deltoid_front',
+  바벨푸시프레스: 'deltoid_front',
   푸쉬프레스: 'deltoid_front',
   사이드레터럴레이즈: 'deltoid_front',
   덤벨사이드레터럴: 'deltoid_front',
+  덤벨사이드레터럴레이즈: 'deltoid_front',
   케이블사이드레터럴: 'deltoid_front',
+  케이블사이드레터럴레이즈: 'deltoid_front',
   덤벨프론트레이즈: 'deltoid_front',
   아놀드프레스: 'deltoid_front',
   덤벨컬: 'biceps',
   바벨컬: 'biceps',
+  언더그립바벨컬: 'biceps',
   이지바컬: 'biceps',
   암컬머신: 'biceps',
   해머컬: 'brachialis',
@@ -333,8 +282,10 @@ const EXERCISE_TARGETS = {
   덤벨풀오버: 'serratus',
   레그익스텐션: 'rectus_femoris',
   스쿼트: 'quad',
+  바벨스쿼트: 'quad',
   런지: 'quad',
   레그프레스: 'quad',
+  머신레그프레스: 'quad',
   스텝업: 'vastus_lateralis',
   와이드스쿼트: 'inner_thigh',
   코펜하겐플랭크: 'inner_thigh',
@@ -355,8 +306,10 @@ const EXERCISE_TARGETS = {
   프론트랫풀다운: 'lat',
   비하인드넥랫풀다운: 'lat',
   풀업: 'lat',
+  어시스트풀업: 'lat',
   친업: 'lat',
   바벨벤트로우: 'lat',
+  언더그립바벨로우: 'lat',
   체스트서포티드로우: 'rhomboid',
   백익스텐션: 'erector_spinae',
   루마니안데드리프트: 'hamstring',
@@ -1117,24 +1070,22 @@ function MuscleFigure({ activeId, routineTargetIds = [], highlightedId, onSelect
 }
 
 export default function ExercisePageProposal() {
-  const exerciseStore = useExerciseState(ROUTINES)
+  const exerciseStore = useExerciseState()
   const [activeId, setActiveId] = useState('chest')
   const [showRoutine, setShowRoutine] = useState(false)
   const [showAllRecommendations, setShowAllRecommendations] = useState(false)
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState('')
   const [favoriteExercises, setFavoriteExercises] = useState([])
-  const [routinesMeta, setRoutinesMeta] = useState(() => ROUTINES)
+  const [routinesMeta, setRoutinesMeta] = useState({})
   const [routineDraftExercise, setRoutineDraftExercise] = useState(null)
   const [routineDraft, setRoutineDraft] = useState({
-    routineId: 'day1',
+    routineId: '',
     reps: '10',
     sets: '3',
     weight: '',
   })
-  const [activeRoutineId, setActiveRoutineId] = useState('day1')
-  const [routineItemsByDay, setRoutineItemsByDay] = useState(() => (
-    Object.fromEntries(Object.entries(ROUTINES).map(([id, routine]) => [id, routine.items]))
-  ))
+  const [activeRoutineId, setActiveRoutineId] = useState('')
+  const [routineItemsByDay, setRoutineItemsByDay] = useState({})
   const [editingId, setEditingId] = useState(null)
   const [draggingId, setDraggingId] = useState(null)
   const [dragOverId, setDragOverId] = useState(null)
@@ -1144,44 +1095,44 @@ export default function ExercisePageProposal() {
 
   useEffect(() => {
     if (exerciseStore.loading || !exerciseStore.initialized) return
-    if (!exerciseStore.routinesMeta || !exerciseStore.routineItemsByDay) {
-      exerciseStore.seedDefaults()
+    if (!exerciseStore.connected) {
+      setFavoriteExercises([])
+      setRoutinesMeta({})
+      setRoutineItemsByDay({})
+      setActiveRoutineId('')
+      setRoutineDraft((draft) => ({ ...draft, routineId: '' }))
+      setShowRoutine(false)
       return
     }
 
     setFavoriteExercises(exerciseStore.favorites)
-    setRoutinesMeta(exerciseStore.routinesMeta)
-    setRoutineItemsByDay(exerciseStore.routineItemsByDay)
+    setRoutinesMeta(exerciseStore.routinesMeta || {})
+    setRoutineItemsByDay(exerciseStore.routineItemsByDay || {})
 
-    if (!exerciseStore.routinesMeta[activeRoutineId]) {
-      const [firstRoutineId] = Object.keys(exerciseStore.routinesMeta)
+    if (!exerciseStore.routinesMeta?.[activeRoutineId]) {
+      const [firstRoutineId] = Object.keys(exerciseStore.routinesMeta || {})
       if (firstRoutineId) {
         setActiveRoutineId(firstRoutineId)
         setRoutineDraft((draft) => ({ ...draft, routineId: firstRoutineId }))
+      } else {
+        setActiveRoutineId('')
+        setRoutineDraft((draft) => ({ ...draft, routineId: '' }))
       }
     }
   }, [
     activeRoutineId,
+    exerciseStore.connected,
     exerciseStore.favorites,
     exerciseStore.initialized,
     exerciseStore.loading,
     exerciseStore.routineItemsByDay,
     exerciseStore.routinesMeta,
-    exerciseStore.seedDefaults,
   ])
 
   const saveFavoritesState = (updater) => {
     setFavoriteExercises((current) => {
       const next = typeof updater === 'function' ? updater(current) : updater
       exerciseStore.saveFavorites(next)
-      return next
-    })
-  }
-
-  const saveRoutinesMetaState = (updater) => {
-    setRoutinesMeta((current) => {
-      const next = typeof updater === 'function' ? updater(current) : updater
-      exerciseStore.saveRoutinesMeta(next)
       return next
     })
   }
@@ -1195,8 +1146,13 @@ export default function ExercisePageProposal() {
   }
 
   const active = useMemo(() => MUSCLES[activeId], [activeId])
+  const routineCount = Object.keys(routinesMeta).length
+  const hasRoutines = routineCount > 0
   const activeRoutine = routinesMeta[activeRoutineId]
-  const routineItems = routineItemsByDay[activeRoutineId] ?? []
+  const routineItems = useMemo(
+    () => routineItemsByDay[activeRoutineId] ?? [],
+    [activeRoutineId, routineItemsByDay],
+  )
   const routineTargetIds = useMemo(() => getRoutineTargetIds(routineItems), [routineItems])
   const visibleTargetIds = useMemo(
     () => [...new Set([...(showRoutine ? routineTargetIds : []), ...extraMuscleIds])],
@@ -1250,6 +1206,7 @@ export default function ExercisePageProposal() {
     if (!routineDraftExercise) return
 
     const routineId = routineDraft.routineId
+    if (!routineId || !routinesMeta[routineId]) return
     const exerciseName = formatExerciseName(routineDraftExercise.name)
     const id = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const nextItem = {
@@ -1297,8 +1254,10 @@ export default function ExercisePageProposal() {
             <select
               value={routineDraft.routineId}
               onChange={(event) => setRoutineDraft((draft) => ({ ...draft, routineId: event.target.value }))}
+              disabled={!hasRoutines}
               className="mt-1 h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-sm font-bold text-slate-900 outline-none focus:border-[#134e4a]"
             >
+              {!hasRoutines && <option value="">루틴을 먼저 생성하세요</option>}
               {Object.entries(routinesMeta).map(([id, routine]) => (
                 <option key={id} value={id}>{routine.day} · {routine.title}</option>
               ))}
@@ -1334,7 +1293,8 @@ export default function ExercisePageProposal() {
         <button
           type="button"
           onClick={addDraftExerciseToRoutine}
-          className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#134e4a] text-sm font-black text-white transition hover:bg-[#0f3f3b]"
+          disabled={!hasRoutines}
+          className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#134e4a] text-sm font-black text-white transition hover:bg-[#0f3f3b] disabled:cursor-not-allowed disabled:opacity-40"
         >
           선택한 루틴에 추가
         </button>
@@ -1437,6 +1397,8 @@ export default function ExercisePageProposal() {
   }
 
   const createRoutine = () => {
+    if (!exerciseStore.connected) return
+
     const nextNumber = Object.keys(routinesMeta).length + 1
     const id = `custom-routine-${Date.now()}`
     const nextRoutine = {
@@ -1505,6 +1467,12 @@ export default function ExercisePageProposal() {
   return (
     <section className="min-h-full bg-[#e8eff3] text-slate-900">
       <main className="relative min-h-full overflow-hidden bg-[#f6f8fa] px-4 py-4">
+        {!exerciseStore.loading && !exerciseStore.connected && (
+          <div className="relative z-10 mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
+            운동 루틴은 로그인 후 RTDB에만 저장됩니다. 로그인하지 않은 상태에서는 기기 간 동기화되는 루틴을 만들 수 없습니다.
+          </div>
+        )}
+
         <div className="relative z-10 flex justify-end">
           <div className="relative w-full sm:w-72">
             <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
@@ -1613,7 +1581,7 @@ export default function ExercisePageProposal() {
                     <button
                       type="button"
                       onClick={deleteActiveRoutine}
-                      disabled={Object.keys(routinesMeta).length <= 1}
+                      disabled={routineCount <= 1}
                       className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-red-200 bg-white px-2 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       <Trash2 size={14} />
@@ -1621,6 +1589,20 @@ export default function ExercisePageProposal() {
                     </button>
                   </div>
                 </div>
+                {!activeRoutine && (
+                  <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
+                    <p className="text-sm font-black text-slate-500">저장된 루틴이 없습니다.</p>
+                    <button
+                      type="button"
+                      onClick={createRoutine}
+                      className="mt-3 inline-flex h-9 items-center justify-center rounded-md bg-[#134e4a] px-3 text-xs font-black text-white"
+                    >
+                      루틴 생성
+                    </button>
+                  </div>
+                )}
+                {activeRoutine && (
+                <>
                 <div className="grid gap-2 sm:grid-cols-[84px_minmax(0,1fr)_96px]">
                   <label className="text-[11px] font-black text-slate-500">
                     DAY
@@ -1777,6 +1759,8 @@ export default function ExercisePageProposal() {
                     )
                   })}
                 </div>
+                </>
+                )}
               </div>
             )}
 

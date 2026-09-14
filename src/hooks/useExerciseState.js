@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { get, onValue, ref, serverTimestamp, set, update } from 'firebase/database'
+import { onValue, ref, serverTimestamp, set, update } from 'firebase/database'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -9,34 +9,8 @@ const EMPTY_EXERCISE_STATE = {
   routineItemsByDay: null,
 }
 
-const GUEST_STORAGE_KEY = 'mine.exerciseState.guest'
-
-function readGuestState() {
-  try {
-    const value = JSON.parse(localStorage.getItem(GUEST_STORAGE_KEY) ?? 'null')
-    return value && typeof value === 'object' ? value : EMPTY_EXERCISE_STATE
-  } catch {
-    return EMPTY_EXERCISE_STATE
-  }
-}
-
-function writeGuestState(nextState) {
-  try {
-    localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(nextState))
-  } catch {
-    // Exercise changes can still work for the current session if browser storage is unavailable.
-  }
-}
-
-function updateGuestState(updater) {
-  const current = readGuestState()
-  const nextState = updater(current)
-  writeGuestState(nextState)
-  return nextState
-}
-
-export function useExerciseState(defaultRoutines) {
-  const { user } = useAuth()
+export function useExerciseState() {
+  const { user, loading: authLoading } = useAuth()
   const [state, setState] = useState(EMPTY_EXERCISE_STATE)
   const [loading, setLoading] = useState(true)
   const [initialized, setInitialized] = useState(false)
@@ -47,8 +21,14 @@ export function useExerciseState(defaultRoutines) {
   ), [user])
 
   useEffect(() => {
+    if (authLoading) {
+      setLoading(true)
+      setInitialized(false)
+      return undefined
+    }
+
     if (!exercisePath) {
-      setState(readGuestState())
+      setState(EMPTY_EXERCISE_STATE)
       setLoading(false)
       setInitialized(true)
       return undefined
@@ -77,54 +57,10 @@ export function useExerciseState(defaultRoutines) {
         setInitialized(true)
       },
     )
-  }, [exercisePath])
-
-  const seedDefaults = useCallback(async () => {
-    const itemsByDay = Object.fromEntries(
-      Object.entries(defaultRoutines).map(([id, routine]) => [id, routine.items]),
-    )
-
-    if (!exercisePath) {
-      const current = readGuestState()
-      const nextState = {
-        favorites: current.favorites,
-        routinesMeta: {
-          ...defaultRoutines,
-          ...(current.routinesMeta || {}),
-        },
-        routineItemsByDay: {
-          ...itemsByDay,
-          ...(current.routineItemsByDay || {}),
-        },
-      }
-      setState(nextState)
-      writeGuestState(nextState)
-      return
-    }
-
-    const snapshot = await get(ref(db, exercisePath))
-    const current = snapshot.val() || {}
-
-    await update(ref(db), {
-      [`${exercisePath}/routines/meta`]: {
-        ...defaultRoutines,
-        ...(current.routines?.meta || {}),
-      },
-      [`${exercisePath}/routines/itemsByDay`]: {
-        ...itemsByDay,
-        ...(current.routines?.itemsByDay || {}),
-      },
-      [`${exercisePath}/updatedAtServer`]: serverTimestamp(),
-    })
-  }, [defaultRoutines, exercisePath])
+  }, [authLoading, exercisePath])
 
   const saveFavorites = useCallback(async (favorites) => {
     if (!exercisePath) {
-      setState((current) => {
-        const nextState = { ...current, favorites }
-        writeGuestState(nextState)
-        return nextState
-      })
       return
     }
     await update(ref(db), {
@@ -135,11 +71,6 @@ export function useExerciseState(defaultRoutines) {
 
   const saveRoutinesMeta = useCallback(async (routinesMeta) => {
     if (!exercisePath) {
-      setState((current) => {
-        const nextState = { ...current, routinesMeta }
-        writeGuestState(nextState)
-        return nextState
-      })
       return
     }
     await update(ref(db), {
@@ -150,11 +81,6 @@ export function useExerciseState(defaultRoutines) {
 
   const saveRoutineItemsByDay = useCallback(async (routineItemsByDay) => {
     if (!exercisePath) {
-      setState((current) => {
-        const nextState = { ...current, routineItemsByDay }
-        writeGuestState(nextState)
-        return nextState
-      })
       return
     }
     await update(ref(db), {
@@ -165,17 +91,6 @@ export function useExerciseState(defaultRoutines) {
 
   const saveRoutine = useCallback(async (routineId, routine, items = []) => {
     if (!exercisePath) {
-      setState(updateGuestState((current) => ({
-        ...current,
-        routinesMeta: {
-          ...(current.routinesMeta || {}),
-          [routineId]: routine,
-        },
-        routineItemsByDay: {
-          ...(current.routineItemsByDay || {}),
-          [routineId]: items,
-        },
-      })))
       return
     }
 
@@ -188,13 +103,6 @@ export function useExerciseState(defaultRoutines) {
 
   const removeRoutine = useCallback(async (routineId) => {
     if (!exercisePath) {
-      setState(updateGuestState((current) => {
-        const routinesMeta = { ...(current.routinesMeta || {}) }
-        const routineItemsByDay = { ...(current.routineItemsByDay || {}) }
-        delete routinesMeta[routineId]
-        delete routineItemsByDay[routineId]
-        return { ...current, routinesMeta, routineItemsByDay }
-      }))
       return
     }
 
@@ -207,7 +115,6 @@ export function useExerciseState(defaultRoutines) {
 
   const removeExerciseState = useCallback(async () => {
     if (!exercisePath) {
-      localStorage.removeItem(GUEST_STORAGE_KEY)
       setState(EMPTY_EXERCISE_STATE)
       return
     }
@@ -220,7 +127,6 @@ export function useExerciseState(defaultRoutines) {
     initialized,
     error,
     connected: Boolean(exercisePath),
-    seedDefaults,
     saveFavorites,
     saveRoutinesMeta,
     saveRoutineItemsByDay,

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   onValue,
+  get,
   push,
   ref,
   serverTimestamp,
@@ -69,9 +70,12 @@ export function useEuphony({ seedDefaults = true } = {}) {
   const [error, setError] = useState(null)
   const seeded = useRef(false)
 
-  const highlightsPath = useMemo(() => (
-    user ? `users/${user.uid}/pages/euphony/highlights` : null
+  const euphonyPath = useMemo(() => (
+    user ? `users/${user.uid}/pages/euphony` : null
   ), [user])
+  const highlightsPath = useMemo(() => (
+    euphonyPath ? `${euphonyPath}/highlights` : null
+  ), [euphonyPath])
 
   useEffect(() => {
     if (!highlightsPath) {
@@ -95,10 +99,12 @@ export function useEuphony({ seedDefaults = true } = {}) {
 
         if (!seedDefaults) return
 
-        const defaultHighlights = await loadDefaultHighlights()
-
         if (items.length === 0 && !seeded.current) {
+          const metadata = (await get(ref(db, `${euphonyPath}/metadata`))).val() || {}
+          if (metadata.defaultHighlightsSeededAt) return
+
           seeded.current = true
+          const defaultHighlights = await loadDefaultHighlights()
           const updates = {}
           defaultHighlights.forEach((highlight, index) => {
             updates[`${highlightsPath}/${highlight.id}`] = highlightNodeFromPayload({
@@ -114,10 +120,9 @@ export function useEuphony({ seedDefaults = true } = {}) {
             })
             addBookIndexUpdate(updates, user.uid, highlight.id, highlight.bookTitle, true)
           })
+          updates[`${euphonyPath}/metadata/defaultHighlightsSeededAt`] = serverTimestamp()
           await update(ref(db), updates)
         } else {
-          const existingIds = new Set(items.map(item => item.id))
-          const existingById = new Map(items.map((item) => [item.id, item]))
           const backfill = {}
 
           Object.entries(rawValue).forEach(([id, item]) => {
@@ -126,28 +131,6 @@ export function useEuphony({ seedDefaults = true } = {}) {
               backfill[`${highlightsPath}/${id}`] = highlightNodeFromPayload(normalized)
             }
             addBookIndexUpdate(backfill, user.uid, id, normalized.bookTitle, true)
-          })
-
-          defaultHighlights.forEach((highlight, index) => {
-            if (!existingIds.has(highlight.id)) {
-              backfill[`${highlightsPath}/${highlight.id}`] = highlightNodeFromPayload({
-                text: highlight.text,
-                highlightedAt: highlight.highlightedAt,
-                bookTitle: highlight.bookTitle,
-                author: highlight.author || '',
-                order: index + 1,
-                createdAt: Date.now() - index,
-                updatedAt: Date.now() - index,
-                createdAtServer: serverTimestamp(),
-                updatedAtServer: serverTimestamp(),
-              })
-              addBookIndexUpdate(backfill, user.uid, highlight.id, highlight.bookTitle, true)
-            } else {
-              const existing = existingById.get(highlight.id)
-              if (existing && existing.author !== (highlight.author || '')) {
-                backfill[`${highlightsPath}/${highlight.id}/meta/author`] = highlight.author || ''
-              }
-            }
           })
           if (Object.keys(backfill).length > 0) {
             await update(ref(db), backfill)
@@ -160,7 +143,7 @@ export function useEuphony({ seedDefaults = true } = {}) {
         setLoading(false)
       }
     )
-  }, [highlightsPath, seedDefaults])
+  }, [euphonyPath, highlightsPath, seedDefaults, user])
 
   const updateHighlight = useCallback(async (highlightId, payload) => {
     if (!highlightsPath || !highlightId) return

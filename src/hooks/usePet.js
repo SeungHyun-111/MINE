@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { onValue, ref, update } from 'firebase/database'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/hooks/useAuth'
@@ -63,7 +63,12 @@ export function usePet() {
   const path = useMemo(() => user ? `users/${user.uid}/game/pet` : null, [user])
 
   useEffect(() => {
-    if (!path) { setLoading(false); return }
+    if (!path) {
+      setRaw(null)
+      setLoading(false)
+      return undefined
+    }
+    setLoading(true)
     return onValue(ref(db, path), (snap) => {
       setRaw(snap.val())
       setLoading(false)

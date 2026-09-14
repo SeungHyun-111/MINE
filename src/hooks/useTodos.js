@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  get,
   onValue,
   push,
   ref,
@@ -42,6 +43,7 @@ export function useTodos() {
     if (!user) return null
     const pagePath = `users/${user.uid}/pages/todo`
     return {
+      page: pagePath,
       sections: `${pagePath}/sections`,
       todos: `${pagePath}/items`,
     }
@@ -65,11 +67,15 @@ export function useTodos() {
         setSections(items.length > 0 ? items : DEFAULT_SECTIONS)
 
         if (items.length === 0 && !seededSections.current) {
+          const metadata = (await get(ref(db, `${paths.page}/metadata`))).val() || {}
+          if (metadata.defaultSectionsSeededAt) return
+
           seededSections.current = true
           const updates = {}
           DEFAULT_SECTIONS.forEach((section) => {
             updates[`${paths.sections}/${section.id}`] = section
           })
+          updates[`${paths.page}/metadata/defaultSectionsSeededAt`] = serverTimestamp()
           await update(ref(db), updates)
         }
       },

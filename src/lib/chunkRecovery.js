@@ -1,4 +1,5 @@
 const RELOAD_KEY = 'mine:chunk-reload-attempted'
+const RELOAD_COOLDOWN_MS = 5 * 60 * 1000
 
 function isChunkLoadError(reason) {
   const message = String(reason?.message || reason || '')
@@ -12,19 +13,16 @@ function isChunkLoadError(reason) {
 }
 
 function reloadOnce() {
-  if (sessionStorage.getItem(RELOAD_KEY) === 'true') {
+  const lastAttempt = Number(sessionStorage.getItem(RELOAD_KEY) || 0)
+  if (lastAttempt && Date.now() - lastAttempt < RELOAD_COOLDOWN_MS) {
     return
   }
 
-  sessionStorage.setItem(RELOAD_KEY, 'true')
+  sessionStorage.setItem(RELOAD_KEY, String(Date.now()))
   window.location.reload()
 }
 
 export function installChunkRecovery() {
-  window.addEventListener('load', () => {
-    sessionStorage.removeItem(RELOAD_KEY)
-  })
-
   window.addEventListener('error', (event) => {
     if (isChunkLoadError(event.error || event.message)) {
       reloadOnce()

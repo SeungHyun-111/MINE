@@ -7,12 +7,7 @@ import { installChunkRecovery } from './lib/chunkRecovery.js'
 
 installChunkRecovery()
 
-registerSW({
-  immediate: true,
-  onRegisteredSW(_swUrl, registration) {
-    registration?.update()
-  },
-})
+registerSW()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
