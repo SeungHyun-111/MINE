@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "updatedAt": "2026-08-17T23:41:27.159Z",
+  "updatedAt": "2026-09-14T00:51:36.042Z",
   "sources": {
     "csv": "dhlottery_lotto645_1_1233.csv",
     "manual": "manual"
@@ -22326,6 +22326,29 @@
       "firstTotalAmount": 28669084128,
       "dayStemBranch": "임오일",
       "dayGanji": "임오"
+    },
+    {
+      "drawNo": 1241,
+      "drawDate": "2026-09-12",
+      "numbers": [
+        7,
+        13,
+        16,
+        23,
+        24,
+        43
+      ],
+      "bonus": 9,
+      "source": "manual",
+      "firstWinnerCount": 18,
+      "firstPrizeAmount": 1628391980,
+      "firstTotalAmount": 29311055640,
+      "secondWinnerCount": 90,
+      "secondPrizeAmount": 54279733,
+      "thirdWinnerCount": 3254,
+      "thirdPrizeAmount": 1501284,
+      "dayStemBranch": "기축일",
+      "dayGanji": "기축"
     }
   ],
   "ganji": {
